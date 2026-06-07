@@ -1,0 +1,51 @@
+// src/components/profile/ProfileHero.tsx
+import { AppText } from "@/components/ui/AppText";
+import { Colors } from "@/constants/Colors";
+import { Ionicons } from "@expo/vector-icons";
+import { Image, Pressable, View } from "react-native";
+
+export function ProfileHero() {
+  return (
+    <View className="pb-6">
+      <Image
+        source={require("../../../assets/images/wedding-floral.png")}
+        className="absolute -right-1 h-56 w-56 opacity-70"
+        resizeMode="contain"
+      />
+
+      <View className="flex-row items-center">
+        <View>
+          <Image
+            source={require("../../../assets/images/profile/profile.png")}
+            className="h-28 w-28 rounded-full"
+            resizeMode="cover"
+          />
+
+          <Pressable className="absolute -bottom-1 -right-1 h-11 w-11 items-center justify-center rounded-full bg-primary">
+            <Ionicons name="camera" size={21} color={Colors.white} />
+          </Pressable>
+        </View>
+
+        <View className="ml-8 flex-1">
+          <AppText variant="serifTitle" className="text-[30px] text-textDark">
+            Onur Aydınoğlu
+          </AppText>
+
+          <View className="mt-4 flex-row items-center">
+            <Ionicons name="mail-outline" size={21} color={Colors.textLight} />
+            <AppText className="ml-3 text-[15px] text-textMuted">
+              onur@gmail.com
+            </AppText>
+          </View>
+
+          <View className="mt-3 flex-row items-center">
+            <Ionicons name="call-outline" size={21} color={Colors.textLight} />
+            <AppText className="ml-3 text-[15px] text-textMuted">
+              +90 555 555 55 55
+            </AppText>
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+}

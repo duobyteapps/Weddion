@@ -16,7 +16,7 @@ export function QuickActionCard({
   subtitle,
 }: QuickActionCardProps) {
   return (
-    <AppCard className="w-[48%] flex-row items-center px-3 py-4">
+    <AppCard className="w-[48%] flex-row border-0 items-center px-3 py-4">
       <View className="mr-3 h-11 w-11 items-center justify-center rounded-2xl bg-primaryLight">
         <Ionicons name={icon} size={23} color="#A875D1" />
       </View>

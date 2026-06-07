@@ -1,9 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Image, Pressable, View } from "react-native";
 
-export function DashboardHeader() {
+export function AppHeader() {
   return (
-    <View className="mb-3 flex-row items-center justify-between">
+    <View className="mb-8 pt-4 flex-row items-center justify-between">
       <View className="h-10 w-10 items-center justify-center">
         <Image
           source={require("../../../assets/images/logo.png")}
@@ -14,7 +14,7 @@ export function DashboardHeader() {
 
       <Image
         source={require("../../../assets/images/logo-name.png")}
-        className="h-8 w-28"
+        className="h-8 w-32"
         resizeMode="contain"
       />
 

@@ -1,7 +1,7 @@
 // src/app/(tabs)/home.tsx
 import { ScrollView, View } from "react-native";
 
-import { DashboardHeader } from "@/components/home/DashboardHeader";
+import { AppHeader } from "@/components/common/AppHeader";
 import { HeroCard } from "@/components/home/HeroCard";
 import { PromoCard } from "@/components/home/PromoCard";
 import { QuickActionCard } from "@/components/home/QuickActionCard";
@@ -11,8 +11,8 @@ import { ScreenContainer } from "@/components/ui/ScreenContainer";
 export default function HomeScreen() {
   return (
     <ScreenContainer className="bg-background">
-      <View className="flex-1 pt-4">
-        <DashboardHeader />
+      <View className="flex-1">
+        <AppHeader />
 
         <ScrollView
           showsVerticalScrollIndicator={false}
