@@ -7,8 +7,8 @@ export type Profile = {
   phone: string | null;
   birth_date: string | null;
   avatar_url: string | null;
-  email_notifications: boolean;
-  sms_notifications: boolean;
+  email_notifications: boolean | null;
+  sms_notifications: boolean | null;
 };
 
 export type UpdateProfilePayload = {
@@ -32,7 +32,7 @@ export async function getCurrentUserProfile() {
   }
 
   if (!user) {
-    throw new Error("Kullanıcı bulunamadı.");
+    throw new Error("Oturum bulunamadı.");
   }
 
   const { data: profile, error } = await supabase
@@ -52,20 +52,24 @@ export async function getCurrentUserProfile() {
     };
   }
 
-  const { data: createdProfile, error: insertError } = await supabase
+  const { data: createdProfile, error: createError } = await supabase
     .from("profiles")
-    .insert({
+    .upsert({
       id: user.id,
       first_name: user.user_metadata?.first_name ?? null,
       last_name: user.user_metadata?.last_name ?? null,
+      phone: null,
+      birth_date: null,
+      avatar_url: null,
       email_notifications: true,
       sms_notifications: true,
+      updated_at: new Date().toISOString(),
     })
     .select("*")
     .single();
 
-  if (insertError) {
-    throw new Error(insertError.message);
+  if (createError) {
+    throw new Error(createError.message);
   }
 
   return {
@@ -85,22 +89,20 @@ export async function updateCurrentUserProfile(payload: UpdateProfilePayload) {
   }
 
   if (!user) {
-    throw new Error("Kullanıcı bulunamadı.");
+    throw new Error("Oturum bulunamadı.");
   }
 
-  const { error } = await supabase
-    .from("profiles")
-    .update({
-      first_name: payload.first_name.trim(),
-      last_name: payload.last_name.trim(),
-      phone: payload.phone.trim(),
-      birth_date: payload.birth_date || null,
-      avatar_url: payload.avatar_url ?? null,
-      email_notifications: payload.email_notifications,
-      sms_notifications: payload.sms_notifications,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", user.id);
+  const { error } = await supabase.from("profiles").upsert({
+    id: user.id,
+    first_name: payload.first_name.trim() || null,
+    last_name: payload.last_name.trim() || null,
+    phone: payload.phone.trim() || null,
+    birth_date: payload.birth_date || null,
+    avatar_url: payload.avatar_url ?? null,
+    email_notifications: payload.email_notifications,
+    sms_notifications: payload.sms_notifications,
+    updated_at: new Date().toISOString(),
+  });
 
   if (error) {
     throw new Error(error.message);

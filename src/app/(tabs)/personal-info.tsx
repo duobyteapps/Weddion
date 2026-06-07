@@ -37,11 +37,14 @@ export default function PersonalInfoScreen() {
       setPhone(profile.phone ?? "");
       setBirthDate(profile.birth_date ?? "");
       setAvatarUrl(profile.avatar_url);
-      setEmailNotifications(profile.email_notifications);
-      setSmsNotifications(profile.sms_notifications);
+      setEmailNotifications(profile.email_notifications ?? true);
+      setSmsNotifications(profile.sms_notifications ?? true);
     } catch (error) {
       console.log(error);
-      Alert.alert("Hata", "Profil bilgileri alınamadı.");
+      Alert.alert(
+        "Hata",
+        error instanceof Error ? error.message : "Profil bilgileri alınamadı.",
+      );
     } finally {
       setLoading(false);
     }
