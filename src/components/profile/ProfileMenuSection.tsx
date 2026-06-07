@@ -2,6 +2,7 @@
 import { AppText } from "@/components/ui/AppText";
 import { Colors } from "@/constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
+import { Href, router } from "expo-router";
 import { Pressable, View } from "react-native";
 import { AppCard } from "../ui/AppCard";
 import { AppDivider } from "../ui/AppDivider";
@@ -9,6 +10,7 @@ import { AppDivider } from "../ui/AppDivider";
 type MenuItem = {
   label: string;
   icon: keyof typeof Ionicons.glyphMap;
+  route?: Href;
   danger?: boolean;
   onPress?: () => void;
 };
@@ -19,6 +21,17 @@ type Props = {
 };
 
 export function ProfileMenuSection({ title, items }: Props) {
+  const handlePress = (item: MenuItem) => {
+    if (item.onPress) {
+      item.onPress();
+      return;
+    }
+
+    if (item.route) {
+      router.push(item.route);
+    }
+  };
+
   return (
     <AppCard>
       <AppText
@@ -35,7 +48,7 @@ export function ProfileMenuSection({ title, items }: Props) {
         return (
           <View key={item.label}>
             <Pressable
-              onPress={item.onPress}
+              onPress={() => handlePress(item)}
               className={`flex-row items-center ${
                 isLast ? "pt-3 pb-0" : "py-3"
               }`}

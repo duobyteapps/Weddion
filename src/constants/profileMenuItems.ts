@@ -1,14 +1,20 @@
 // src/constants/profileMenuItems.ts
 import { Ionicons } from "@expo/vector-icons";
+import { Href } from "expo-router";
 
 export type ProfileMenuItem = {
   label: string;
   icon: keyof typeof Ionicons.glyphMap;
+  route?: Href;
   danger?: boolean;
 };
 
 export const accountMenuItems: ProfileMenuItem[] = [
-  { label: "Kişisel Bilgiler", icon: "person-outline" },
+  {
+    label: "Kişisel Bilgiler",
+    icon: "person-outline",
+    route: "/(tabs)/personal-info",
+  },
   { label: "Şifre ve Güvenlik", icon: "lock-closed-outline" },
   { label: "Bildirim Ayarları", icon: "notifications-outline" },
   { label: "Gizlilik ve KVKK", icon: "shield-checkmark-outline" },
