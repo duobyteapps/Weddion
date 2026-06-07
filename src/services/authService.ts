@@ -1,7 +1,9 @@
+// src/services/authService.ts
 import { supabase } from "@/lib/supabase";
 
 type RegisterUserParams = {
-  fullName: string;
+  firstName: string;
+  lastName: string;
   email: string;
   password: string;
 };
@@ -12,7 +14,8 @@ type LoginUserParams = {
 };
 
 export async function registerUser({
-  fullName,
+  firstName,
+  lastName,
   email,
   password,
 }: RegisterUserParams) {
@@ -21,7 +24,8 @@ export async function registerUser({
     password,
     options: {
       data: {
-        full_name: fullName.trim(),
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
       },
     },
   });

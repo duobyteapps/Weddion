@@ -1,4 +1,3 @@
-// src/app/(tabs)/profile.tsx
 import { AppHeader } from "@/components/common/AppHeader";
 import { PremiumCard } from "@/components/profile/PremiumCard";
 import { ProfileEventCard } from "@/components/profile/ProfileEventCard";
@@ -10,7 +9,7 @@ import { ScrollView } from "react-native";
 
 export default function ProfileScreen() {
   return (
-    <ScreenContainer className="bg-background">
+    <ScreenContainer className="flex-1 bg-background">
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerClassName="pb-32"

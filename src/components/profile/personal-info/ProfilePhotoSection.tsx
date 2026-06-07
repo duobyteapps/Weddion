@@ -1,31 +1,30 @@
-// src/components/profile/personal-info/ProfilePhotoSection.tsx
 import { AppText } from "@/components/ui/AppText";
+import { Colors } from "@/constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
 import { Image, Pressable, View } from "react-native";
 
-export function ProfilePhotoSection() {
-  return (
-    <View className="relative mt-4 min-h-[170px] flex-row items-center">
-      <Image
-        source={require("@/assets/images/wedding-floral.png")}
-        resizeMode="contain"
-        className="absolute -right-12 -top-10 h-[210px] w-[210px] opacity-80"
-      />
+type Props = {
+  avatarUrl: string | null;
+};
 
-      <View className="relative z-10">
+export function ProfilePhotoSection({ avatarUrl }: Props) {
+  return (
+    <View className="mt-4 flex-row items-center">
+      <View className="relative">
         <Image
-          source={{
-            uri: "https://images.unsplash.com/photo-1529634806980-85c3dd6d34ac?w=400",
-          }}
-          className="h-[108px] w-[108px] rounded-full"
+          source={
+            avatarUrl ? { uri: avatarUrl } : require("@/assets/images/logo.png")
+          }
+          resizeMode="cover"
+          className="h-[108px] w-[108px] rounded-full bg-primarySoft"
         />
 
         <View className="absolute -bottom-1 -right-1 h-12 w-12 items-center justify-center rounded-full bg-primary">
-          <Ionicons name="camera" size={23} color="#FFFFFF" />
+          <Ionicons name="camera" size={23} color={Colors.white} />
         </View>
       </View>
 
-      <View className="z-10 ml-7 flex-1">
+      <View className="ml-7 flex-1">
         <AppText
           variant="serifSubtitle"
           className="text-[24px] leading-[30px] text-textDark"
@@ -40,8 +39,8 @@ export function ProfilePhotoSection() {
           JPG, PNG veya WEBP. Maksimum 5MB.
         </AppText>
 
-        <Pressable className="mt-4 h-[48px] flex-row items-center justify-center rounded-2xl border border-primary/50 bg-transparent">
-          <Ionicons name="camera-outline" size={23} color="#A875D1" />
+        <Pressable className="mt-4 h-[48px] flex-row items-center justify-center rounded-2xl border border-primary/50">
+          <Ionicons name="camera-outline" size={23} color={Colors.primary} />
 
           <AppText
             variant="body"

@@ -8,9 +8,17 @@ type PreferenceRowProps = {
   icon: keyof typeof Ionicons.glyphMap;
   title: string;
   description: string;
+  value: boolean;
+  onChangeValue: (value: boolean) => void;
 };
 
-function PreferenceRow({ icon, title, description }: PreferenceRowProps) {
+function PreferenceRow({
+  icon,
+  title,
+  description,
+  value,
+  onChangeValue,
+}: PreferenceRowProps) {
   return (
     <View className="flex-row items-center rounded-2xl border border-border bg-surface px-4 py-4">
       <View className="h-10 w-10 items-center justify-center rounded-xl bg-primarySoft">
@@ -28,7 +36,8 @@ function PreferenceRow({ icon, title, description }: PreferenceRowProps) {
       </View>
 
       <Switch
-        value
+        value={value}
+        onValueChange={onChangeValue}
         trackColor={{ false: Colors.border, true: Colors.primary }}
         thumbColor={Colors.white}
       />
@@ -36,9 +45,21 @@ function PreferenceRow({ icon, title, description }: PreferenceRowProps) {
   );
 }
 
-export function AccountPreferencesCard() {
+type Props = {
+  emailNotifications: boolean;
+  smsNotifications: boolean;
+  onChangeEmailNotifications: (value: boolean) => void;
+  onChangeSmsNotifications: (value: boolean) => void;
+};
+
+export function AccountPreferencesCard({
+  emailNotifications,
+  smsNotifications,
+  onChangeEmailNotifications,
+  onChangeSmsNotifications,
+}: Props) {
   return (
-    <AppCard className="mt-6">
+    <AppCard>
       <AppText
         variant="serifSubtitle"
         className="mb-5 text-[25px] text-textDark"
@@ -50,6 +71,8 @@ export function AccountPreferencesCard() {
         icon="notifications-outline"
         title="E-posta Bildirimleri"
         description="Etkinlikler ve güncellemeler hakkında bilgilendiril."
+        value={emailNotifications}
+        onChangeValue={onChangeEmailNotifications}
       />
 
       <View className="h-3" />
@@ -58,6 +81,8 @@ export function AccountPreferencesCard() {
         icon="chatbox-ellipses-outline"
         title="SMS Bildirimleri"
         description="Önemli hatırlatmalar için SMS al."
+        value={smsNotifications}
+        onChangeValue={onChangeSmsNotifications}
       />
     </AppCard>
   );

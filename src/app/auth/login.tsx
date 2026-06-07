@@ -36,7 +36,7 @@ export default function LoginScreen() {
         password,
       });
 
-      router.replace("/home");
+      router.replace("/(tabs)/home");
     } catch (error) {
       const message =
         error instanceof Error
@@ -94,7 +94,10 @@ export default function LoginScreen() {
               secureTextEntry
             />
 
-            <Pressable onPress={() => {}} className="self-end">
+            <Pressable
+              onPress={() => router.push("/auth/forgot-password")}
+              className="self-end"
+            >
               <AppText variant="captionStrong">Şifremi unuttum</AppText>
             </Pressable>
 

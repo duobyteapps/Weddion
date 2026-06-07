@@ -1,4 +1,3 @@
-// src/components/profile/ProfileMenuSection.tsx
 import { AppText } from "@/components/ui/AppText";
 import { Colors } from "@/constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
@@ -21,7 +20,7 @@ type Props = {
 };
 
 export function ProfileMenuSection({ title, items }: Props) {
-  const handlePress = (item: MenuItem) => {
+  function handlePress(item: MenuItem) {
     if (item.onPress) {
       item.onPress();
       return;
@@ -30,7 +29,7 @@ export function ProfileMenuSection({ title, items }: Props) {
     if (item.route) {
       router.push(item.route);
     }
-  };
+  }
 
   return (
     <AppCard>

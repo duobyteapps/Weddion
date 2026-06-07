@@ -3,9 +3,31 @@ import { AppInput } from "@/components/ui/AppInput";
 import { AppText } from "@/components/ui/AppText";
 import { View } from "react-native";
 
-export function PersonalInfoCard() {
+type Props = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  birthDate: string;
+  onChangeFirstName: (value: string) => void;
+  onChangeLastName: (value: string) => void;
+  onChangePhone: (value: string) => void;
+  onChangeBirthDate: (value: string) => void;
+};
+
+export function PersonalInfoCard({
+  firstName,
+  lastName,
+  email,
+  phone,
+  birthDate,
+  onChangeFirstName,
+  onChangeLastName,
+  onChangePhone,
+  onChangeBirthDate,
+}: Props) {
   return (
-    <AppCard className="mt-8">
+    <AppCard>
       <AppText
         variant="serifSubtitle"
         className="mb-5 text-[25px] text-textDark"
@@ -16,38 +38,40 @@ export function PersonalInfoCard() {
       <View className="flex-row gap-3">
         <AppInput
           label="Adınız"
-          value="Onur"
+          value={firstName}
+          onChangeText={onChangeFirstName}
           className="flex-1"
-          inputClassName="font-manropeBold text-[16px] text-textDark"
         />
 
         <AppInput
           label="Soyadınız"
-          value="Yılmaz"
+          value={lastName}
+          onChangeText={onChangeLastName}
           className="flex-1"
-          inputClassName="font-manropeBold text-[16px] text-textDark"
         />
       </View>
 
       <AppInput
         label="E-posta Adresiniz"
-        value="onur.yilmaz@gmail.com"
-        className="mt-4"
-        inputClassName="font-manropeBold text-[16px] text-textDark"
+        value={email}
+        editable={false}
+        className="mt-4 opacity-70"
       />
 
       <AppInput
         label="Telefon Numaranız"
-        value="+90 555 123 45 67"
+        value={phone}
+        onChangeText={onChangePhone}
+        keyboardType="phone-pad"
         className="mt-4"
-        inputClassName="font-manropeBold text-[16px] text-textDark"
       />
 
       <AppInput
         label="Doğum Tarihiniz"
-        value="12.04.1992"
+        value={birthDate}
+        onChangeText={onChangeBirthDate}
+        placeholder="1998-04-12"
         className="mt-4"
-        inputClassName="font-manropeBold text-[16px] text-textDark"
       />
     </AppCard>
   );

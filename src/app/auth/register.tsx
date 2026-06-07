@@ -15,14 +15,20 @@ import { validateRegisterForm } from "@/utils/authValidation";
 export default function RegisterScreen() {
   const router = useRouter();
 
-  const [fullName, setFullName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const [isLoading, setIsLoading] = useState(false);
 
   const handleRegister = async () => {
-    const validationError = validateRegisterForm(fullName, email, password);
+    const validationError = validateRegisterForm(
+      firstName,
+      lastName,
+      email,
+      password,
+    );
 
     if (validationError) {
       Alert.alert("Uyarı", validationError);
@@ -33,7 +39,8 @@ export default function RegisterScreen() {
       setIsLoading(true);
 
       await registerUser({
-        fullName,
+        firstName,
+        lastName,
         email,
         password,
       });
@@ -84,13 +91,25 @@ export default function RegisterScreen() {
           </View>
 
           <View className="mt-6 gap-4">
-            <AppInput
-              label="Ad Soyad"
-              placeholder="Adınız Soyadınız"
-              value={fullName}
-              onChangeText={setFullName}
-              autoCapitalize="words"
-            />
+            <View className="flex-row gap-3">
+              <AppInput
+                label="Ad"
+                placeholder="Adınız"
+                value={firstName}
+                onChangeText={setFirstName}
+                autoCapitalize="words"
+                className="flex-1"
+              />
+
+              <AppInput
+                label="Soyad"
+                placeholder="Soyadınız"
+                value={lastName}
+                onChangeText={setLastName}
+                autoCapitalize="words"
+                className="flex-1"
+              />
+            </View>
 
             <AppInput
               label="E-posta"

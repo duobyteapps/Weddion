@@ -1,4 +1,3 @@
-// src/constants/profileMenuItems.ts
 import { Ionicons } from "@expo/vector-icons";
 import { Href } from "expo-router";
 

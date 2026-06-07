@@ -7,7 +7,7 @@ export function PersonalInfoHeader() {
   return (
     <View className="relative h-[92px] justify-center">
       <AppBackButton
-        onPress={() => router.push("/(tabs)/profile")}
+        onPress={() => router.replace("/(tabs)/profile")}
         className="absolute left-0 z-10"
       />
 
@@ -21,7 +21,7 @@ export function PersonalInfoHeader() {
 
         <AppText
           variant="body"
-          className="mt-1 text-center font-manropeMedium text-textMuted"
+          className="mt-1 text-center text-[14px] font-manropeMedium text-textMuted"
         >
           Hesap bilgilerinizi güncelleyin.
         </AppText>
