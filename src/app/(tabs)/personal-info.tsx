@@ -89,7 +89,7 @@ export default function PersonalInfoScreen() {
     <ScreenContainer className="flex-1 bg-background">
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerClassName="px-5 pb-28"
+        contentContainerClassName="pb-32"
       >
         <PersonalInfoHeader />
 

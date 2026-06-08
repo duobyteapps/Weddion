@@ -1,4 +1,5 @@
 import { AppCard } from "@/components/ui/AppCard";
+import { AppDateInput } from "@/components/ui/AppDateInput";
 import { AppInput } from "@/components/ui/AppInput";
 import { AppText } from "@/components/ui/AppText";
 import { View } from "react-native";
@@ -66,11 +67,12 @@ export function PersonalInfoCard({
         className="mt-4"
       />
 
-      <AppInput
+      <AppDateInput
         label="Doğum Tarihiniz"
         value={birthDate}
-        onChangeText={onChangeBirthDate}
-        placeholder="1998-04-12"
+        placeholder="Doğum tarihinizi seçin"
+        maximumDate={new Date()}
+        onChange={onChangeBirthDate}
         className="mt-4"
       />
     </AppCard>
