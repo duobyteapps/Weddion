@@ -66,3 +66,15 @@ export async function getCurrentSession() {
 
   return data.session;
 }
+
+export async function changePassword(newPassword: string) {
+  const { data, error } = await supabase.auth.updateUser({
+    password: newPassword,
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data;
+}

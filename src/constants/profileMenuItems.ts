@@ -14,7 +14,11 @@ export const accountMenuItems: ProfileMenuItem[] = [
     icon: "person-outline",
     route: "/(tabs)/personal-info",
   },
-  { label: "Şifre ve Güvenlik", icon: "lock-closed-outline" },
+  {
+    label: "Şifre ve Güvenlik",
+    icon: "lock-closed-outline",
+    route: "/(tabs)/change-password",
+  },
   { label: "Bildirim Ayarları", icon: "notifications-outline" },
   { label: "Gizlilik ve KVKK", icon: "shield-checkmark-outline" },
 ];
