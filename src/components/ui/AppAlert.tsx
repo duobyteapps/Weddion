@@ -33,16 +33,16 @@ const alertStyles: Record<
   }
 > = {
   success: {
-    icon: require("@/assets/images/alert-icons/checkmark.png"),
+    icon: require("@/assets/images/alert-icons/success.png"),
   },
   error: {
-    icon: require("@/assets/images/alert-icons/checkmark.png"),
+    icon: require("@/assets/images/alert-icons/error.png"),
   },
   warning: {
-    icon: require("@/assets/images/alert-icons/checkmark.png"),
+    icon: require("@/assets/images/alert-icons/warning.png"),
   },
   info: {
-    icon: require("@/assets/images/alert-icons/checkmark.png"),
+    icon: require("@/assets/images/alert-icons/info.png"),
   },
 };
 
