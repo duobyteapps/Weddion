@@ -1,8 +1,23 @@
-import { Tabs } from "expo-router";
-
 import { AppTabBar } from "@/components/layout/AppTabBar";
+import { useAuth } from "@/context/AuthContext";
+import { Redirect, Tabs } from "expo-router";
+import { ActivityIndicator, View } from "react-native";
 
 export default function TabsLayout() {
+  const { loading, isAuthenticated } = useAuth();
+
+  if (loading) {
+    return (
+      <View className="flex-1 items-center justify-center bg-background">
+        <ActivityIndicator />
+      </View>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Redirect href="/auth/login" />;
+  }
+
   return (
     <Tabs
       initialRouteName="home"

@@ -1,6 +1,6 @@
-// src/app/_layout.tsx
 import "../../global.css";
 
+import { AuthProvider } from "@/context/AuthContext";
 import {
   CormorantGaramond_600SemiBold,
   CormorantGaramond_700Bold,
@@ -23,18 +23,17 @@ export default function RootLayout() {
     Manrope_600SemiBold,
     Manrope_700Bold,
     Manrope_800ExtraBold,
-
     CormorantGaramond_600SemiBold,
     CormorantGaramond_700Bold,
   });
 
-  if (!fontsLoaded) {
-    return null;
-  }
+  if (!fontsLoaded) return null;
 
   return (
     <SafeAreaProvider>
-      <Stack screenOptions={{ headerShown: false }} />
+      <AuthProvider>
+        <Stack screenOptions={{ headerShown: false }} />
+      </AuthProvider>
     </SafeAreaProvider>
   );
 }
