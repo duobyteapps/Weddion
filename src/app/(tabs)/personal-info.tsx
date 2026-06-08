@@ -2,6 +2,7 @@ import { AccountPreferencesCard } from "@/components/profile/personal-info/Accou
 import { PersonalInfoCard } from "@/components/profile/personal-info/PersonalInfoCard";
 import { PersonalInfoHeader } from "@/components/profile/personal-info/PersonalInfoHeader";
 import { ProfilePhotoSection } from "@/components/profile/personal-info/ProfilePhotoSection";
+import { useAppAlert } from "@/components/ui/AppAlert";
 import { AppButton } from "@/components/ui/AppButton";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import {
@@ -9,9 +10,11 @@ import {
   updateCurrentUserProfile,
 } from "@/services/profileService";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, ScrollView, View } from "react-native";
+import { ActivityIndicator, ScrollView, View } from "react-native";
 
 export default function PersonalInfoScreen() {
+  const { showAlert } = useAppAlert();
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -41,10 +44,15 @@ export default function PersonalInfoScreen() {
       setSmsNotifications(profile.sms_notifications ?? true);
     } catch (error) {
       console.log(error);
-      Alert.alert(
-        "Hata",
-        error instanceof Error ? error.message : "Profil bilgileri alınamadı.",
-      );
+
+      showAlert({
+        title: "Profil Alınamadı",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Profil bilgileri alınamadı.",
+        type: "error",
+      });
     } finally {
       setLoading(false);
     }
@@ -64,10 +72,19 @@ export default function PersonalInfoScreen() {
         sms_notifications: smsNotifications,
       });
 
-      Alert.alert("Başarılı", "Profil bilgileriniz güncellendi.");
+      showAlert({
+        title: "Profil Güncellendi",
+        message: "Profil bilgileriniz başarıyla güncellendi.",
+        type: "success",
+      });
     } catch (error) {
       console.log(error);
-      Alert.alert("Hata", "Profil bilgileriniz güncellenemedi.");
+
+      showAlert({
+        title: "Profil Güncellenemedi",
+        message: "Profil bilgileriniz güncellenemedi.",
+        type: "error",
+      });
     } finally {
       setSaving(false);
     }

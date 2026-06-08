@@ -23,7 +23,7 @@ export function ProfileHero({
   return (
     <View className="pb-6">
       <Image
-        source={require("../../../assets/images/wedding-floral.png")}
+        source={require("../../../assets/images/backgrounds/wedding-floral.png")}
         className="absolute -right-1 h-56 w-56 opacity-70"
         resizeMode="contain"
       />

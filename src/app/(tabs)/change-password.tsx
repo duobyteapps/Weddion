@@ -1,38 +1,58 @@
 import { ChangePasswordCard } from "@/components/profile/change-password/ChangePasswordCard";
 import { ChangePasswordHeader } from "@/components/profile/change-password/ChangePasswordHeader";
+import { useAppAlert } from "@/components/ui/AppAlert";
 import { AppButton } from "@/components/ui/AppButton";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { changePassword } from "@/services/authService";
 import { router } from "expo-router";
 import { useState } from "react";
-import { Alert, ScrollView } from "react-native";
+import { ScrollView } from "react-native";
 
 export default function ChangePasswordScreen() {
+  const { showAlert } = useAppAlert();
+
   const [password, setPassword] = useState("");
   const [passwordAgain, setPasswordAgain] = useState("");
   const [saving, setSaving] = useState(false);
 
   async function handleSave() {
     if (password.length < 6) {
-      Alert.alert("Hata", "Şifre en az 6 karakter olmalı.");
+      showAlert({
+        title: "Şifre Hatası",
+        message: "Şifre en az 6 karakter olmalı.",
+        type: "warning",
+      });
       return;
     }
 
     if (password !== passwordAgain) {
-      Alert.alert("Hata", "Şifreler eşleşmiyor.");
+      showAlert({
+        title: "Şifreler Eşleşmiyor",
+        message: "Lütfen iki alana da aynı şifreyi girin.",
+        type: "warning",
+      });
       return;
     }
 
     try {
       setSaving(true);
+
       await changePassword(password);
-      Alert.alert("Başarılı", "Şifreniz güncellendi.");
-      router.back();
+
+      showAlert({
+        title: "Şifre Güncellendi",
+        message: "Şifreniz başarıyla güncellendi.",
+        type: "success",
+        confirmText: "Tamam",
+        onConfirm: () => router.back(),
+      });
     } catch (error) {
-      Alert.alert(
-        "Hata",
-        error instanceof Error ? error.message : "Şifre güncellenemedi.",
-      );
+      showAlert({
+        title: "Şifre Güncellenemedi",
+        message:
+          error instanceof Error ? error.message : "Şifre güncellenemedi.",
+        type: "error",
+      });
     } finally {
       setSaving(false);
     }

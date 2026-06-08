@@ -3,6 +3,7 @@ import { PremiumCard } from "@/components/profile/PremiumCard";
 import { ProfileEventCard } from "@/components/profile/ProfileEventCard";
 import { ProfileHero } from "@/components/profile/ProfileHero";
 import { ProfileMenuSection } from "@/components/profile/ProfileMenuSection";
+import { useAppAlert } from "@/components/ui/AppAlert";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { accountMenuItems, otherMenuItems } from "@/constants/profileMenuItems";
 import { logoutUser } from "@/services/authService";
@@ -13,9 +14,11 @@ import {
 } from "@/services/profileService";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
-import { ActivityIndicator, Alert, ScrollView, View } from "react-native";
+import { ActivityIndicator, ScrollView, View } from "react-native";
 
 export default function ProfileScreen() {
+  const { showAlert } = useAppAlert();
+
   const [profile, setProfile] = useState<Profile | null>(null);
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(true);
@@ -60,39 +63,40 @@ export default function ProfileScreen() {
           ? error.message
           : "Çıkış yapılırken bir hata oluştu.";
 
-      Alert.alert("Çıkış Hatası", message);
+      showAlert({
+        title: "Çıkış Hatası",
+        message,
+        type: "error",
+      });
     }
   };
 
   const handleDeleteAccount = () => {
-    Alert.alert(
-      "Profil silinsin mi?",
-      "Profiliniz ve size ait tüm bilgiler kalıcı olarak silinecek. Bu işlem geri alınamaz.",
-      [
-        {
-          text: "Vazgeç",
-          style: "cancel",
-        },
-        {
-          text: "Evet, sil",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await deleteCurrentUserAccount();
+    showAlert({
+      title: "Profil Silinsin mi?",
+      message:
+        "Profiliniz ve size ait tüm bilgiler kalıcı olarak silinecek. Bu işlem geri alınamaz.",
+      type: "warning",
+      confirmText: "Evet, Sil",
+      onConfirm: async () => {
+        try {
+          await deleteCurrentUserAccount();
 
-              router.replace("/auth/login");
-            } catch (error) {
-              const message =
-                error instanceof Error
-                  ? error.message
-                  : "Hesap silinirken bir hata oluştu.";
+          router.replace("/auth/login");
+        } catch (error) {
+          const message =
+            error instanceof Error
+              ? error.message
+              : "Hesap silinirken bir hata oluştu.";
 
-              Alert.alert("Silme Hatası", message);
-            }
-          },
-        },
-      ],
-    );
+          showAlert({
+            title: "Silme Hatası",
+            message,
+            type: "error",
+          });
+        }
+      },
+    });
   };
 
   const menuItems = otherMenuItems.map((item) => {

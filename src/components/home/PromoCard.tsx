@@ -29,7 +29,7 @@ export function PromoCard() {
       </View>
 
       <Image
-        source={require("../../../assets/images/lavender-wedding-invitation.png")}
+        source={require("@/assets/images/lavender-wedding-invitation.png")}
         className="-mr-4 h-44 w-44"
         resizeMode="contain"
       />

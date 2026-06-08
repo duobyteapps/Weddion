@@ -16,7 +16,7 @@ export default function HomeScreen() {
 
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerClassName="pb-5"
+          contentContainerClassName="pb-32"
         >
           <HeroCard />
 

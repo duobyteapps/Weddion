@@ -1,8 +1,9 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Alert, Image, Pressable, View } from "react-native";
+import { Image, Pressable, View } from "react-native";
 
 import { AuthHeader } from "@/components/auth/AuthHeader";
+import { AppAlertProvider, useAppAlert } from "@/components/ui/AppAlert";
 import { AppBackButton } from "@/components/ui/AppBackButton";
 import { AppButton } from "@/components/ui/AppButton";
 import { AppCard } from "@/components/ui/AppCard";
@@ -13,7 +14,16 @@ import { registerUser } from "@/services/authService";
 import { validateRegisterForm } from "@/utils/authValidation";
 
 export default function RegisterScreen() {
+  return (
+    <AppAlertProvider>
+      <RegisterContent />
+    </AppAlertProvider>
+  );
+}
+
+function RegisterContent() {
   const router = useRouter();
+  const { showAlert } = useAppAlert();
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -31,7 +41,11 @@ export default function RegisterScreen() {
     );
 
     if (validationError) {
-      Alert.alert("Uyarı", validationError);
+      showAlert({
+        title: "Eksik Bilgi",
+        message: validationError,
+        type: "warning",
+      });
       return;
     }
 
@@ -45,19 +59,24 @@ export default function RegisterScreen() {
         password,
       });
 
-      Alert.alert("Başarılı", "Hesabın oluşturuldu.", [
-        {
-          text: "Tamam",
-          onPress: () => router.replace("/auth/login"),
-        },
-      ]);
+      showAlert({
+        title: "Hesabın Oluşturuldu",
+        message: "Giriş yaparak Weddion’u kullanmaya başlayabilirsin.",
+        type: "success",
+        confirmText: "Giriş Yap",
+        onConfirm: () => router.replace("/auth/login"),
+      });
     } catch (error) {
       const message =
         error instanceof Error
           ? error.message
           : "Kayıt oluşturulurken bir hata oluştu.";
 
-      Alert.alert("Kayıt Hatası", message);
+      showAlert({
+        title: "Kayıt Oluşturulamadı",
+        message,
+        type: "error",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -67,7 +86,7 @@ export default function RegisterScreen() {
     <ScreenContainer className="bg-background">
       <View className="relative flex-1 px-1 pb-8 pt-4">
         <Image
-          source={require("../../../assets/images/wedding-floral.png")}
+          source={require("@/assets/images/backgrounds/wedding-floral.png")}
           className="absolute -right-8 top-0 h-44 w-44 opacity-80"
           resizeMode="contain"
         />

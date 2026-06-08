@@ -27,7 +27,7 @@ export function PremiumCard() {
       </Pressable>
 
       <Image
-        source={require("../../../assets/images/floral-corner.png")}
+        source={require("../../../assets/images/backgrounds/floral-corner.png")}
         className="absolute -right-5 -top-5 h-24 w-24 opacity-70"
         resizeMode="contain"
       />

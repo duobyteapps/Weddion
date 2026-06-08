@@ -8,7 +8,7 @@ export function HeroCard() {
   return (
     <AppCard className="relative overflow-hidden px-5 py-5">
       <Image
-        source={require("../../../assets/images/lavender-garden.png")}
+        source={require("@/assets/images/backgrounds/lavender-garden.png")}
         className="absolute -right-5 top-2 h-40 w-40 opacity-90"
         resizeMode="contain"
       />

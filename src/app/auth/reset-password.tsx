@@ -1,9 +1,10 @@
 import * as Linking from "expo-linking";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Alert, Image, Pressable, View } from "react-native";
+import { Image, Pressable, View } from "react-native";
 
 import { AuthHeader } from "@/components/auth/AuthHeader";
+import { useAppAlert } from "@/components/ui/AppAlert";
 import { AppBackButton } from "@/components/ui/AppBackButton";
 import { AppButton } from "@/components/ui/AppButton";
 import { AppCard } from "@/components/ui/AppCard";
@@ -14,6 +15,7 @@ import { supabase } from "@/lib/supabase";
 
 export default function ResetPasswordScreen() {
   const router = useRouter();
+  const { showAlert } = useAppAlert();
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -46,36 +48,53 @@ export default function ResetPasswordScreen() {
       });
 
       if (error) {
-        Alert.alert(
-          "Hata",
-          "Şifre sıfırlama bağlantısı geçersiz veya süresi dolmuş.",
-        );
+        showAlert({
+          title: "Bağlantı Geçersiz",
+          message: "Şifre sıfırlama bağlantısı geçersiz veya süresi dolmuş.",
+          type: "error",
+        });
       }
 
       setSessionReady(true);
     }
 
     handlePasswordResetLink();
-  }, []);
+  }, [showAlert]);
 
   async function handleUpdatePassword() {
     if (!sessionReady) {
-      Alert.alert("Uyarı", "Şifre sıfırlama bağlantısı hazırlanıyor.");
+      showAlert({
+        title: "Hazırlanıyor",
+        message: "Şifre sıfırlama bağlantısı hazırlanıyor.",
+        type: "info",
+      });
       return;
     }
 
     if (!password || !confirmPassword) {
-      Alert.alert("Uyarı", "Lütfen tüm alanları doldurun.");
+      showAlert({
+        title: "Eksik Bilgi",
+        message: "Lütfen tüm alanları doldurun.",
+        type: "warning",
+      });
       return;
     }
 
     if (password.length < 6) {
-      Alert.alert("Uyarı", "Şifre en az 6 karakter olmalı.");
+      showAlert({
+        title: "Şifre Çok Kısa",
+        message: "Şifre en az 6 karakter olmalı.",
+        type: "warning",
+      });
       return;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert("Uyarı", "Şifreler eşleşmiyor.");
+      showAlert({
+        title: "Şifreler Eşleşmiyor",
+        message: "Lütfen iki alana da aynı şifreyi girin.",
+        type: "warning",
+      });
       return;
     }
 
@@ -88,23 +107,28 @@ export default function ResetPasswordScreen() {
     setLoading(false);
 
     if (error) {
-      Alert.alert("Hata", error.message);
+      showAlert({
+        title: "Şifre Güncellenemedi",
+        message: error.message,
+        type: "error",
+      });
       return;
     }
 
-    Alert.alert("Başarılı", "Şifren güncellendi.", [
-      {
-        text: "Giriş Yap",
-        onPress: () => router.replace("/auth/login"),
-      },
-    ]);
+    showAlert({
+      title: "Şifre Güncellendi",
+      message: "Yeni şifren başarıyla kaydedildi.",
+      type: "success",
+      confirmText: "Giriş Yap",
+      onConfirm: () => router.replace("/auth/login"),
+    });
   }
 
   return (
     <ScreenContainer className="bg-background">
       <View className="relative flex-1 px-1 pb-8 pt-4">
         <Image
-          source={require("../../../assets/images/wedding-floral.png")}
+          source={require("../../../assets/images/backgrounds/wedding-floral.png")}
           className="absolute -right-8 top-0 h-44 w-44 opacity-80"
           resizeMode="contain"
         />

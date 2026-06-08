@@ -1,8 +1,9 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Alert, Image, Pressable, View } from "react-native";
+import { Image, Pressable, View } from "react-native";
 
 import { AuthHeader } from "@/components/auth/AuthHeader";
+import { useAppAlert } from "@/components/ui/AppAlert";
 import { AppBackButton } from "@/components/ui/AppBackButton";
 import { AppButton } from "@/components/ui/AppButton";
 import { AppCard } from "@/components/ui/AppCard";
@@ -14,6 +15,7 @@ import { validateLoginForm } from "@/utils/authValidation";
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { showAlert } = useAppAlert();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -24,7 +26,11 @@ export default function LoginScreen() {
     const validationError = validateLoginForm(email, password);
 
     if (validationError) {
-      Alert.alert("Uyarı", validationError);
+      showAlert({
+        title: "Eksik Bilgi",
+        message: validationError,
+        type: "warning",
+      });
       return;
     }
 
@@ -43,7 +49,11 @@ export default function LoginScreen() {
           ? error.message
           : "Giriş yapılırken bir hata oluştu.";
 
-      Alert.alert("Giriş Hatası", message);
+      showAlert({
+        title: "Giriş Hatası",
+        message,
+        type: "error",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -53,7 +63,7 @@ export default function LoginScreen() {
     <ScreenContainer className="bg-background">
       <View className="relative flex-1 px-1 pb-8 pt-4">
         <Image
-          source={require("../../../assets/images/wedding-floral.png")}
+          source={require("../../../assets/images/backgrounds/wedding-floral.png")}
           className="absolute -right-8 top-0 h-44 w-44 opacity-80"
           resizeMode="contain"
         />

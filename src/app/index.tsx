@@ -14,13 +14,13 @@ export default function HomeScreen() {
     <ScreenContainer className="bg-background">
       <View className="relative flex-1 justify-between pb-8 pt-14">
         <Image
-          source={require("../../assets/images/lavender-bloom.png")}
+          source={require("@/assets/images/backgrounds/lavender-bloom.png")}
           className="absolute -left-28 -top-1 h-60 w-60 opacity-85"
           resizeMode="contain"
         />
 
         <Image
-          source={require("../../assets/images/floral-corner.png")}
+          source={require("@/assets/images/backgrounds/floral-corner.png")}
           className="absolute -right-28 -top-1 h-60 w-60 opacity-85"
           resizeMode="contain"
         />
@@ -62,7 +62,7 @@ export default function HomeScreen() {
             <View className="flex-row items-center gap-4">
               <View className="h-[116px] w-[116px] items-center justify-center rounded-2xl border border-primaryLight bg-backgroundSoft">
                 <Image
-                  source={require("../../assets/images/qr-code.png")}
+                  source={require("../../assets/images/qr-code/qr-code.png")}
                   className="h-[96px] w-[96px]"
                   resizeMode="contain"
                 />

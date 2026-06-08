@@ -1,5 +1,4 @@
-import "../../global.css";
-
+import { AppAlertProvider } from "@/components/ui/AppAlert";
 import { AuthProvider } from "@/context/AuthContext";
 import {
   CormorantGaramond_600SemiBold,
@@ -15,6 +14,7 @@ import {
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import "../../global.css";
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -32,7 +32,9 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <AuthProvider>
-        <Stack screenOptions={{ headerShown: false }} />
+        <AppAlertProvider>
+          <Stack screenOptions={{ headerShown: false }} />
+        </AppAlertProvider>
       </AuthProvider>
     </SafeAreaProvider>
   );
