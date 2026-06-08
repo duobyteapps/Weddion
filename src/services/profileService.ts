@@ -108,3 +108,34 @@ export async function updateCurrentUserProfile(payload: UpdateProfilePayload) {
     throw new Error(error.message);
   }
 }
+
+export async function deleteCurrentUserAccount() {
+  const {
+    data: { session },
+    error: sessionError,
+  } = await supabase.auth.getSession();
+
+  if (sessionError) {
+    throw new Error(sessionError.message);
+  }
+
+  if (!session) {
+    throw new Error("Oturum bulunamadı.");
+  }
+
+  const { data, error } = await supabase.functions.invoke("delete-account", {
+    headers: {
+      Authorization: `Bearer ${session.access_token}`,
+    },
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  if (!data?.success) {
+    throw new Error(data?.message ?? "Hesap silinemedi.");
+  }
+
+  await supabase.auth.signOut();
+}

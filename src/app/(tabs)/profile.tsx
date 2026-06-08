@@ -6,7 +6,11 @@ import { ProfileMenuSection } from "@/components/profile/ProfileMenuSection";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { accountMenuItems, otherMenuItems } from "@/constants/profileMenuItems";
 import { logoutUser } from "@/services/authService";
-import { getCurrentUserProfile, Profile } from "@/services/profileService";
+import {
+  deleteCurrentUserAccount,
+  getCurrentUserProfile,
+  Profile,
+} from "@/services/profileService";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
 import { ActivityIndicator, Alert, ScrollView, View } from "react-native";
@@ -60,14 +64,54 @@ export default function ProfileScreen() {
     }
   };
 
-  const menuItemsWithLogout = otherMenuItems.map((item) =>
-    item.label === "Çıkış Yap"
-      ? {
-          ...item,
-          onPress: handleLogout,
-        }
-      : item,
-  );
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      "Profil silinsin mi?",
+      "Profiliniz ve size ait tüm bilgiler kalıcı olarak silinecek. Bu işlem geri alınamaz.",
+      [
+        {
+          text: "Vazgeç",
+          style: "cancel",
+        },
+        {
+          text: "Evet, sil",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteCurrentUserAccount();
+
+              router.replace("/auth/login");
+            } catch (error) {
+              const message =
+                error instanceof Error
+                  ? error.message
+                  : "Hesap silinirken bir hata oluştu.";
+
+              Alert.alert("Silme Hatası", message);
+            }
+          },
+        },
+      ],
+    );
+  };
+
+  const menuItems = otherMenuItems.map((item) => {
+    if (item.label === "Çıkış Yap") {
+      return {
+        ...item,
+        onPress: handleLogout,
+      };
+    }
+
+    if (item.label === "Profilimi ve Bilgilerimi Sil") {
+      return {
+        ...item,
+        onPress: handleDeleteAccount,
+      };
+    }
+
+    return item;
+  });
 
   return (
     <ScreenContainer className="flex-1 bg-background">
@@ -78,7 +122,7 @@ export default function ProfileScreen() {
         <AppHeader />
 
         {loading ? (
-          <View className="py-10 items-center justify-center">
+          <View className="items-center justify-center py-10">
             <ActivityIndicator />
           </View>
         ) : (
@@ -92,7 +136,7 @@ export default function ProfileScreen() {
 
         <ProfileMenuSection title="Hesabım" items={accountMenuItems} />
         <ProfileEventCard />
-        <ProfileMenuSection title="Diğer" items={menuItemsWithLogout} />
+        <ProfileMenuSection title="Diğer" items={menuItems} />
         <PremiumCard />
       </ScrollView>
     </ScreenContainer>
