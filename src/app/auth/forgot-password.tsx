@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Image, Pressable, View } from "react-native";
+import { Alert, Image, Pressable, View } from "react-native";
 
 import { AuthHeader } from "@/components/auth/AuthHeader";
 import { AppBackButton } from "@/components/ui/AppBackButton";
@@ -9,10 +9,38 @@ import { AppCard } from "@/components/ui/AppCard";
 import { AppInput } from "@/components/ui/AppInput";
 import { AppText } from "@/components/ui/AppText";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
+import { supabase } from "@/lib/supabase";
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
   const [email, setEmail] = useState("");
+
+  const [loading, setLoading] = useState(false);
+
+  async function handleSendResetLink() {
+    if (!email.trim()) {
+      Alert.alert("Uyarı", "Lütfen e-posta adresinizi girin.");
+      return;
+    }
+
+    setLoading(true);
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: "weddion://auth/reset-password",
+    });
+
+    setLoading(false);
+
+    if (error) {
+      Alert.alert("Hata", error.message);
+      return;
+    }
+
+    Alert.alert(
+      "Gönderildi",
+      "Şifre sıfırlama bağlantısı e-posta adresine gönderildi.",
+    );
+  }
 
   return (
     <ScreenContainer className="bg-background">
@@ -52,7 +80,13 @@ export default function ForgotPasswordScreen() {
               autoCorrect={false}
             />
 
-            <AppButton title="Şifre Sıfırlama Linki Gönder" className="mt-1" />
+            <AppButton
+              title={
+                loading ? "Gönderiliyor..." : "Şifre Sıfırlama Linki Gönder"
+              }
+              className="mt-1"
+              onPress={handleSendResetLink}
+            />
 
             <View className="flex-row items-center justify-center gap-1 pt-2">
               <AppText variant="caption" className="text-textLight">

@@ -1,6 +1,7 @@
+import * as Linking from "expo-linking";
 import { useRouter } from "expo-router";
-import { useState } from "react";
-import { Image, Pressable, View } from "react-native";
+import { useEffect, useState } from "react";
+import { Alert, Image, Pressable, View } from "react-native";
 
 import { AuthHeader } from "@/components/auth/AuthHeader";
 import { AppBackButton } from "@/components/ui/AppBackButton";
@@ -9,12 +10,95 @@ import { AppCard } from "@/components/ui/AppCard";
 import { AppInput } from "@/components/ui/AppInput";
 import { AppText } from "@/components/ui/AppText";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
+import { supabase } from "@/lib/supabase";
 
 export default function ResetPasswordScreen() {
   const router = useRouter();
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [sessionReady, setSessionReady] = useState(false);
+
+  useEffect(() => {
+    async function handlePasswordResetLink() {
+      const url = await Linking.getInitialURL();
+
+      if (!url) {
+        setSessionReady(true);
+        return;
+      }
+
+      const normalizedUrl = url.replace("#", "?");
+      const parsedUrl = new URL(normalizedUrl);
+
+      const accessToken = parsedUrl.searchParams.get("access_token");
+      const refreshToken = parsedUrl.searchParams.get("refresh_token");
+
+      if (!accessToken || !refreshToken) {
+        setSessionReady(true);
+        return;
+      }
+
+      const { error } = await supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken,
+      });
+
+      if (error) {
+        Alert.alert(
+          "Hata",
+          "Şifre sıfırlama bağlantısı geçersiz veya süresi dolmuş.",
+        );
+      }
+
+      setSessionReady(true);
+    }
+
+    handlePasswordResetLink();
+  }, []);
+
+  async function handleUpdatePassword() {
+    if (!sessionReady) {
+      Alert.alert("Uyarı", "Şifre sıfırlama bağlantısı hazırlanıyor.");
+      return;
+    }
+
+    if (!password || !confirmPassword) {
+      Alert.alert("Uyarı", "Lütfen tüm alanları doldurun.");
+      return;
+    }
+
+    if (password.length < 6) {
+      Alert.alert("Uyarı", "Şifre en az 6 karakter olmalı.");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      Alert.alert("Uyarı", "Şifreler eşleşmiyor.");
+      return;
+    }
+
+    setLoading(true);
+
+    const { error } = await supabase.auth.updateUser({
+      password,
+    });
+
+    setLoading(false);
+
+    if (error) {
+      Alert.alert("Hata", error.message);
+      return;
+    }
+
+    Alert.alert("Başarılı", "Şifren güncellendi.", [
+      {
+        text: "Giriş Yap",
+        onPress: () => router.replace("/auth/login"),
+      },
+    ]);
+  }
 
   return (
     <ScreenContainer className="bg-background">
@@ -60,7 +144,11 @@ export default function ResetPasswordScreen() {
               secureTextEntry
             />
 
-            <AppButton title="Şifreyi Güncelle" className="mt-1" />
+            <AppButton
+              title={loading ? "Güncelleniyor..." : "Şifreyi Güncelle"}
+              className="mt-1"
+              onPress={handleUpdatePassword}
+            />
 
             <View className="flex-row items-center justify-center gap-1 pt-2">
               <AppText variant="caption" className="text-textLight">
