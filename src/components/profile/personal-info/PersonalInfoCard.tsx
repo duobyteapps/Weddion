@@ -29,10 +29,7 @@ export function PersonalInfoCard({
 }: Props) {
   return (
     <AppCard>
-      <AppText
-        variant="serifSubtitle"
-        className="mb-5 text-[25px] text-textDark"
-      >
+      <AppText variant="serifTitle" className="mb-3">
         Kişisel Bilgiler
       </AppText>
 
@@ -73,7 +70,6 @@ export function PersonalInfoCard({
         placeholder="Doğum tarihinizi seçin"
         maximumDate={new Date()}
         onChange={onChangeBirthDate}
-        className="mt-4"
       />
     </AppCard>
   );

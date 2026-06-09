@@ -20,13 +20,13 @@ export default function HomeScreen() {
         >
           <HeroCard />
 
-          <AppText variant="subtitle" className="mb-3 mt-5 text-text">
+          <AppText variant="subtitle" className="mb-3 text-text">
             Kısayollar
           </AppText>
 
-          <View className="flex-row flex-wrap justify-between gap-y-3">
+          <View className="w-full flex-row flex-wrap justify-between">
             <QuickActionCard
-              icon="mail"
+              icon="mail-outline"
               title="Davetiyelerim"
               subtitle="3 aktif davetiye"
             />
@@ -38,7 +38,7 @@ export default function HomeScreen() {
             />
 
             <QuickActionCard
-              icon="images"
+              icon="images-outline"
               title="Galeri"
               subtitle="45 fotoğraf"
             />

@@ -139,7 +139,6 @@ export default function PersonalInfoScreen() {
           title={saving ? "Kaydediliyor..." : "Değişiklikleri Kaydet"}
           onPress={handleSave}
           disabled={saving}
-          className="mt-7 h-[56px] rounded-2xl"
         />
       </ScrollView>
     </ScreenContainer>

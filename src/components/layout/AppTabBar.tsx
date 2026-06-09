@@ -59,7 +59,7 @@ export function AppTabBar({ state, descriptors, navigation }: AppTabBarProps) {
   };
 
   return (
-    <View className="absolute bottom-0 left-0 right-0 h-[96px] flex-row items-center justify-between bg-surface px-3 pb-5 pt-3 shadow-sm">
+    <View className="absolute bottom-0 left-0 right-0 flex-row items-center justify-between bg-surface px-3 pb-5 pt-3 shadow-sm">
       {firstTabs.map((route, index) => (
         <TabItem
           key={route.key}

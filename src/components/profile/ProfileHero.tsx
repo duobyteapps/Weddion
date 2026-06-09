@@ -18,13 +18,13 @@ export function ProfileHero({
 }: ProfileHeroProps) {
   const avatarSource = avatarUrl
     ? { uri: avatarUrl }
-    : require("../../../assets/images/profile/profile.png");
+    : require("@/assets/images/profile/profile.png");
 
   return (
     <View className="pb-6">
       <Image
-        source={require("../../../assets/images/backgrounds/wedding-floral.png")}
-        className="absolute -right-1 h-56 w-56 opacity-70"
+        source={require("@/assets/images/backgrounds/wedding-floral.png")}
+        className="absolute -right-1 h-44 w-44 opacity-70"
         resizeMode="contain"
       />
 
@@ -32,7 +32,7 @@ export function ProfileHero({
         <View>
           <Image
             source={avatarSource}
-            className="h-28 w-28 rounded-full"
+            className="h-20 w-20 rounded-full"
             resizeMode="cover"
           />
 
@@ -41,21 +41,27 @@ export function ProfileHero({
           </Pressable>
         </View>
 
-        <View className="ml-8 flex-1">
-          <AppText variant="serifTitle" className="text-textDark">
+        <View className="ml-5 flex-1">
+          <AppText
+            variant="serifTitle"
+            className="text-textDark"
+            numberOfLines={1}
+          >
             {fullName}
           </AppText>
 
-          <View className="mt-4 flex-row items-center">
+          <View className="mt-1 flex-row items-center">
             <Ionicons name="mail-outline" size={14} color={Colors.textLight} />
-            <AppText className="ml-3 text-textMuted">
+
+            <AppText className="ml-3 flex-1 text-textMuted" numberOfLines={1}>
               {email || "Mail bilgisi yok"}
             </AppText>
           </View>
 
-          <View className="mt-3 flex-row items-center">
+          <View className="mt-1 flex-row items-center">
             <Ionicons name="call-outline" size={14} color={Colors.textLight} />
-            <AppText className="ml-3 text-textMuted">
+
+            <AppText className="ml-3 flex-1 text-textMuted" numberOfLines={1}>
               {phone || "Telefon bilgisi yok"}
             </AppText>
           </View>

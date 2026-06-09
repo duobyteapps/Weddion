@@ -33,7 +33,7 @@ export function ProfileMenuSection({ title, items }: Props) {
 
   return (
     <AppCard>
-      <AppText variant="serifTitle" className="mb-3 text-textDark">
+      <AppText variant="serifTitle" className="mb-3">
         {title}
       </AppText>
 

@@ -46,7 +46,7 @@ export function AppButton({
     <Pressable
       disabled={isDisabled}
       className={`
-        h-12
+        ${className.includes("h-") ? "" : "h-12"}
         items-center
         justify-center
         rounded-xl

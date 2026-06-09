@@ -2,35 +2,34 @@
 import { AppText } from "@/components/ui/AppText";
 import { Colors } from "@/constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
-import { Image, Pressable, View } from "react-native";
+import { Image, View } from "react-native";
+import { AppButton } from "../ui/AppButton";
 import { AppCard } from "../ui/AppCard";
 
 export function PremiumCard() {
   return (
     <AppCard className="flex-row items-center">
-      <View className="h-20 w-20 items-center justify-center rounded-2xl bg-primary">
-        <Ionicons name="diamond-outline" size={38} color={Colors.white} />
+      <View className="h-14 w-14 items-center justify-center rounded-xl bg-primary">
+        <Ionicons name="diamond-outline" size={25} color={Colors.white} />
       </View>
 
-      <View className="ml-5 flex-1">
-        <AppText variant="subtitle" className="text-[17px] text-textDark">
+      <View className="ml-3 flex-1">
+        <AppText variant="subtitle" className="text-textDark">
           Premium’a Geç
         </AppText>
 
-        <AppText className="mt-1 text-[14px] text-textMuted">
+        <AppText variant="body" className="mt-1">
           Daha fazla özellikle etkinliğini bir üst seviyeye taşı!
         </AppText>
       </View>
 
-      <Pressable className="rounded-xl bg-primary px-7 py-3">
-        <AppText className="font-manropeSemiBold text-white">Keşfet</AppText>
-      </Pressable>
-
       <Image
-        source={require("../../../assets/images/backgrounds/floral-corner.png")}
-        className="absolute -right-5 -top-5 h-24 w-24 opacity-70"
+        source={require("@/assets/images/backgrounds/floral-corner.png")}
+        className="absolute -right-5 -top-8 h-24 w-24"
         resizeMode="contain"
       />
+
+      <AppButton title="Keşfet" className="rounded-xl h-11" />
     </AppCard>
   );
 }
