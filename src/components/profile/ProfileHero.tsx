@@ -42,20 +42,20 @@ export function ProfileHero({
         </View>
 
         <View className="ml-8 flex-1">
-          <AppText variant="serifTitle" className="text-[30px] text-textDark">
+          <AppText variant="serifTitle" className="text-textDark">
             {fullName}
           </AppText>
 
           <View className="mt-4 flex-row items-center">
-            <Ionicons name="mail-outline" size={21} color={Colors.textLight} />
-            <AppText className="ml-3 text-[15px] text-textMuted">
+            <Ionicons name="mail-outline" size={14} color={Colors.textLight} />
+            <AppText className="ml-3 text-textMuted">
               {email || "Mail bilgisi yok"}
             </AppText>
           </View>
 
           <View className="mt-3 flex-row items-center">
-            <Ionicons name="call-outline" size={21} color={Colors.textLight} />
-            <AppText className="ml-3 text-[15px] text-textMuted">
+            <Ionicons name="call-outline" size={14} color={Colors.textLight} />
+            <AppText className="ml-3 text-textMuted">
               {phone || "Telefon bilgisi yok"}
             </AppText>
           </View>

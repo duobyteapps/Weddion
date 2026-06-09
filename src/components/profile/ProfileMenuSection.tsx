@@ -33,10 +33,7 @@ export function ProfileMenuSection({ title, items }: Props) {
 
   return (
     <AppCard>
-      <AppText
-        variant="serifSubtitle"
-        className="mb-3 text-[24px] text-textDark"
-      >
+      <AppText variant="serifTitle" className="mb-3 text-textDark">
         {title}
       </AppText>
 
@@ -52,13 +49,13 @@ export function ProfileMenuSection({ title, items }: Props) {
                 isLast ? "pt-3 pb-0" : "py-3"
               }`}
             >
-              <View className="h-10 w-10 items-center justify-center rounded-xl bg-primarySoft">
-                <Ionicons name={item.icon} size={22} color={color} />
+              <View className="h-8 w-8 items-center justify-center rounded-xl bg-primarySoft">
+                <Ionicons name={item.icon} size={14} color={color} />
               </View>
 
               <AppText
                 variant="body"
-                className={`ml-4 flex-1 text-[15px] font-manropeSemiBold ${
+                className={`ml-4 flex-1 font-manropeSemiBold ${
                   item.danger ? "text-[#D24B5B]" : "text-textDark"
                 }`}
               >
@@ -67,12 +64,12 @@ export function ProfileMenuSection({ title, items }: Props) {
 
               <Ionicons
                 name="chevron-forward"
-                size={22}
+                size={14}
                 color={Colors.textLight}
               />
             </Pressable>
 
-            {!isLast && <AppDivider className="ml-14" />}
+            {!isLast && <AppDivider className="ml-12" />}
           </View>
         );
       })}

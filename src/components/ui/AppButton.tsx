@@ -46,10 +46,10 @@ export function AppButton({
     <Pressable
       disabled={isDisabled}
       className={`
-        h-[54px]
+        h-12
         items-center
         justify-center
-        rounded-2xl
+        rounded-xl
         border
         px-5
         ${buttonVariants[variant]}
@@ -64,7 +64,6 @@ export function AppButton({
         <Text
           className={`
             font-manropeSemiBold
-            text-[15px]
             ${textVariants[variant]}
           `}
         >
