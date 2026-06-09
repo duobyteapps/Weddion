@@ -1,31 +1,30 @@
+import { View } from "react-native";
+
+import { AppBackButton } from "@/components/ui/AppBackButton";
 import { AppText } from "@/components/ui/AppText";
-import { Colors } from "@/constants/Colors";
-import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
-import { Pressable, View } from "react-native";
 
-export function ChangePasswordHeader() {
+type Props = {
+  onBackPress: () => void;
+};
+
+export function ChangePasswordHeader({ onBackPress }: Props) {
   return (
-    <View className="mb-10 flex-row items-start">
-      <Pressable
-        onPress={() => router.back()}
-        className="mt-3 h-10 w-10 items-center justify-center"
+    <View className="relative items-center px-2">
+      <AppBackButton
+        onPress={onBackPress}
+        className="absolute left-0 top-0 z-10"
+      />
+
+      <AppText
+        variant="serifTitle"
+        className="text-center text-[38px] leading-[44px] text-primary"
       >
-        <Ionicons name="chevron-back" size={32} color={Colors.textLight} />
-      </Pressable>
+        Şifre Değiştir
+      </AppText>
 
-      <View className="flex-1 items-center pr-10">
-        <AppText
-          variant="title"
-          className="text-center text-[34px] text-textDark"
-        >
-          Şifre ve Güvenlik
-        </AppText>
-
-        <AppText variant="body" className="mt-1 text-center text-textMuted">
-          Hesap şifrenizi güncelleyin.
-        </AppText>
-      </View>
+      <AppText className="mt-2 text-center text-[15px] leading-6 text-textMuted">
+        Hesabınızın güvenliği için güçlü bir şifre belirleyin.
+      </AppText>
     </View>
   );
 }

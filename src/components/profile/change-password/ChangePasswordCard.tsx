@@ -1,60 +1,87 @@
-import { AppCard } from "@/components/ui/AppCard";
-import { AppPasswordInput } from "@/components/ui/AppPasswordInput";
-import { AppText } from "@/components/ui/AppText";
-import { Colors } from "@/constants/Colors";
-import { Ionicons } from "@expo/vector-icons";
 import { View } from "react-native";
 
+import { AppButton } from "@/components/ui/AppButton";
+import { AppCard } from "@/components/ui/AppCard";
+import { AppDivider } from "@/components/ui/AppDivider";
+import { AppPasswordInput } from "@/components/ui/AppPasswordInput";
+import { AppText } from "@/components/ui/AppText";
+import { PasswordCardIcon } from "./PasswordCardIcon";
+import { PasswordSuggestions } from "./PasswordSuggestions";
+
 type Props = {
-  password: string;
-  passwordAgain: string;
-  onChangePassword: (value: string) => void;
-  onChangePasswordAgain: (value: string) => void;
+  currentPassword: string;
+  newPassword: string;
+  repeatPassword: string;
+  loading?: boolean;
+  onChangeCurrentPassword: (value: string) => void;
+  onChangeNewPassword: (value: string) => void;
+  onChangeRepeatPassword: (value: string) => void;
+  onSubmit: () => void;
 };
 
 export function ChangePasswordCard({
-  password,
-  passwordAgain,
-  onChangePassword,
-  onChangePasswordAgain,
+  currentPassword,
+  newPassword,
+  repeatPassword,
+  loading = false,
+  onChangeCurrentPassword,
+  onChangeNewPassword,
+  onChangeRepeatPassword,
+  onSubmit,
 }: Props) {
   return (
-    <AppCard className="rounded-[26px] px-5 py-7">
-      <View className="mb-7 flex-row items-center gap-3">
-        <View className="h-12 w-12 items-center justify-center rounded-2xl bg-primarySoft">
-          <Ionicons
-            name="lock-closed-outline"
-            size={24}
-            color={Colors.primary}
-          />
-        </View>
+    <AppCard className="rounded-[28px] border border-borderSoft bg-surface px-5 py-6">
+      <View className="flex-row items-center gap-4">
+        <PasswordCardIcon />
 
-        <View>
-          <AppText variant="title" className="text-[34px] text-textDark">
-            Şifre Değiştir
+        <View className="flex-1">
+          <AppText
+            variant="serifTitle"
+            className="text-[27px] leading-8 text-textDark"
+          >
+            Yeni şifrenizi oluşturun
           </AppText>
 
-          <AppText variant="caption" className="mt-1 text-textMuted">
-            Yeni şifrenizi belirleyin.
+          <AppText className="mt-1 text-[14px] leading-6 text-textMuted">
+            Şifreniz en az 8 karakter olmalı ve harf, rakam ve özel karakter
+            içermelidir.
           </AppText>
         </View>
       </View>
 
-      <View className="gap-5">
-        <AppPasswordInput
-          label="Yeni Şifre"
-          value={password}
-          onChangeText={onChangePassword}
-          placeholder="Yeni şifrenizi yazın"
-        />
+      <AppDivider className="my-6 bg-borderSoft" />
 
-        <AppPasswordInput
-          label="Yeni Şifre Tekrar"
-          value={passwordAgain}
-          onChangeText={onChangePasswordAgain}
-          placeholder="Yeni şifrenizi tekrar yazın"
-        />
-      </View>
+      <AppPasswordInput
+        label="Mevcut Şifre"
+        placeholder="Mevcut şifrenizi girin"
+        value={currentPassword}
+        onChangeText={onChangeCurrentPassword}
+      />
+
+      <AppPasswordInput
+        label="Yeni Şifre"
+        placeholder="Yeni şifrenizi girin"
+        value={newPassword}
+        onChangeText={onChangeNewPassword}
+        className="mt-4"
+      />
+
+      <AppPasswordInput
+        label="Yeni Şifre (Tekrar)"
+        placeholder="Yeni şifrenizi tekrar girin"
+        value={repeatPassword}
+        onChangeText={onChangeRepeatPassword}
+        className="mt-4"
+      />
+
+      <PasswordSuggestions />
+
+      <AppButton
+        title={loading ? "Güncelleniyor..." : "Şifremi Güncelle"}
+        loading={loading}
+        onPress={onSubmit}
+        className="mt-7"
+      />
     </AppCard>
   );
 }

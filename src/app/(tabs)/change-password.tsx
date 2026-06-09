@@ -1,85 +1,136 @@
-import { ChangePasswordCard } from "@/components/profile/change-password/ChangePasswordCard";
-import { ChangePasswordHeader } from "@/components/profile/change-password/ChangePasswordHeader";
-import { useAppAlert } from "@/components/ui/AppAlert";
-import { AppButton } from "@/components/ui/AppButton";
-import { ScreenContainer } from "@/components/ui/ScreenContainer";
-import { changePassword } from "@/services/authService";
 import { router } from "expo-router";
 import { useState } from "react";
-import { ScrollView } from "react-native";
+import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
+
+import { ChangePasswordCard } from "@/components/profile/change-password/ChangePasswordCard";
+import { ChangePasswordHeader } from "@/components/profile/change-password/ChangePasswordHeader";
+import { ChangePasswordHero } from "@/components/profile/change-password/ChangePasswordHero";
+import { SecurityInfoCard } from "@/components/profile/change-password/SecurityInfoCard";
+import { useAppAlert } from "@/components/ui/AppAlert";
+import { ScreenContainer } from "@/components/ui/ScreenContainer";
+import { supabase } from "@/lib/supabase";
 
 export default function ChangePasswordScreen() {
   const { showAlert } = useAppAlert();
 
-  const [password, setPassword] = useState("");
-  const [passwordAgain, setPasswordAgain] = useState("");
-  const [saving, setSaving] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [repeatPassword, setRepeatPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  async function handleSave() {
-    if (password.length < 6) {
+  const handleSubmit = async () => {
+    if (!currentPassword || !newPassword || !repeatPassword) {
       showAlert({
-        title: "Şifre Hatası",
-        message: "Şifre en az 6 karakter olmalı.",
         type: "warning",
+        title: "Eksik Bilgi",
+        message: "Lütfen tüm şifre alanlarını doldurun.",
       });
       return;
     }
 
-    if (password !== passwordAgain) {
+    if (newPassword.length < 8) {
       showAlert({
-        title: "Şifreler Eşleşmiyor",
-        message: "Lütfen iki alana da aynı şifreyi girin.",
         type: "warning",
+        title: "Şifre Çok Kısa",
+        message: "Yeni şifreniz en az 8 karakter olmalıdır.",
       });
       return;
     }
 
-    try {
-      setSaving(true);
-
-      await changePassword(password);
-
+    if (newPassword !== repeatPassword) {
       showAlert({
-        title: "Şifre Güncellendi",
-        message: "Şifreniz başarıyla güncellendi.",
-        type: "success",
-        confirmText: "Tamam",
-        onConfirm: () => router.back(),
-      });
-    } catch (error) {
-      showAlert({
-        title: "Şifre Güncellenemedi",
-        message:
-          error instanceof Error ? error.message : "Şifre güncellenemedi.",
         type: "error",
+        title: "Şifreler Eşleşmiyor",
+        message: "Yeni şifre ve tekrar şifre alanları aynı olmalıdır.",
       });
-    } finally {
-      setSaving(false);
+      return;
     }
-  }
+
+    setLoading(true);
+
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user?.email) {
+      setLoading(false);
+      showAlert({
+        type: "error",
+        title: "Kullanıcı Bulunamadı",
+        message: "Oturum bilgilerinize ulaşılamadı. Lütfen tekrar giriş yapın.",
+      });
+      return;
+    }
+
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: user.email,
+      password: currentPassword,
+    });
+
+    if (signInError) {
+      setLoading(false);
+      showAlert({
+        type: "error",
+        title: "Mevcut Şifre Hatalı",
+        message: "Girdiğiniz mevcut şifre doğru değil.",
+      });
+      return;
+    }
+
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword,
+    });
+
+    setLoading(false);
+
+    if (error) {
+      showAlert({
+        type: "error",
+        title: "Şifre Güncellenemedi",
+        message: "Şifreniz güncellenirken bir hata oluştu.",
+      });
+      return;
+    }
+
+    showAlert({
+      type: "success",
+      title: "Şifre Güncellendi",
+      message: "Şifreniz başarıyla güncellendi.",
+      onConfirm: () => router.back(),
+    });
+  };
 
   return (
     <ScreenContainer className="flex-1 bg-background">
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerClassName="pb-32"
+      <KeyboardAvoidingView
+        className="flex-1"
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        <ChangePasswordHeader />
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerClassName="pb-32"
+        >
+          <ChangePasswordHeader onBackPress={() => router.back()} />
 
-        <ChangePasswordCard
-          password={password}
-          passwordAgain={passwordAgain}
-          onChangePassword={setPassword}
-          onChangePasswordAgain={setPasswordAgain}
-        />
+          <ChangePasswordHero />
 
-        <AppButton
-          title="Şifreyi Güncelle"
-          loading={saving}
-          onPress={handleSave}
-          className="mt-16"
-        />
-      </ScrollView>
+          <View className="-mt-2">
+            <ChangePasswordCard
+              currentPassword={currentPassword}
+              newPassword={newPassword}
+              repeatPassword={repeatPassword}
+              loading={loading}
+              onChangeCurrentPassword={setCurrentPassword}
+              onChangeNewPassword={setNewPassword}
+              onChangeRepeatPassword={setRepeatPassword}
+              onSubmit={handleSubmit}
+            />
+          </View>
+
+          <SecurityInfoCard />
+        </ScrollView>
+      </KeyboardAvoidingView>
     </ScreenContainer>
   );
 }
