@@ -5,7 +5,7 @@ import { AppText } from "@/components/ui/AppText";
 
 export function PromoCard() {
   return (
-    <AppCard className="mb-24 mt-5 flex-row items-center overflow-hidden border-0 !bg-primarySoft px-5 py-5">
+    <AppCard className="mt-5 flex-row items-center overflow-hidden border-0 !bg-primarySoft px-5 py-5">
       <View className="z-10 flex-1 pr-2">
         <AppText variant="subtitle" className="text-[18px] leading-7 text-text">
           Premium davetiyelerle fark yaratın ✨

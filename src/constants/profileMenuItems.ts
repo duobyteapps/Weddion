@@ -24,7 +24,11 @@ export const accountMenuItems: ProfileMenuItem[] = [
     icon: "notifications-outline",
     route: "/(tabs)/notification-settings",
   },
-  { label: "Gizlilik ve KVKK", icon: "shield-checkmark-outline" },
+  {
+    label: "Gizlilik ve KVKK",
+    icon: "shield-checkmark-outline",
+    route: "/(tabs)/privacy-kvkk",
+  },
 ];
 
 export const otherMenuItems: ProfileMenuItem[] = [
