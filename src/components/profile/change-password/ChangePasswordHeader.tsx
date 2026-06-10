@@ -1,30 +1,24 @@
-import { View } from "react-native";
-
 import { AppBackButton } from "@/components/ui/AppBackButton";
 import { AppText } from "@/components/ui/AppText";
+import { router } from "expo-router";
+import { View } from "react-native";
 
-type Props = {
-  onBackPress: () => void;
-};
-
-export function ChangePasswordHeader({ onBackPress }: Props) {
+export function ChangePasswordHeader() {
   return (
-    <View className="relative items-center px-2">
+    <View className="relative justify-center">
       <AppBackButton
-        onPress={onBackPress}
-        className="absolute left-0 top-0 z-10"
+        onPress={() => router.replace("/(tabs)/profile")}
+        className="absolute left-0 z-10"
       />
+      <View className="items-center">
+        <AppText variant="serifTitle" className="">
+          Şifre Değiştir
+        </AppText>
 
-      <AppText
-        variant="serifTitle"
-        className="text-center text-[38px] leading-[44px] text-primary"
-      >
-        Şifre Değiştir
-      </AppText>
-
-      <AppText className="mt-2 text-center text-[15px] leading-6 text-textMuted">
-        Hesabınızın güvenliği için güçlü bir şifre belirleyin.
-      </AppText>
+        <AppText variant="body">
+          Hesabınızın güvenliği için güçlü bir şifre belirleyin.
+        </AppText>
+      </View>
     </View>
   );
 }

@@ -1,11 +1,8 @@
-import { View } from "react-native";
-
+import { SectionInfoHeader } from "@/components/common/SectionInfoHeader";
 import { AppButton } from "@/components/ui/AppButton";
 import { AppCard } from "@/components/ui/AppCard";
 import { AppDivider } from "@/components/ui/AppDivider";
 import { AppPasswordInput } from "@/components/ui/AppPasswordInput";
-import { AppText } from "@/components/ui/AppText";
-import { PasswordCardIcon } from "./PasswordCardIcon";
 import { PasswordSuggestions } from "./PasswordSuggestions";
 
 type Props = {
@@ -30,24 +27,12 @@ export function ChangePasswordCard({
   onSubmit,
 }: Props) {
   return (
-    <AppCard className="rounded-[28px] border border-borderSoft bg-surface px-5 py-6">
-      <View className="flex-row items-center gap-4">
-        <PasswordCardIcon />
-
-        <View className="flex-1">
-          <AppText
-            variant="serifTitle"
-            className="text-[27px] leading-8 text-textDark"
-          >
-            Yeni şifrenizi oluşturun
-          </AppText>
-
-          <AppText className="mt-1 text-[14px] leading-6 text-textMuted">
-            Şifreniz en az 8 karakter olmalı ve harf, rakam ve özel karakter
-            içermelidir.
-          </AppText>
-        </View>
-      </View>
+    <AppCard>
+      <SectionInfoHeader
+        iconName="lock-closed-outline"
+        title="Yeni şifrenizi oluşturun"
+        description="Şifreniz en az 8 karakter olmalı ve harf, rakam ve özel karakter içermelidir."
+      />
 
       <AppDivider className="my-6 bg-borderSoft" />
 

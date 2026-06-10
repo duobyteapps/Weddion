@@ -20,16 +20,14 @@ export function AppPasswordInput({
   error,
   className = "",
   inputClassName = "",
-  placeholderTextColor = Colors.textLight,
+  placeholderTextColor = "#817A90",
   size = "default",
   ...props
 }: AppPasswordInputProps) {
   const [visible, setVisible] = useState(false);
 
   const inputSizeClass =
-    size === "compact"
-      ? "h-[46px] rounded-[14px] text-[14px]"
-      : "h-[52px] rounded-2xl text-[15px]";
+    size === "compact" ? "h-12 rounded-xl" : "h-12 rounded-xl";
 
   return (
     <View className={`gap-1.5 ${className}`}>

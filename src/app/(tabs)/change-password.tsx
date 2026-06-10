@@ -1,10 +1,15 @@
 import { router } from "expo-router";
 import { useState } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
+import {
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  View,
+} from "react-native";
 
 import { ChangePasswordCard } from "@/components/profile/change-password/ChangePasswordCard";
 import { ChangePasswordHeader } from "@/components/profile/change-password/ChangePasswordHeader";
-import { ChangePasswordHero } from "@/components/profile/change-password/ChangePasswordHero";
 import { SecurityInfoCard } from "@/components/profile/change-password/SecurityInfoCard";
 import { useAppAlert } from "@/components/ui/AppAlert";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
@@ -111,9 +116,15 @@ export default function ChangePasswordScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerClassName="pb-32"
         >
-          <ChangePasswordHeader onBackPress={() => router.back()} />
+          <ChangePasswordHeader />
 
-          <ChangePasswordHero />
+          <View className="items-center mt-3">
+            <Image
+              source={require("@/assets/images/backgrounds/privacy-shield-purple.png")}
+              className="w-72 h-40"
+              resizeMode="contain"
+            />
+          </View>
 
           <View className="-mt-2">
             <ChangePasswordCard
