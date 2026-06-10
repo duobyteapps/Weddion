@@ -25,7 +25,7 @@ function TextArea() {
 function ButtonArea() {
   return (
     <Pressable
-      onPress={() => router.push("/(tabs)/privacy-kvkk")}
+      onPress={() => router.push("/(tabs)/privacy-disclosure")}
       className="ml-3 flex-row items-center rounded-xl bg-backgroundSoft px-2 py-2"
     >
       <AppText
