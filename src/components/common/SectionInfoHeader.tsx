@@ -14,7 +14,7 @@ export function SectionInfoHeader({ iconName, title, description }: Props) {
   return (
     <View className="flex-row items-center gap-4">
       <View className="h-14 w-14 items-center justify-center rounded-xl bg-accentLight">
-        <Ionicons name={iconName} size={24} color={Colors.accent} />
+        <Ionicons name={iconName} size={24} color={Colors.primary} />
       </View>
 
       <View className="flex-1">

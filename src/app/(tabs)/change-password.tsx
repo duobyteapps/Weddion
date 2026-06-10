@@ -1,4 +1,3 @@
-import { router } from "expo-router";
 import { useState } from "react";
 import {
   Image,
@@ -98,11 +97,14 @@ export default function ChangePasswordScreen() {
       return;
     }
 
+    setCurrentPassword("");
+    setNewPassword("");
+    setRepeatPassword("");
+
     showAlert({
       type: "success",
       title: "Şifre Güncellendi",
       message: "Şifreniz başarıyla güncellendi.",
-      onConfirm: () => router.back(),
     });
   };
 

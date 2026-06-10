@@ -29,7 +29,7 @@ export function AppText({
     body: "font-manrope text-[12px] leading-[18px] text-textMuted",
     caption: "font-manropeMedium text-[11px] leading-[16px] text-textLight",
     captionStrong:
-      "font-manropeExtraBold text-[11px] leading-[16px] text-primaryDark",
+      "font-manropeExtraBold text-[14px] leading-[16px] text-primaryDark",
     link: "font-manropeSemiBold text-[12px] leading-[18px] text-primary",
     serifTitle: "font-cormorantBold text-[24px] leading-[24px] text-text",
     serifSubtitle: "font-cormorantBold text-[18px] leading-[19px] text-text",

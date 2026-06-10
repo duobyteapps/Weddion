@@ -27,46 +27,47 @@ export function ChangePasswordCard({
   onSubmit,
 }: Props) {
   return (
-    <AppCard>
-      <SectionInfoHeader
-        iconName="lock-closed-outline"
-        title="Yeni şifrenizi oluşturun"
-        description="Şifreniz en az 8 karakter olmalı ve harf, rakam ve özel karakter içermelidir."
-      />
+    <>
+      <AppCard>
+        <SectionInfoHeader
+          iconName="lock-closed-outline"
+          title="Yeni şifrenizi oluşturun"
+          description="Şifreniz en az 8 karakter olmalı ve harf, rakam ve özel karakter içermelidir."
+        />
 
-      <AppDivider className="my-6 bg-borderSoft" />
+        <AppDivider className="my-6" />
 
-      <AppPasswordInput
-        label="Mevcut Şifre"
-        placeholder="Mevcut şifrenizi girin"
-        value={currentPassword}
-        onChangeText={onChangeCurrentPassword}
-      />
+        <AppPasswordInput
+          label="Mevcut Şifre"
+          placeholder="Mevcut şifrenizi girin"
+          value={currentPassword}
+          onChangeText={onChangeCurrentPassword}
+        />
 
-      <AppPasswordInput
-        label="Yeni Şifre"
-        placeholder="Yeni şifrenizi girin"
-        value={newPassword}
-        onChangeText={onChangeNewPassword}
-        className="mt-4"
-      />
+        <AppPasswordInput
+          label="Yeni Şifre"
+          placeholder="Yeni şifrenizi girin"
+          value={newPassword}
+          onChangeText={onChangeNewPassword}
+          className="mt-4"
+        />
 
-      <AppPasswordInput
-        label="Yeni Şifre (Tekrar)"
-        placeholder="Yeni şifrenizi tekrar girin"
-        value={repeatPassword}
-        onChangeText={onChangeRepeatPassword}
-        className="mt-4"
-      />
+        <AppPasswordInput
+          label="Yeni Şifre (Tekrar)"
+          placeholder="Yeni şifrenizi tekrar girin"
+          value={repeatPassword}
+          onChangeText={onChangeRepeatPassword}
+          className="mt-4"
+        />
 
-      <PasswordSuggestions />
+        <PasswordSuggestions />
+      </AppCard>
 
       <AppButton
         title={loading ? "Güncelleniyor..." : "Şifremi Güncelle"}
         loading={loading}
         onPress={onSubmit}
-        className="mt-7"
       />
-    </AppCard>
+    </>
   );
 }

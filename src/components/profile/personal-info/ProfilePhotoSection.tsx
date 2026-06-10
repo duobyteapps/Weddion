@@ -35,18 +35,18 @@ export function ProfilePhotoSection({ avatarUrl }: Props) {
         </View>
 
         <View className="ml-5 flex-1">
-          <AppText variant="serifSubtitle" numberOfLines={1} className="mb-1">
+          <AppText variant="serifSubtitle" numberOfLines={1}>
             Profil Fotoğrafı
           </AppText>
 
-          <AppText variant="caption" numberOfLines={1}>
+          <AppText variant="caption" numberOfLines={1} className="mt-1 mb-1">
             JPG, PNG veya WEBP. Maksimum 5MB.
           </AppText>
 
           <AppButton
             title="Fotoğrafı Değiştir"
-            variant="ghost"
-            className="mt-1 border-primary/50 font-manropeSemiBold text-[13px]"
+            variant="secondary"
+            className="h-12 px-6"
             onPress={() => {}}
           />
         </View>

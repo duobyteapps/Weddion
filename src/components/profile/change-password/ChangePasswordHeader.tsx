@@ -1,7 +1,8 @@
-import { AppBackButton } from "@/components/ui/AppBackButton";
-import { AppText } from "@/components/ui/AppText";
 import { router } from "expo-router";
 import { View } from "react-native";
+
+import { AppBackButton } from "@/components/ui/AppBackButton";
+import { AppText } from "@/components/ui/AppText";
 
 export function ChangePasswordHeader() {
   return (

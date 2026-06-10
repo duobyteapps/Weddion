@@ -1,4 +1,3 @@
-import { AccountPreferencesCard } from "@/components/profile/personal-info/AccountPreferencesCard";
 import { PersonalInfoCard } from "@/components/profile/personal-info/PersonalInfoCard";
 import { PersonalInfoHeader } from "@/components/profile/personal-info/PersonalInfoHeader";
 import { ProfilePhotoSection } from "@/components/profile/personal-info/ProfilePhotoSection";
@@ -123,15 +122,6 @@ export default function PersonalInfoScreen() {
             onChangeLastName={setLastName}
             onChangePhone={setPhone}
             onChangeBirthDate={setBirthDate}
-          />
-        </View>
-
-        <View className="mt-6">
-          <AccountPreferencesCard
-            emailNotifications={emailNotifications}
-            smsNotifications={smsNotifications}
-            onChangeEmailNotifications={setEmailNotifications}
-            onChangeSmsNotifications={setSmsNotifications}
           />
         </View>
 

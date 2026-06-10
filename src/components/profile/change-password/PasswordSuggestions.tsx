@@ -23,9 +23,7 @@ export function PasswordSuggestions() {
       </View>
 
       <View className="flex-1">
-        <AppText variant="captionStrong" className="text-[14px]">
-          Güçlü şifre için öneriler
-        </AppText>
+        <AppText variant="captionStrong">Güçlü şifre için öneriler</AppText>
 
         <View className="mt-2 gap-2">
           {suggestions.map((item) => (
