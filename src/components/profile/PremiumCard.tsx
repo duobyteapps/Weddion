@@ -25,7 +25,7 @@ export function PremiumCard() {
 
       <Image
         source={require("@/assets/images/backgrounds/floral-corner.png")}
-        className="absolute -right-5 -top-8 h-24 w-24"
+        className="absolute -right-5 -top-5 h-24 w-24"
         resizeMode="contain"
       />
 

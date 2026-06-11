@@ -31,7 +31,7 @@ export function AppText({
     captionStrong:
       "font-manropeExtraBold text-[14px] leading-[16px] text-primaryDark",
     link: "font-manropeSemiBold text-[12px] leading-[18px] text-primary",
-    serifTitle: "font-cormorantBold text-[24px] leading-[28px] text-text",
+    serifTitle: "font-cormorantBold text-[24px] leading-[18px] text-text",
     serifSubtitle: "font-cormorantBold text-[18px] leading-[24px] text-text",
   };
 

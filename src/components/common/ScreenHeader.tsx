@@ -23,7 +23,14 @@ export function ScreenHeader({
       />
 
       <View className="items-center px-10">
-        <AppText variant="serifTitle">{title}</AppText>
+        <AppText
+          variant="serifTitle"
+          className="text-center"
+          numberOfLines={1}
+          adjustsFontSizeToFit
+        >
+          {title}
+        </AppText>
 
         {description ? (
           <AppText variant="body" className="mt-1 text-center">
