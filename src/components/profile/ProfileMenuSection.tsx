@@ -2,15 +2,16 @@ import { AppText } from "@/components/ui/AppText";
 import { Colors } from "@/constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
 import { Href, router } from "expo-router";
-import { Pressable, View } from "react-native";
+import { Linking, Pressable, View } from "react-native";
 import { AppCard } from "../ui/AppCard";
 import { AppDivider } from "../ui/AppDivider";
 
 type MenuItem = {
   label: string;
   icon: keyof typeof Ionicons.glyphMap;
-  route?: Href;
   danger?: boolean;
+  route?: Href;
+  url?: string;
   onPress?: () => void;
 };
 
@@ -21,6 +22,15 @@ type Props = {
 
 export function ProfileMenuSection({ title, items }: Props) {
   function handlePress(item: MenuItem) {
+    if (item.url) {
+      Linking.openURL(item.url).catch(() => {
+        Linking.openURL(
+          "https://play.google.com/store/apps/details?id=com.duobyteapps.weddion",
+        );
+      });
+      return;
+    }
+
     if (item.onPress) {
       item.onPress();
       return;

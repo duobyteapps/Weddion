@@ -1,5 +1,6 @@
-import { useRouter } from "expo-router";
-import { Image, View } from "react-native";
+import { useAuth } from "@/context/AuthContext";
+import { Redirect, useRouter } from "expo-router";
+import { ActivityIndicator, Image, View } from "react-native";
 
 import { AppButton } from "@/components/ui/AppButton";
 import { AppCard } from "@/components/ui/AppCard";
@@ -9,6 +10,21 @@ import { ScreenContainer } from "@/components/ui/ScreenContainer";
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { loading, isAuthenticated } = useAuth();
+
+  if (loading) {
+    return (
+      <ScreenContainer className="bg-background">
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator />
+        </View>
+      </ScreenContainer>
+    );
+  }
+
+  if (isAuthenticated) {
+    return <Redirect href="/(tabs)/home" />;
+  }
 
   return (
     <ScreenContainer className="bg-background">

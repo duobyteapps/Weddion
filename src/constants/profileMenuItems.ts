@@ -5,6 +5,7 @@ export type ProfileMenuItem = {
   label: string;
   icon: keyof typeof Ionicons.glyphMap;
   route?: Href;
+  url?: string;
   danger?: boolean;
 };
 
@@ -32,13 +33,24 @@ export const accountMenuItems: ProfileMenuItem[] = [
 ];
 
 export const otherMenuItems: ProfileMenuItem[] = [
-  { label: "Yardım ve Destek", icon: "help-circle-outline" },
-  { label: "Bize Ulaşın", icon: "chatbox-ellipses-outline" },
-  { label: "Uygulamayı Değerlendir", icon: "star-outline" },
+  {
+    label: "Yardım ve Destek",
+    icon: "help-circle-outline",
+    route: "/(tabs)/support",
+  },
+  {
+    label: "Uygulamayı Değerlendir",
+    icon: "star-outline",
+    url: "market://details?id=com.duobyteapps.weddion",
+  },
   {
     label: "Profilimi ve Bilgilerimi Sil",
     icon: "trash-outline",
     danger: true,
   },
-  { label: "Çıkış Yap", icon: "log-out-outline", danger: true },
+  {
+    label: "Çıkış Yap",
+    icon: "log-out-outline",
+    danger: true,
+  },
 ];

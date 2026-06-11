@@ -1,7 +1,7 @@
 import { ScreenHeader } from "@/components/common/ScreenHeader";
-import { PrivacyDisclosureContent } from "@/components/privacy/PrivacyDisclosureContent";
-import { PrivacyDisclosureFooter } from "@/components/privacy/PrivacyDisclosureFooter";
-import { PrivacyDisclosureHero } from "@/components/privacy/PrivacyDisclosureHero";
+import { PrivacyDisclosureContent } from "@/components/privacy/privacy-dislosure/PrivacyDisclosureContent";
+import { PrivacyDisclosureFooter } from "@/components/privacy/privacy-dislosure/PrivacyDisclosureFooter";
+import { PrivacyDisclosureHero } from "@/components/privacy/privacy-dislosure/PrivacyDisclosureHero";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { ScrollView } from "react-native";
 

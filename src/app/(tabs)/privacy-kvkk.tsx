@@ -1,9 +1,9 @@
 // src/app/(tabs)/privacy-kvkk.tsx
 
 import { ScreenHeader } from "@/components/common/ScreenHeader";
-import { PrivacyKvkkContent } from "@/components/profile/privacy-kvkk/PrivacyKvkkContent";
-import { PrivacyKvkkFooter } from "@/components/profile/privacy-kvkk/PrivacyKvkkFooter";
-import { PrivacyKvkkHero } from "@/components/profile/privacy-kvkk/PrivacyKvkkHero";
+import { PrivacyKvkkContent } from "@/components/privacy/privacy-kvkk/PrivacyKvkkContent";
+import { PrivacyKvkkFooter } from "@/components/privacy/privacy-kvkk/PrivacyKvkkFooter";
+import { PrivacyKvkkHero } from "@/components/privacy/privacy-kvkk/PrivacyKvkkHero";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { ScrollView } from "react-native";
 
