@@ -37,15 +37,14 @@ function mapInvitationTemplateRow(
   };
 }
 
-const INVITATION_TEMPLATE_SELECT =
-  "id, title, category, category_title, image_url, content_image_url, editable_image_url";
-
 export async function getInvitationTemplates(): Promise<
   InvitationTemplateDto[]
 > {
   const { data, error } = await supabase
     .from("invitation_templates")
-    .select(INVITATION_TEMPLATE_SELECT)
+    .select(
+      "id, title, category, category_title, image_url, content_image_url, editable_image_url",
+    )
     .eq("is_active", true)
     .order("sort_order", { ascending: true });
 
@@ -63,7 +62,9 @@ export async function getInvitationTemplateById(
 ): Promise<InvitationTemplateDto | null> {
   const { data, error } = await supabase
     .from("invitation_templates")
-    .select(INVITATION_TEMPLATE_SELECT)
+    .select(
+      "id, title, category, category_title, image_url, content_image_url, editable_image_url",
+    )
     .eq("id", templateId)
     .eq("is_active", true)
     .maybeSingle();

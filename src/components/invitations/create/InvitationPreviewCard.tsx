@@ -22,70 +22,99 @@ export function InvitationPreviewCard({
   venueName,
   venueLocation,
 }: Props) {
-  const [firstName = "Nisa", secondName = "Onur"] = names
+  const nameParts = names
     .split("&")
-    .map((item) => item.trim());
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+  const firstName = nameParts[0] ?? "";
+  const secondName = nameParts[1] ?? "";
+
+  const hasFirstName = firstName.length > 0;
+  const hasSecondName = secondName.length > 0;
+  const hasNames = hasFirstName || hasSecondName;
+
+  const hasDate = date.trim().length > 0;
+  const hasTime = time.trim().length > 0;
+  const hasDescription = description.trim().length > 0;
+  const hasVenueName = venueName.trim().length > 0;
+  const hasVenueLocation = venueLocation.trim().length > 0;
 
   const content = (
     <View className="min-h-[520px] items-center justify-center px-5 py-8">
-      <AppText
-        variant="captionStrong"
-        className="text-center tracking-[2px] text-textLight"
-      >
-        DAVETLİSİNİZ
-      </AppText>
+      {hasNames ? (
+        <>
+          {hasFirstName ? (
+            <AppText
+              variant="serifTitle"
+              className="mt-8 text-center text-[52px] leading-[58px] text-textDark"
+            >
+              {firstName}
+            </AppText>
+          ) : null}
 
-      <AppText
-        variant="serifTitle"
-        className="mt-8 text-center text-[52px] leading-[58px] text-textDark"
-      >
-        {firstName}
-      </AppText>
+          {hasFirstName && hasSecondName ? (
+            <AppText
+              variant="serifTitle"
+              className="mt-2 text-center text-[38px] leading-[42px] text-primaryDark"
+            >
+              &
+            </AppText>
+          ) : null}
 
-      <AppText
-        variant="serifTitle"
-        className="mt-2 text-center text-[38px] leading-[42px] text-primaryDark"
-      >
-        &
-      </AppText>
+          {hasSecondName ? (
+            <AppText
+              variant="serifTitle"
+              className="mt-2 text-center text-[52px] leading-[58px] text-textDark"
+            >
+              {secondName}
+            </AppText>
+          ) : null}
+        </>
+      ) : null}
 
-      <AppText
-        variant="serifTitle"
-        className="mt-2 text-center text-[52px] leading-[58px] text-textDark"
-      >
-        {secondName}
-      </AppText>
+      {hasDate ? (
+        <AppText
+          variant="subtitle"
+          className="mt-9 text-center text-[17px] text-primaryDark"
+        >
+          {date}
+        </AppText>
+      ) : null}
 
-      <AppText
-        variant="subtitle"
-        className="mt-9 text-center text-[17px] text-primaryDark"
-      >
-        {date}
-      </AppText>
+      {hasTime ? (
+        <AppText
+          variant="captionStrong"
+          className="mt-2 text-center text-textDark"
+        >
+          {time}
+        </AppText>
+      ) : null}
 
-      <AppText
-        variant="captionStrong"
-        className="mt-2 text-center text-textDark"
-      >
-        {time}
-      </AppText>
+      {hasDescription ? (
+        <>
+          <View className="my-7 h-[1px] w-28 bg-border" />
 
-      <View className="my-7 h-[1px] w-28 bg-border" />
+          <AppText variant="body" className="text-center text-textDark">
+            {description}
+          </AppText>
+        </>
+      ) : null}
 
-      <AppText variant="body" className="text-center text-textDark">
-        {description}
-      </AppText>
+      {hasVenueName ? (
+        <AppText
+          variant="captionStrong"
+          className="mt-9 text-center text-primaryDark"
+        >
+          {venueName}
+        </AppText>
+      ) : null}
 
-      <AppText
-        variant="captionStrong"
-        className="mt-9 text-center text-primaryDark"
-      >
-        {venueName}
-      </AppText>
-
-      <AppText variant="caption" className="mt-1 text-center text-textDark">
-        {venueLocation}
-      </AppText>
+      {hasVenueLocation ? (
+        <AppText variant="caption" className="mt-1 text-center text-textDark">
+          {venueLocation}
+        </AppText>
+      ) : null}
     </View>
   );
 

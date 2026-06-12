@@ -27,14 +27,12 @@ export default function InvitationFlowEditScreen() {
   const [template, setTemplate] = useState<InvitationTemplateDto | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const [names, setNames] = useState("Nisa & Onur");
-  const [date, setDate] = useState("22 AĞUSTOS 2026");
-  const [time, setTime] = useState("CUMARTESİ | 19.00");
-  const [description, setDescription] = useState(
-    "Bu özel günümüzde\nsizleri de aramızda görmekten\nmutluluk duyarız.",
-  );
-  const [venueName, setVenueName] = useState("FOUR SEASONS HOTEL");
-  const [venueLocation, setVenueLocation] = useState("Beşiktaş, İstanbul");
+  const [names, setNames] = useState("");
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
+  const [description, setDescription] = useState("");
+  const [venueName, setVenueName] = useState("");
+  const [venueLocation, setVenueLocation] = useState("");
 
   useEffect(() => {
     fetchTemplate();
@@ -76,7 +74,7 @@ export default function InvitationFlowEditScreen() {
         description,
         venueName,
         venueLocation,
-        editableImageUrl: template.editableImageUrl ?? "",
+        editableImageUrl: template.editableImageUrl || template.imageUrl,
       },
     });
   }
@@ -111,6 +109,9 @@ export default function InvitationFlowEditScreen() {
     );
   }
 
+  const editablePreviewImageUrl =
+    template.editableImageUrl || template.imageUrl;
+
   return (
     <ScreenContainer className="flex-1 bg-background">
       <ScrollView
@@ -126,7 +127,7 @@ export default function InvitationFlowEditScreen() {
 
         <View className="mt-5">
           <InvitationPreviewCard
-            imageUrl={template.editableImageUrl ?? template.imageUrl}
+            imageUrl={editablePreviewImageUrl}
             names={names}
             date={date}
             time={time}
