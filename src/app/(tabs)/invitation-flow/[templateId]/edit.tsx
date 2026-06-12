@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, ScrollView, View } from "react-native";
 
 import { ScreenHeader } from "@/components/common/ScreenHeader";
@@ -14,7 +14,15 @@ import {
 } from "@/services/invitationTemplateService";
 
 export default function InvitationFlowEditScreen() {
-  const { templateId } = useLocalSearchParams<{ templateId: string }>();
+  const params = useLocalSearchParams<{ templateId?: string | string[] }>();
+
+  const templateId = useMemo(() => {
+    if (Array.isArray(params.templateId)) {
+      return params.templateId[0];
+    }
+
+    return params.templateId;
+  }, [params.templateId]);
 
   const [template, setTemplate] = useState<InvitationTemplateDto | null>(null);
   const [loading, setLoading] = useState(true);
@@ -29,21 +37,25 @@ export default function InvitationFlowEditScreen() {
   const [venueLocation, setVenueLocation] = useState("Beşiktaş, İstanbul");
 
   useEffect(() => {
-    if (!templateId) {
-      return;
-    }
-
     fetchTemplate();
   }, [templateId]);
 
   async function fetchTemplate() {
+    if (!templateId) {
+      setTemplate(null);
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
 
       const data = await getInvitationTemplateById(templateId);
+
       setTemplate(data);
     } catch (error) {
       console.log("Davetiye şablonu alınamadı:", error);
+      setTemplate(null);
     } finally {
       setLoading(false);
     }
@@ -64,6 +76,7 @@ export default function InvitationFlowEditScreen() {
         description,
         venueName,
         venueLocation,
+        editableImageUrl: template.editableImageUrl ?? "",
       },
     });
   }
@@ -71,7 +84,7 @@ export default function InvitationFlowEditScreen() {
   if (loading) {
     return (
       <ScreenContainer className="flex-1 bg-background">
-        <View className="flex-1 items-center justify-center">
+        <View className="flex-1 items-center justify-center px-6">
           <ActivityIndicator color="#7C3AED" />
 
           <AppText variant="caption" className="mt-3 text-textMuted">
@@ -113,7 +126,7 @@ export default function InvitationFlowEditScreen() {
 
         <View className="mt-5">
           <InvitationPreviewCard
-            template={template}
+            imageUrl={template.editableImageUrl ?? template.imageUrl}
             names={names}
             date={date}
             time={time}
