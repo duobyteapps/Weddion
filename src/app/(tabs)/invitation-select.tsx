@@ -1,5 +1,3 @@
-// src/app/(tabs)/invitation-select.tsx
-
 import { ScreenHeader } from "@/components/common/ScreenHeader";
 import {
   InvitationCategory,
@@ -10,66 +8,32 @@ import {
   InvitationTemplateCard,
 } from "@/components/invitations/select/InvitationTemplateCard";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
-import { useMemo, useState } from "react";
-import { FlatList, View } from "react-native";
-
-const initialTemplates: InvitationTemplate[] = [
-  {
-    id: "1",
-    title: "Lavanta Bahçesi",
-    category: "flower",
-    categoryTitle: "Çiçekli",
-    image: require("@/assets/images/invitations/davetiye-1.png"),
-    isFavorite: true,
-  },
-  {
-    id: "2",
-    title: "Lila Romantizm",
-    category: "flower",
-    categoryTitle: "Çiçekli",
-    image: require("@/assets/images/invitations/davetiye-2.png"),
-    isFavorite: false,
-  },
-  {
-    id: "3",
-    title: "Soft Zarafet",
-    category: "minimal",
-    categoryTitle: "Minimal",
-    image: require("@/assets/images/invitations/davetiye-3.png"),
-    isFavorite: false,
-  },
-  {
-    id: "4",
-    title: "Mor Bahar",
-    category: "flower",
-    categoryTitle: "Çiçekli",
-    image: require("@/assets/images/invitations/davetiye-4.png"),
-    isFavorite: false,
-  },
-  {
-    id: "5",
-    title: "İnci Dokunuş",
-    category: "classic",
-    categoryTitle: "Klasik",
-    image: require("@/assets/images/invitations/davetiye-5.png"),
-    isFavorite: false,
-  },
-  {
-    id: "6",
-    title: "Sade Aşk",
-    category: "minimal",
-    categoryTitle: "Minimal",
-    image: require("@/assets/images/invitations/davetiye-6.png"),
-    isFavorite: false,
-  },
-];
+import { getInvitationTemplates } from "@/services/invitationTemplateService";
+import { useEffect, useMemo, useState } from "react";
+import { ActivityIndicator, FlatList, View } from "react-native";
 
 export default function InvitationSelectScreen() {
   const [selectedCategory, setSelectedCategory] =
     useState<InvitationCategory>("all");
 
-  const [templates, setTemplates] =
-    useState<InvitationTemplate[]>(initialTemplates);
+  const [templates, setTemplates] = useState<InvitationTemplate[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchTemplates();
+  }, []);
+
+  const fetchTemplates = async () => {
+    try {
+      setLoading(true);
+      const data = await getInvitationTemplates();
+      setTemplates(data);
+    } catch (error) {
+      console.log("Davetiye şablonları alınamadı:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredTemplates = useMemo(() => {
     if (selectedCategory === "all") {
@@ -107,6 +71,12 @@ export default function InvitationSelectScreen() {
               selectedCategory={selectedCategory}
               onChangeCategory={setSelectedCategory}
             />
+
+            {loading && (
+              <View className="mt-8">
+                <ActivityIndicator />
+              </View>
+            )}
           </>
         }
         renderItem={({ item }) => (

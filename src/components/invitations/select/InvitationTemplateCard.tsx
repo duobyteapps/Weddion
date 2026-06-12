@@ -1,11 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import {
-  Image,
-  ImageSourcePropType,
-  Pressable,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Image, Pressable, TouchableOpacity, View } from "react-native";
 
 import { AppCard } from "@/components/ui/AppCard";
 import { AppText } from "@/components/ui/AppText";
@@ -16,7 +10,7 @@ export type InvitationTemplate = {
   title: string;
   category: InvitationCategory;
   categoryTitle: string;
-  image: ImageSourcePropType;
+  imageUrl: string;
   isFavorite?: boolean;
 };
 
@@ -40,7 +34,7 @@ export function InvitationTemplateCard({
       >
         <View className="relative">
           <Image
-            source={template.image}
+            source={{ uri: template.imageUrl }}
             resizeMode="cover"
             className="h-44 w-full rounded-2xl"
           />
@@ -69,7 +63,7 @@ export function InvitationTemplateCard({
 
           <View className="mt-2 self-start rounded-xl bg-primarySoft px-3 py-1">
             <AppText variant="caption" className="!text-primaryDark">
-              {template.category}
+              {template.categoryTitle}
             </AppText>
           </View>
         </View>
