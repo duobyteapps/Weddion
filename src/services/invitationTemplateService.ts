@@ -18,6 +18,19 @@ type InvitationTemplateRow = {
   image_url: string;
 };
 
+function mapInvitationTemplateRow(
+  item: InvitationTemplateRow,
+): InvitationTemplateDto {
+  return {
+    id: item.id,
+    title: item.title,
+    category: item.category,
+    categoryTitle: item.category_title,
+    imageUrl: item.image_url,
+    isFavorite: false,
+  };
+}
+
 export async function getInvitationTemplates(): Promise<
   InvitationTemplateDto[]
 > {
@@ -31,12 +44,28 @@ export async function getInvitationTemplates(): Promise<
     throw error;
   }
 
-  return ((data ?? []) as InvitationTemplateRow[]).map((item) => ({
-    id: item.id,
-    title: item.title,
-    category: item.category,
-    categoryTitle: item.category_title,
-    imageUrl: item.image_url,
-    isFavorite: false,
-  }));
+  return ((data ?? []) as InvitationTemplateRow[]).map(
+    mapInvitationTemplateRow,
+  );
+}
+
+export async function getInvitationTemplateById(
+  templateId: string,
+): Promise<InvitationTemplateDto | null> {
+  const { data, error } = await supabase
+    .from("invitation_templates")
+    .select("id, title, category, category_title, image_url")
+    .eq("id", templateId)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  if (!data) {
+    return null;
+  }
+
+  return mapInvitationTemplateRow(data as InvitationTemplateRow);
 }
