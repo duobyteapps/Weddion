@@ -1,0 +1,146 @@
+import { router, useLocalSearchParams } from "expo-router";
+import { useEffect, useState } from "react";
+import { ActivityIndicator, ScrollView, View } from "react-native";
+
+import { ScreenHeader } from "@/components/common/ScreenHeader";
+import { InvitationEditFormSection } from "@/components/invitations/create/InvitationEditFormSection";
+import { InvitationEditSteps } from "@/components/invitations/create/InvitationEditSteps";
+import { InvitationPreviewCard } from "@/components/invitations/create/InvitationPreviewCard";
+import { AppText } from "@/components/ui/AppText";
+import { ScreenContainer } from "@/components/ui/ScreenContainer";
+import {
+  getInvitationTemplateById,
+  InvitationTemplateDto,
+} from "@/services/invitationTemplateService";
+
+export default function InvitationFlowEditScreen() {
+  const { templateId } = useLocalSearchParams<{ templateId: string }>();
+
+  const [template, setTemplate] = useState<InvitationTemplateDto | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const [names, setNames] = useState("Nisa & Onur");
+  const [date, setDate] = useState("22 AĞUSTOS 2026");
+  const [time, setTime] = useState("CUMARTESİ | 19.00");
+  const [description, setDescription] = useState(
+    "Bu özel günümüzde\nsizleri de aramızda görmekten\nmutluluk duyarız.",
+  );
+  const [venueName, setVenueName] = useState("FOUR SEASONS HOTEL");
+  const [venueLocation, setVenueLocation] = useState("Beşiktaş, İstanbul");
+
+  useEffect(() => {
+    if (!templateId) {
+      return;
+    }
+
+    fetchTemplate();
+  }, [templateId]);
+
+  async function fetchTemplate() {
+    try {
+      setLoading(true);
+
+      const data = await getInvitationTemplateById(templateId);
+      setTemplate(data);
+    } catch (error) {
+      console.log("Davetiye şablonu alınamadı:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function handleSave() {
+    if (!template) {
+      return;
+    }
+
+    router.push({
+      pathname: "/invitation-flow/[templateId]/preview",
+      params: {
+        templateId: template.id,
+        names,
+        date,
+        time,
+        description,
+        venueName,
+        venueLocation,
+      },
+    });
+  }
+
+  if (loading) {
+    return (
+      <ScreenContainer className="flex-1 bg-background">
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator color="#7C3AED" />
+
+          <AppText variant="caption" className="mt-3 text-textMuted">
+            Davetiye yükleniyor...
+          </AppText>
+        </View>
+      </ScreenContainer>
+    );
+  }
+
+  if (!template) {
+    return (
+      <ScreenContainer className="flex-1 bg-background">
+        <View className="flex-1 items-center justify-center px-6">
+          <AppText variant="subtitle" className="text-center text-textDark">
+            Davetiye bulunamadı.
+          </AppText>
+
+          <AppText variant="body" className="mt-2 text-center text-textMuted">
+            Seçilen davetiye kaldırılmış veya pasif durumda olabilir.
+          </AppText>
+        </View>
+      </ScreenContainer>
+    );
+  }
+
+  return (
+    <ScreenContainer className="flex-1 bg-background">
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerClassName="pb-32"
+      >
+        <ScreenHeader
+          title="Davetiye Düzenle"
+          description="Davetiye içeriğinizi düzenleyin."
+        />
+
+        <InvitationEditSteps activeStep={1} />
+
+        <View className="mt-5">
+          <InvitationPreviewCard
+            template={template}
+            names={names}
+            date={date}
+            time={time}
+            description={description}
+            venueName={venueName}
+            venueLocation={venueLocation}
+          />
+        </View>
+
+        <View className="mt-5">
+          <InvitationEditFormSection
+            names={names}
+            date={date}
+            time={time}
+            description={description}
+            venueName={venueName}
+            venueLocation={venueLocation}
+            onChangeNames={setNames}
+            onChangeDate={setDate}
+            onChangeTime={setTime}
+            onChangeDescription={setDescription}
+            onChangeVenueName={setVenueName}
+            onChangeVenueLocation={setVenueLocation}
+            onSave={handleSave}
+          />
+        </View>
+      </ScrollView>
+    </ScreenContainer>
+  );
+}

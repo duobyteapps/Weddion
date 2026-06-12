@@ -1,7 +1,6 @@
 import { View } from "react-native";
 
 import { AppText } from "@/components/ui/AppText";
-import { Colors } from "@/constants/Colors";
 
 type Props = {
   activeStep: 1 | 2 | 3;
@@ -15,19 +14,16 @@ const steps = [
 
 export function InvitationEditSteps({ activeStep }: Props) {
   return (
-    <View className="mt-3 flex-row items-center justify-center">
+    <View className="mt-4 flex-row items-center justify-center">
       {steps.map((step, index) => {
         const isActive = step.id === activeStep;
 
         return (
           <View key={step.id} className="flex-row items-center">
             <View
-              className="h-8 w-8 items-center justify-center rounded-full"
-              style={{
-                backgroundColor: isActive
-                  ? Colors.primaryDark
-                  : Colors.primaryLight,
-              }}
+              className={`h-8 w-8 items-center justify-center rounded-full ${
+                isActive ? "bg-primary" : "bg-primarySoft"
+              }`}
             >
               <AppText
                 variant="captionStrong"
@@ -47,7 +43,7 @@ export function InvitationEditSteps({ activeStep }: Props) {
             </AppText>
 
             {index !== steps.length - 1 ? (
-              <View className="mx-3 h-[1px] w-10 bg-border" />
+              <View className="mx-3 h-[1px] w-8 bg-border" />
             ) : null}
           </View>
         );
