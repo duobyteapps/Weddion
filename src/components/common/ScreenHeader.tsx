@@ -16,7 +16,7 @@ export function ScreenHeader({
   backTo = "/(tabs)/profile",
 }: ScreenHeaderProps) {
   return (
-    <View className="relative justify-center mb-8">
+    <View className="relative justify-center mb-8 mt-4">
       <AppBackButton
         onPress={() => router.replace(backTo)}
         className="absolute left-0 z-10"

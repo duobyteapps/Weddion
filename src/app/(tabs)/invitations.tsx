@@ -1,17 +1,28 @@
 // src/app/(tabs)/invitations.tsx
-import { View } from "react-native";
 
-import { AppText } from "@/components/ui/AppText";
+import { ScreenHeader } from "@/components/common/ScreenHeader";
+import { EmptyInvitations } from "@/components/invitations/EmptyInvitations";
+import { InvitationsHero } from "@/components/invitations/InvitationsHero";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
+import { ScrollView } from "react-native";
 
 export default function InvitationsScreen() {
+  const handleCreateInvitation = () => {
+    // router.push("/create");
+  };
   return (
-    <ScreenContainer className="bg-background">
-      <View className="flex-1 items-center justify-center px-5">
-        <AppText variant="title" className="text-text">
-          Davetiyeler
-        </AppText>
-      </View>
+    <ScreenContainer className="flex-1 bg-background">
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerClassName="pb-32"
+      >
+        <ScreenHeader
+          title="Davetiyelerim"
+          description="Oluşturduğunuz tüm davetiyeleri buradan görüntüleyebilirsiniz."
+        />
+        <InvitationsHero />
+        <EmptyInvitations onCreatePress={handleCreateInvitation} />
+      </ScrollView>
     </ScreenContainer>
   );
 }
