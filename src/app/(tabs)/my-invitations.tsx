@@ -1,4 +1,4 @@
-// src/app/(tabs)/invitations.tsx
+// src/app/(tabs)/my-invitations.tsx
 
 import { ScreenHeader } from "@/components/common/ScreenHeader";
 import { EmptyInvitations } from "@/components/invitations/EmptyInvitations";
@@ -6,7 +6,7 @@ import { InvitationsHero } from "@/components/invitations/InvitationsHero";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { ScrollView } from "react-native";
 
-export default function InvitationsScreen() {
+export default function MyInvitationsScreen() {
   const handleCreateInvitation = () => {
     // router.push("/create");
   };
