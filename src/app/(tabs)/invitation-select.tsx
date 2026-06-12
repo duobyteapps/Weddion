@@ -3,14 +3,12 @@ import {
   InvitationCategory,
   InvitationCategoryFilter,
 } from "@/components/invitations/select/InvitationCategoryFilter";
-import {
-  InvitationTemplate,
-  InvitationTemplateCard,
-} from "@/components/invitations/select/InvitationTemplateCard";
+import { InvitationTemplate } from "@/components/invitations/select/InvitationTemplateCard";
+import { InvitationTemplateList } from "@/components/invitations/select/InvitationTemplateList";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { getInvitationTemplates } from "@/services/invitationTemplateService";
 import { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, FlatList, View } from "react-native";
+import { ActivityIndicator, View } from "react-native";
 
 export default function InvitationSelectScreen() {
   const [selectedCategory, setSelectedCategory] =
@@ -53,13 +51,10 @@ export default function InvitationSelectScreen() {
 
   return (
     <ScreenContainer className="flex-1 bg-background">
-      <FlatList
-        data={filteredTemplates}
-        keyExtractor={(item) => item.id}
-        numColumns={2}
-        showsVerticalScrollIndicator={false}
-        contentContainerClassName="pb-32"
-        columnWrapperClassName="justify-between"
+      <InvitationTemplateList
+        templates={loading ? [] : filteredTemplates}
+        onPressTemplate={(template) => {}}
+        onFavoritePress={toggleFavorite}
         ListHeaderComponent={
           <>
             <ScreenHeader
@@ -79,15 +74,6 @@ export default function InvitationSelectScreen() {
             )}
           </>
         }
-        renderItem={({ item }) => (
-          <View className="mb-4 w-[48.5%]">
-            <InvitationTemplateCard
-              template={item}
-              onPress={() => {}}
-              onFavoritePress={() => toggleFavorite(item.id)}
-            />
-          </View>
-        )}
       />
     </ScreenContainer>
   );

@@ -41,7 +41,10 @@ export function InvitationTemplateCard({
 
           <TouchableOpacity
             activeOpacity={0.8}
-            onPress={onFavoritePress}
+            onPress={(event) => {
+              event.stopPropagation();
+              onFavoritePress?.();
+            }}
             className="absolute -bottom-4 right-3 h-10 w-10 items-center justify-center rounded-full bg-white"
           >
             <Ionicons
