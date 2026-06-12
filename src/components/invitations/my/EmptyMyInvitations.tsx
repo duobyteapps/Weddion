@@ -3,11 +3,11 @@ import { AppCard } from "@/components/ui/AppCard";
 import { AppText } from "@/components/ui/AppText";
 import { Image, View } from "react-native";
 
-type EmptyInvitations = {
+type EmptyMyInvitations = {
   onCreatePress: () => void;
 };
 
-export function EmptyInvitations({ onCreatePress }: EmptyInvitations) {
+export function EmptyMyInvitations({ onCreatePress }: EmptyMyInvitations) {
   return (
     <AppCard className="mt-6 min-h-[520px] items-center justify-center px-6 py-10">
       <Image

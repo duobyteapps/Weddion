@@ -1,8 +1,8 @@
 // src/app/(tabs)/my-invitations.tsx
 
 import { ScreenHeader } from "@/components/common/ScreenHeader";
-import { EmptyInvitations } from "@/components/invitations/EmptyInvitations";
-import { InvitationsHero } from "@/components/invitations/InvitationsHero";
+import { EmptyMyInvitations } from "@/components/invitations/my/EmptyMyInvitations";
+import { MyInvitationsHero } from "@/components/invitations/my/MyInvitationsHero";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { ScrollView } from "react-native";
 
@@ -20,8 +20,8 @@ export default function MyInvitationsScreen() {
           title="Davetiyelerim"
           description="Oluşturduğunuz tüm davetiyeleri buradan görüntüleyebilirsiniz."
         />
-        <InvitationsHero />
-        <EmptyInvitations onCreatePress={handleCreateInvitation} />
+        <MyInvitationsHero />
+        <EmptyMyInvitations onCreatePress={handleCreateInvitation} />
       </ScrollView>
     </ScreenContainer>
   );

@@ -2,7 +2,7 @@ import { AppCard } from "@/components/ui/AppCard";
 import { AppText } from "@/components/ui/AppText";
 import { Image, View } from "react-native";
 
-export function InvitationsHero() {
+export function MyInvitationsHero() {
   return (
     <AppCard className="relative overflow-hidden">
       <View className="z-10 w-[56%]">

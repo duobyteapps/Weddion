@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Pressable, View } from "react-native";
 
 import { AppText } from "@/components/ui/AppText";
+import { router } from "expo-router";
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -36,7 +37,7 @@ const TAB_ICONS: Record<string, { active: IconName; inactive: IconName }> = {
     active: "home",
     inactive: "home-outline",
   },
-  invitations: {
+  "my-invitations": {
     active: "mail",
     inactive: "mail-outline",
   },
@@ -55,7 +56,7 @@ export function AppTabBar({ state, descriptors, navigation }: AppTabBarProps) {
   const lastTabs = state.routes.slice(2);
 
   const handleCreatePress = () => {
-    navigation.navigate("invitations");
+    router.push("/invitation-select");
   };
 
   return (
@@ -119,7 +120,7 @@ function TabItem({ routeName, label, active, onPress }: TabItemProps) {
         color={color}
       />
 
-      <AppText variant="caption" className="text-[11px]" style={{ color }}>
+      <AppText variant="caption" className="!text-[10px]" style={{ color }}>
         {label}
       </AppText>
     </Pressable>
