@@ -159,19 +159,23 @@ export default function InvitationFlowPreviewScreen() {
     try {
       setSaving(true);
 
-      const savedInvitation = await createUserInvitation({
-        templateId: params.templateId,
-        formData,
-        status: "ready",
-      });
+      let capturedImageUri: string | null = null;
 
       try {
-        const capturedImageUri = await captureInvitationImage();
+        capturedImageUri = await captureInvitationImage();
         setCapturedInvitationImageUri(capturedImageUri);
       } catch (captureError) {
         console.log("Davetiye görseli oluşturulamadı:", captureError);
         setCapturedInvitationImageUri(null);
+        capturedImageUri = null;
       }
+
+      const savedInvitation = await createUserInvitation({
+        templateId: params.templateId,
+        formData,
+        status: "ready",
+        capturedImageUri,
+      });
 
       router.push({
         pathname: "/invitation-flow/[templateId]/share",

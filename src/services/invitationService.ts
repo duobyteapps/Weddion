@@ -1,12 +1,74 @@
 import { supabase } from "@/lib/supabase";
 import {
-    CreateUserInvitationPayload,
-    UserInvitation,
+  CreateUserInvitationPayload,
+  UserInvitation,
 } from "@/types/invitation";
+
+const INVITATION_IMAGES_BUCKET = "invitation-images";
 
 function cleanText(value: string) {
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : null;
+}
+
+function getBase64FromDataUri(dataUri: string) {
+  const parts = dataUri.split(",");
+
+  if (parts.length < 2) {
+    throw new Error("Davetiye görsel formatı geçersiz.");
+  }
+
+  return parts[1];
+}
+
+function base64ToArrayBuffer(base64: string) {
+  const binaryString = globalThis.atob(base64);
+  const length = binaryString.length;
+  const bytes = new Uint8Array(length);
+
+  for (let index = 0; index < length; index += 1) {
+    bytes[index] = binaryString.charCodeAt(index);
+  }
+
+  return bytes.buffer;
+}
+
+async function uploadInvitationImage(params: {
+  userId: string;
+  invitationId: string;
+  capturedImageUri: string;
+}) {
+  const base64 = getBase64FromDataUri(params.capturedImageUri);
+  const arrayBuffer = base64ToArrayBuffer(base64);
+
+  const imagePath = `${params.userId}/${params.invitationId}/invitation.png`;
+
+  const { error: uploadError } = await supabase.storage
+    .from(INVITATION_IMAGES_BUCKET)
+    .upload(imagePath, arrayBuffer, {
+      contentType: "image/png",
+      upsert: true,
+    });
+
+  if (uploadError) {
+    throw new Error(uploadError.message);
+  }
+
+  return {
+    imagePath,
+  };
+}
+
+async function createSignedInvitationImageUrl(imagePath: string) {
+  const { data, error } = await supabase.storage
+    .from(INVITATION_IMAGES_BUCKET)
+    .createSignedUrl(imagePath, 60 * 60);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data.signedUrl;
 }
 
 export async function createUserInvitation(
@@ -27,7 +89,7 @@ export async function createUserInvitation(
 
   const { formData } = payload;
 
-  const { data, error } = await supabase
+  const { data: createdInvitation, error: createError } = await supabase
     .from("user_invitations")
     .insert({
       user_id: user.id,
@@ -47,16 +109,51 @@ export async function createUserInvitation(
       venue_location: cleanText(formData.venueLocation),
 
       status: payload.status ?? "ready",
+      invitation_image_url: null,
+      invitation_image_path: null,
       updated_at: new Date().toISOString(),
     })
     .select("*")
     .single();
 
-  if (error) {
-    throw new Error(error.message);
+  if (createError) {
+    throw new Error(createError.message);
   }
 
-  return data as UserInvitation;
+  if (!payload.capturedImageUri) {
+    return createdInvitation as UserInvitation;
+  }
+
+  const uploadedImage = await uploadInvitationImage({
+    userId: user.id,
+    invitationId: createdInvitation.id,
+    capturedImageUri: payload.capturedImageUri,
+  });
+
+  const { data: updatedInvitation, error: updateError } = await supabase
+    .from("user_invitations")
+    .update({
+      invitation_image_path: uploadedImage.imagePath,
+      invitation_image_url: null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", createdInvitation.id)
+    .eq("user_id", user.id)
+    .select("*")
+    .single();
+
+  if (updateError) {
+    throw new Error(updateError.message);
+  }
+
+  const signedImageUrl = await createSignedInvitationImageUrl(
+    uploadedImage.imagePath,
+  );
+
+  return {
+    ...(updatedInvitation as UserInvitation),
+    invitation_image_url: signedImageUrl,
+  };
 }
 
 export async function getCurrentUserInvitations(): Promise<UserInvitation[]> {
@@ -83,5 +180,28 @@ export async function getCurrentUserInvitations(): Promise<UserInvitation[]> {
     throw new Error(error.message);
   }
 
-  return (data ?? []) as UserInvitation[];
+  const invitations = (data ?? []) as UserInvitation[];
+
+  const invitationsWithSignedUrls = await Promise.all(
+    invitations.map(async (invitation) => {
+      if (!invitation.invitation_image_path) {
+        return invitation;
+      }
+
+      try {
+        const signedImageUrl = await createSignedInvitationImageUrl(
+          invitation.invitation_image_path,
+        );
+
+        return {
+          ...invitation,
+          invitation_image_url: signedImageUrl,
+        };
+      } catch {
+        return invitation;
+      }
+    }),
+  );
+
+  return invitationsWithSignedUrls;
 }

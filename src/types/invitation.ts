@@ -47,6 +47,9 @@ export type UserInvitation = {
   venue_name: string | null;
   venue_location: string | null;
 
+  invitation_image_url: string | null;
+  invitation_image_path: string | null;
+
   status: UserInvitationStatus;
   share_slug: string;
 
@@ -58,4 +61,5 @@ export type CreateUserInvitationPayload = {
   templateId: string;
   formData: InvitationFormData;
   status?: UserInvitationStatus;
+  capturedImageUri?: string | null;
 };
