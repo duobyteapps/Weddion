@@ -232,7 +232,7 @@ export default function InvitationFlowPreviewScreen() {
         message: existingInvitationId
           ? "Davetiyeniz başarıyla güncellendi. Şimdi paylaşım ekranına geçebilirsiniz."
           : "Davetiyeniz başarıyla kaydedildi. Şimdi paylaşım ekranına geçebilirsiniz.",
-        confirmText: "Paylaş",
+        confirmText: "Tamam",
         onConfirm: () => {
           router.push({
             pathname: "/invitation-flow/[templateId]/share",
