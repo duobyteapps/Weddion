@@ -5,11 +5,13 @@ import { Image, Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import { AppText } from "./AppText";
 
 type Props = {
-  label: string;
+  label?: string;
   value: string;
   placeholder?: string;
   maximumDate?: Date;
   onChange: (value: string) => void;
+  containerClassName?: string;
+  inputClassName?: string;
 };
 
 const months = [
@@ -31,14 +33,30 @@ const days = ["P", "S", "Ç", "P", "C", "C", "P"];
 
 const weekDays = ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"];
 
+function getValidDate(value?: string) {
+  if (!value) {
+    return new Date();
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return new Date();
+  }
+
+  return date;
+}
+
 export function AppDateInput({
   label,
   value,
   placeholder = "Tarih seçiniz",
   maximumDate,
   onChange,
+  containerClassName = "mt-4",
+  inputClassName = "",
 }: Props) {
-  const initialDate = value ? new Date(value) : new Date();
+  const initialDate = getValidDate(value);
 
   const [visible, setVisible] = useState(false);
   const [selectedDate, setSelectedDate] = useState(initialDate);
@@ -65,7 +83,7 @@ export function AppDateInput({
   }, [year, month]);
 
   const formattedValue = value
-    ? new Date(value).toLocaleDateString("tr-TR")
+    ? getValidDate(value).toLocaleDateString("tr-TR")
     : "";
 
   const isAfterMaximumDate = (date: Date) => {
@@ -184,13 +202,18 @@ export function AppDateInput({
 
   return (
     <>
-      <Pressable onPress={() => setVisible(true)} className="mt-4 gap-1.5">
-        <AppText variant="caption" className="text-textMuted">
-          {label}
-        </AppText>
+      <Pressable
+        onPress={() => setVisible(true)}
+        className={`gap-1.5 ${containerClassName}`}
+      >
+        {label ? (
+          <AppText variant="caption" className="text-textMuted">
+            {label}
+          </AppText>
+        ) : null}
 
         <View
-          className="
+          className={`
             h-12
             flex-row
             items-center
@@ -200,9 +223,13 @@ export function AppDateInput({
             border-border
             bg-surfaceLight
             px-4
-          "
+            ${inputClassName}
+          `}
         >
-          <AppText className={value ? "text-text" : "text-textMuted"}>
+          <AppText
+            className={value ? "text-text" : "text-textMuted"}
+            numberOfLines={1}
+          >
             {formattedValue || placeholder}
           </AppText>
 

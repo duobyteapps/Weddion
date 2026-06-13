@@ -7,7 +7,10 @@ export const defaultInvitationContent: InvitationFormData = {
   groomParents: "Anne - Baba",
   brideSurname: "Soyad",
   groomSurname: "Soyad",
-  date: "22 Ağustos 2026",
+
+  // AppDateInput için ISO format kullanıyoruz.
+  date: "2026-08-22",
+
   time: "19.00",
   description:
     "Bu özel günümüzde\nsizleri de aramızda görmekten\nmutluluk duyarız.",

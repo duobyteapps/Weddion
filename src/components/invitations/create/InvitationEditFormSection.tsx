@@ -3,6 +3,7 @@ import { View } from "react-native";
 
 import { AppButton } from "@/components/ui/AppButton";
 import { AppCard } from "@/components/ui/AppCard";
+import { AppDateInput } from "@/components/ui/AppDateInput";
 import { AppInput } from "@/components/ui/AppInput";
 import { AppText } from "@/components/ui/AppText";
 import { InvitationFormData } from "@/types/invitation";
@@ -136,13 +137,12 @@ export function InvitationEditFormSection({
 
           <View className="flex-row gap-3">
             <InvitationFormField label="Tarih" className="flex-1">
-              <AppInput
+              <AppDateInput
                 value={formData.date}
-                onChangeText={(value) => onChangeField("date", value)}
-                placeholder="22 Ağustos 2026"
-                maxLength={30}
-                size="compact"
-                inputClassName="text-textDark"
+                placeholder="Düğün tarihini seçin"
+                containerClassName="mt-0"
+                inputClassName="h-12"
+                onChange={(value) => onChangeField("date", value)}
               />
             </InvitationFormField>
 

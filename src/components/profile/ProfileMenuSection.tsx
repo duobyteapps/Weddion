@@ -69,7 +69,7 @@ export function ProfileMenuSection({ title, items }: Props) {
   }
 
   return (
-    <View className="mx-6 mb-6">
+    <View>
       <AppText variant="subtitle" className="mb-3 text-text">
         {title}
       </AppText>

@@ -9,6 +9,27 @@ type Props = {
   formData: InvitationFormData;
 };
 
+function formatInvitationDate(value: string) {
+  if (!value) {
+    return "";
+  }
+
+  const isoDateRegex = /^\d{4}-\d{2}-\d{2}$/;
+
+  if (!isoDateRegex.test(value)) {
+    return value;
+  }
+
+  const [year, month, day] = value.split("-").map(Number);
+  const date = new Date(year, month - 1, day);
+
+  return date.toLocaleDateString("tr-TR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+
 export function InvitationPreviewCard({ imageUrl, formData }: Props) {
   const content = (
     <View className="h-full w-full items-center justify-center px-7 py-10">
@@ -64,7 +85,7 @@ export function InvitationPreviewCard({ imageUrl, formData }: Props) {
 
         <View className="mt-8 w-full flex-row items-center justify-center gap-5">
           <AppText variant="body" className="text-center text-textDark">
-            {formData.date}
+            {formatInvitationDate(formData.date)}
           </AppText>
 
           <View className="h-4 w-px bg-border" />
