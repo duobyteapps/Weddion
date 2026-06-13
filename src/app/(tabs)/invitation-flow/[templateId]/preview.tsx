@@ -1,6 +1,7 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, ScrollView, View } from "react-native";
+import { captureRef } from "react-native-view-shot";
 
 import { ScreenHeader } from "@/components/common/ScreenHeader";
 import { InvitationEditSteps } from "@/components/invitations/create/InvitationEditSteps";
@@ -40,8 +41,17 @@ function getCacheBustedImageUrl(imageUrl?: string | null, version?: string) {
   return `${imageUrl}${separator}v=${version ?? Date.now()}`;
 }
 
+function waitForCaptureReady() {
+  return new Promise<void>((resolve) => {
+    requestAnimationFrame(() => {
+      setTimeout(resolve, 500);
+    });
+  });
+}
+
 export default function InvitationFlowPreviewScreen() {
   const params = useLocalSearchParams<PreviewParams>();
+  const invitationCaptureRef = useRef<View>(null);
 
   const [template, setTemplate] = useState<InvitationTemplateDto | null>(null);
   const [loading, setLoading] = useState(true);
@@ -90,8 +100,7 @@ export default function InvitationFlowPreviewScreen() {
       setLoading(true);
       const data = await getInvitationTemplateById(params.templateId);
       setTemplate(data);
-    } catch (error) {
-      console.log("Davetiye önizleme verisi alınamadı:", error);
+    } catch {
       setTemplate(null);
     } finally {
       setLoading(false);
@@ -122,19 +131,29 @@ export default function InvitationFlowPreviewScreen() {
     });
   }
 
-  function handleShareStep() {
-    router.push({
-      pathname: "/invitation-flow/[templateId]/share",
-      params: getRouteParams(),
-    });
-  }
+  async function handleShareStep() {
+    try {
+      await waitForCaptureReady();
 
-  function handleSave() {
-    console.log("Kaydedilecek davetiye:", {
-      templateId: params.templateId,
-      formData,
-      imageUrl: previewImageUrl,
-    });
+      const capturedImageUri = await captureRef(invitationCaptureRef, {
+        format: "png",
+        quality: 1,
+        result: "tmpfile",
+      });
+
+      router.push({
+        pathname: "/invitation-flow/[templateId]/share",
+        params: {
+          ...getRouteParams(),
+          capturedImageUri: encodeURIComponent(capturedImageUri),
+        },
+      });
+    } catch {
+      router.push({
+        pathname: "/invitation-flow/[templateId]/share",
+        params: getRouteParams(),
+      });
+    }
   }
 
   if (loading) {
@@ -177,7 +196,16 @@ export default function InvitationFlowPreviewScreen() {
 
         <InvitationEditSteps activeStep={2} />
 
-        <InvitationPreviewCard imageUrl={previewImageUrl} formData={formData} />
+        <View
+          ref={invitationCaptureRef}
+          collapsable={false}
+          className="bg-surface"
+        >
+          <InvitationPreviewCard
+            imageUrl={previewImageUrl}
+            formData={formData}
+          />
+        </View>
 
         <InvitationPreviewSuccessCard />
 

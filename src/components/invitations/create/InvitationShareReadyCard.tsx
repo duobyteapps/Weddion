@@ -6,23 +6,50 @@ import { AppText } from "@/components/ui/AppText";
 
 type Props = {
   imageUrl: string | null;
-  onDownloadImagePress: () => void;
+  onDownloadImagePress: () => void | Promise<void>;
+  loading?: boolean;
 };
+
+function normalizeImageUri(imageUrl: string | null) {
+  if (!imageUrl) {
+    return null;
+  }
+
+  if (
+    imageUrl.startsWith("file://") ||
+    imageUrl.startsWith("http://") ||
+    imageUrl.startsWith("https://") ||
+    imageUrl.startsWith("content://")
+  ) {
+    return imageUrl;
+  }
+
+  return `file://${imageUrl}`;
+}
 
 export function InvitationShareReadyCard({
   imageUrl,
   onDownloadImagePress,
+  loading = false,
 }: Props) {
+  const normalizedImageUri = normalizeImageUri(imageUrl);
+
   return (
     <AppCard>
       <View className="flex-row gap-5">
         <View className="w-[40%] overflow-hidden rounded-2xl border border-borderSoft bg-background">
           <View className="aspect-[3/4] w-full">
-            {imageUrl ? (
+            {normalizedImageUri ? (
               <Image
-                source={{ uri: imageUrl }}
+                source={{ uri: normalizedImageUri }}
                 className="h-full w-full"
                 resizeMode="cover"
+                onError={(error) => {
+                  console.log(
+                    "Paylaşım küçük görsel yüklenemedi:",
+                    error.nativeEvent,
+                  );
+                }}
               />
             ) : (
               <View className="flex-1 items-center justify-center px-3">
@@ -40,14 +67,15 @@ export function InvitationShareReadyCard({
           </AppText>
 
           <AppText className="mt-3 leading-6 text-textMuted">
-            Davetiyenizi Instagram hikaye veya gönderi olarak paylaşmak için
-            görseli indirebilirsiniz.
+            Davetiyenizi hikaye veya gönderi olarak paylaşmak için görseli
+            indirebilirsiniz.
           </AppText>
 
           <AppButton
-            title="Instagram Görselini İndir"
+            title="Görselini İndir"
             variant="primary"
             onPress={onDownloadImagePress}
+            loading={loading}
             className="mt-5 h-11 rounded-full px-3"
             textClassName="text-[11px]"
           />

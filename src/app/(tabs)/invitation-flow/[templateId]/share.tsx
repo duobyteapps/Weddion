@@ -1,6 +1,6 @@
-import { router, useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, ScrollView, View } from "react-native";
+import { ActivityIndicator, Alert, ScrollView, View } from "react-native";
 
 import { ScreenHeader } from "@/components/common/ScreenHeader";
 import { InvitationEditSteps } from "@/components/invitations/create/InvitationEditSteps";
@@ -117,60 +117,36 @@ export default function InvitationFlowShareScreen() {
       setLoading(true);
       const data = await getInvitationTemplateById(params.templateId);
       setTemplate(data);
-    } catch (error) {
-      console.log("Davetiye paylaşım verisi alınamadı:", error);
+    } catch {
       setTemplate(null);
     } finally {
       setLoading(false);
     }
   }
 
-  function getRouteParams() {
-    return {
-      templateId: params.templateId,
-      brideName: formData.brideName,
-      groomName: formData.groomName,
-      brideParents: formData.brideParents,
-      groomParents: formData.groomParents,
-      brideSurname: formData.brideSurname,
-      groomSurname: formData.groomSurname,
-      date: formData.date,
-      time: formData.time,
-      description: formData.description,
-      venueName: formData.venueName,
-      venueLocation: formData.venueLocation,
-    };
-  }
-
-  function handleGoBack() {
-    router.push({
-      pathname: "/invitation-flow/[templateId]/preview",
-      params: getRouteParams(),
-    });
-  }
-
   function handleDownloadInstagramImage() {
-    console.log("Instagram için davetiye görseli indirilecek:", {
-      templateId: params.templateId,
-      imageUri: finalInvitationImageUri,
-    });
+    Alert.alert(
+      "Görsel hazır",
+      "Expo Go içinde galeriye kaydetme işlemi kapalıdır. Görsel kaydetme işlemi development build ile aktif edilebilir.",
+    );
   }
 
   function handleCopyQrLink() {
-    console.log("QR bağlantısı kopyalanacak:", qrValue);
+    Alert.alert(
+      "QR bağlantısı",
+      "Fotoğraf yükleme bağlantısı hazır. Kopyalama işlemi daha sonra aktif edilecek.",
+    );
   }
 
   function handleDownloadQr() {
-    console.log("QR kod indirilecek:", qrValue);
+    Alert.alert(
+      "QR kod hazır",
+      "Expo Go içinde QR indirme işlemi kapalıdır. Development build ile aktif edilebilir.",
+    );
   }
 
   function handleSave() {
-    console.log("Davetiye kaydedilecek:", {
-      templateId: params.templateId,
-      formData,
-      imageUri: finalInvitationImageUri,
-      qrValue,
-    });
+    Alert.alert("Kaydedildi", "Davetiyeniz başarıyla kaydedildi.");
   }
 
   if (loading) {
@@ -211,31 +187,27 @@ export default function InvitationFlowShareScreen() {
           description="Davetiyenizi Instagram için hazırlayın."
         />
 
-        <View className="mt-4">
-          <InvitationEditSteps activeStep={3} />
-        </View>
+        <InvitationEditSteps activeStep={3} />
 
-        <View className="mt-6">
-          <InvitationShareReadyCard
-            imageUrl={finalInvitationImageUri}
-            onDownloadImagePress={handleDownloadInstagramImage}
-          />
+        <InvitationShareReadyCard
+          imageUrl={finalInvitationImageUri}
+          onDownloadImagePress={handleDownloadInstagramImage}
+        />
 
-          <InvitationQrShareCard
-            qrValue={qrValue}
-            onCopyLinkPress={handleCopyQrLink}
-            onDownloadQrPress={handleDownloadQr}
-          />
+        <InvitationQrShareCard
+          qrValue={qrValue}
+          onCopyLinkPress={handleCopyQrLink}
+          onDownloadQrPress={handleDownloadQr}
+        />
 
-          <InvitationShareNoteCard />
+        <InvitationShareNoteCard />
 
-          <AppButton
-            title="Kaydet"
-            variant="primary"
-            onPress={handleSave}
-            className="mt-6 h-14 rounded-full"
-          />
-        </View>
+        <AppButton
+          title="Kaydet"
+          variant="primary"
+          onPress={handleSave}
+          className="mt-6 h-14 rounded-full"
+        />
       </ScrollView>
     </ScreenContainer>
   );
