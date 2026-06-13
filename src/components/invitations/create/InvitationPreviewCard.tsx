@@ -1,4 +1,4 @@
-import { ImageBackground, View } from "react-native";
+import { ImageBackground, StyleSheet, View } from "react-native";
 
 import { AppCard } from "@/components/ui/AppCard";
 import { AppText } from "@/components/ui/AppText";
@@ -12,6 +12,8 @@ type Props = {
   venueName: string;
   venueLocation: string;
 };
+
+const INVITATION_IMAGE_ASPECT_RATIO = 3 / 4;
 
 export function InvitationPreviewCard({
   imageUrl,
@@ -41,7 +43,7 @@ export function InvitationPreviewCard({
   const hasVenueLocation = venueLocation.trim().length > 0;
 
   const content = (
-    <View className="min-h-[520px] items-center justify-center px-5 py-8">
+    <View className="absolute inset-0 items-center justify-center !px-1 py-1">
       {hasNames ? (
         <>
           {hasFirstName ? (
@@ -119,21 +121,32 @@ export function InvitationPreviewCard({
   );
 
   return (
-    <AppCard className="overflow-hidden rounded-[28px] bg-surface px-5 py-7">
+    <AppCard noPadding className="overflow-hidden bg-surface py-1 !px-1">
       {imageUrl ? (
         <ImageBackground
+          key={imageUrl}
           source={{ uri: imageUrl }}
-          resizeMode="cover"
-          imageClassName="rounded-[24px]"
-          className="min-h-[520px] overflow-hidden rounded-[24px]"
+          resizeMode="contain"
+          imageClassName="rounded-2xl"
+          className="w-full overflow-hidden rounded-2xl bg-surfaceLight"
+          style={styles.imageContainer}
         >
           {content}
         </ImageBackground>
       ) : (
-        <View className="min-h-[520px] overflow-hidden rounded-[24px] border border-borderSoft bg-surfaceLight">
+        <View
+          className="w-full overflow-hidden rounded-2xl border border-borderSoft bg-surfaceLight"
+          style={styles.imageContainer}
+        >
           {content}
         </View>
       )}
     </AppCard>
   );
 }
+
+const styles = StyleSheet.create({
+  imageContainer: {
+    aspectRatio: INVITATION_IMAGE_ASPECT_RATIO,
+  },
+});

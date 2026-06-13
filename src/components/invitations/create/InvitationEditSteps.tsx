@@ -14,7 +14,7 @@ const steps = [
 
 export function InvitationEditSteps({ activeStep }: Props) {
   return (
-    <View className="mt-4 flex-row items-center justify-center">
+    <View className="flex-row items-center justify-center">
       {steps.map((step, index) => {
         const isActive = step.id === activeStep;
 

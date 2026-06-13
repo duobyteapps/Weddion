@@ -13,6 +13,16 @@ import {
   InvitationTemplateDto,
 } from "@/services/invitationTemplateService";
 
+function getCacheBustedImageUrl(imageUrl?: string | null, version?: string) {
+  if (!imageUrl) {
+    return null;
+  }
+
+  const separator = imageUrl.includes("?") ? "&" : "?";
+
+  return `${imageUrl}${separator}v=${version ?? Date.now()}`;
+}
+
 export default function InvitationFlowEditScreen() {
   const params = useLocalSearchParams<{ templateId?: string | string[] }>();
 
@@ -64,6 +74,9 @@ export default function InvitationFlowEditScreen() {
       return;
     }
 
+    const selectedEditableImageUrl =
+      template.editableImageUrl || template.imageUrl;
+
     router.push({
       pathname: "/invitation-flow/[templateId]/preview",
       params: {
@@ -74,7 +87,7 @@ export default function InvitationFlowEditScreen() {
         description,
         venueName,
         venueLocation,
-        editableImageUrl: template.editableImageUrl || template.imageUrl,
+        editableImageUrl: selectedEditableImageUrl,
       },
     });
   }
@@ -109,8 +122,13 @@ export default function InvitationFlowEditScreen() {
     );
   }
 
-  const editablePreviewImageUrl =
+  const selectedEditableImageUrl =
     template.editableImageUrl || template.imageUrl;
+
+  const editablePreviewImageUrl = getCacheBustedImageUrl(
+    selectedEditableImageUrl,
+    template.id,
+  );
 
   return (
     <ScreenContainer className="flex-1 bg-background">

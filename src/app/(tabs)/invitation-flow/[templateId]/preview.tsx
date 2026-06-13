@@ -14,59 +14,96 @@ import {
 
 export default function InvitationFlowPreviewScreen() {
   const params = useLocalSearchParams<{
-    templateId: string;
-    names?: string;
-    date?: string;
-    time?: string;
-    description?: string;
-    venueName?: string;
-    venueLocation?: string;
+    templateId?: string | string[];
+    names?: string | string[];
+    date?: string | string[];
+    time?: string | string[];
+    description?: string | string[];
+    venueName?: string | string[];
+    venueLocation?: string | string[];
+    editableImageUrl?: string | string[];
   }>();
 
   const [template, setTemplate] = useState<InvitationTemplateDto | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const names = params.names ?? "Nisa & Onur";
-  const date = params.date ?? "22 AĞUSTOS 2026";
-  const time = params.time ?? "CUMARTESİ | 19.00";
-  const description =
-    params.description ??
-    "Bu özel günümüzde\nsizleri de aramızda görmekten\nmutluluk duyarız.";
-  const venueName = params.venueName ?? "FOUR SEASONS HOTEL";
-  const venueLocation = params.venueLocation ?? "Beşiktaş, İstanbul";
+  const templateId = Array.isArray(params.templateId)
+    ? params.templateId[0]
+    : params.templateId;
+
+  const names = Array.isArray(params.names)
+    ? params.names[0]
+    : (params.names ?? "");
+
+  const date = Array.isArray(params.date)
+    ? params.date[0]
+    : (params.date ?? "");
+
+  const time = Array.isArray(params.time)
+    ? params.time[0]
+    : (params.time ?? "");
+
+  const description = Array.isArray(params.description)
+    ? params.description[0]
+    : (params.description ?? "");
+
+  const venueName = Array.isArray(params.venueName)
+    ? params.venueName[0]
+    : (params.venueName ?? "");
+
+  const venueLocation = Array.isArray(params.venueLocation)
+    ? params.venueLocation[0]
+    : (params.venueLocation ?? "");
+
+  const editableImageUrl = Array.isArray(params.editableImageUrl)
+    ? params.editableImageUrl[0]
+    : params.editableImageUrl;
 
   useEffect(() => {
-    if (!params.templateId) {
+    fetchTemplate();
+  }, [templateId]);
+
+  async function fetchTemplate() {
+    if (!templateId) {
+      setTemplate(null);
+      setLoading(false);
       return;
     }
 
-    fetchTemplate();
-  }, [params.templateId]);
-
-  async function fetchTemplate() {
     try {
       setLoading(true);
 
-      const data = await getInvitationTemplateById(params.templateId);
+      const data = await getInvitationTemplateById(templateId);
+
       setTemplate(data);
     } catch (error) {
       console.log("Davetiye önizleme verisi alınamadı:", error);
+      setTemplate(null);
     } finally {
       setLoading(false);
     }
   }
 
   function handleShareStep() {
+    if (!templateId) {
+      return;
+    }
+
     router.push({
       pathname: "/invitation-flow/[templateId]/share",
       params: {
-        templateId: params.templateId,
+        templateId,
         names,
         date,
         time,
         description,
         venueName,
         venueLocation,
+        editableImageUrl:
+          editableImageUrl ||
+          template?.editableImageUrl ||
+          template?.imageUrl ||
+          "",
       },
     });
   }
@@ -97,6 +134,9 @@ export default function InvitationFlowPreviewScreen() {
     );
   }
 
+  const previewImageUrl =
+    editableImageUrl || template.editableImageUrl || template.imageUrl;
+
   return (
     <ScreenContainer className="flex-1 bg-background">
       <ScrollView
@@ -107,7 +147,7 @@ export default function InvitationFlowPreviewScreen() {
 
         <View className="mt-5">
           <InvitationPreviewCard
-            template={template}
+            imageUrl={previewImageUrl}
             names={names}
             date={date}
             time={time}
