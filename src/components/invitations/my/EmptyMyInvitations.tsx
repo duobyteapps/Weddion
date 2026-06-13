@@ -17,7 +17,7 @@ export function EmptyMyInvitations({ onCreatePress }: EmptyMyInvitations) {
       />
 
       <View className="mt-6 items-center">
-        <AppText variant="title">Henüz davetiyeniz yok</AppText>
+        <AppText variant="title">Henüz davetiniz yok</AppText>
 
         <AppText
           variant="body"

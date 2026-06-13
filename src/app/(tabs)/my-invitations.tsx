@@ -17,8 +17,8 @@ export default function MyInvitationsScreen() {
         contentContainerClassName="pb-32"
       >
         <ScreenHeader
-          title="Davetiyelerim"
-          description="Oluşturduğunuz tüm davetiyeleri buradan görüntüleyebilirsiniz."
+          title="Davetlerim"
+          description="Oluşturduğunuz tüm davetleri buradan görüntüleyebilirsiniz."
         />
         <MyInvitationsHero />
         <EmptyMyInvitations onCreatePress={handleCreateInvitation} />

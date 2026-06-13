@@ -27,7 +27,7 @@ export default function TabsLayout() {
       }}
     >
       <Tabs.Screen name="home" options={{ title: "Ana Sayfa" }} />
-      <Tabs.Screen name="my-invitations" options={{ title: "Davetiyelerim" }} />
+      <Tabs.Screen name="my-invitations" options={{ title: "Davetlerim" }} />
       <Tabs.Screen name="guests" options={{ title: "Misafirler" }} />
       <Tabs.Screen name="profile" options={{ title: "Profil" }} />
 
