@@ -1,7 +1,3 @@
-import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, ScrollView, View } from "react-native";
-
 import { ScreenHeader } from "@/components/common/ScreenHeader";
 import { InvitationEditFormSection } from "@/components/invitations/create/InvitationEditFormSection";
 import { InvitationEditSteps } from "@/components/invitations/create/InvitationEditSteps";
@@ -9,13 +5,28 @@ import { InvitationPreviewCard } from "@/components/invitations/create/Invitatio
 import { AppText } from "@/components/ui/AppText";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { defaultInvitationContent } from "@/constants/invitationDefaultContent";
+import { useAppNavigation } from "@/hooks/useAppNavigation";
 import {
   getInvitationTemplateById,
   InvitationTemplateDto,
 } from "@/services/invitationTemplateService";
 import { InvitationFormData } from "@/types/invitation";
+import { useLocalSearchParams } from "expo-router";
+import { useEffect, useMemo, useState } from "react";
+import { ActivityIndicator, ScrollView, View } from "react-native";
+
+function getCacheBustedImageUrl(imageUrl?: string | null, version?: string) {
+  if (!imageUrl) {
+    return null;
+  }
+
+  const separator = imageUrl.includes("?") ? "&" : "?";
+
+  return `${imageUrl}${separator}v=${version ?? Date.now()}`;
+}
 
 export default function InvitationFlowEditScreen() {
+  const appRouter = useAppNavigation();
   const params = useLocalSearchParams<{ templateId?: string | string[] }>();
 
   const templateId = useMemo(() => {
@@ -28,6 +39,7 @@ export default function InvitationFlowEditScreen() {
 
   const [template, setTemplate] = useState<InvitationTemplateDto | null>(null);
   const [loading, setLoading] = useState(true);
+
   const [formData, setFormData] = useState<InvitationFormData>(
     defaultInvitationContent,
   );
@@ -70,8 +82,11 @@ export default function InvitationFlowEditScreen() {
       return;
     }
 
-    router.push({
-      pathname: "/invitation-flow/[templateId]/preview",
+    const selectedEditableImageUrl =
+      template.editableImageUrl || template.imageUrl;
+
+    appRouter.push({
+      pathname: "/(tabs)/invitation-flow/[templateId]/preview",
       params: {
         templateId: template.id,
         brideName: formData.brideName,
@@ -85,6 +100,7 @@ export default function InvitationFlowEditScreen() {
         description: formData.description,
         venueName: formData.venueName,
         venueLocation: formData.venueLocation,
+        editableImageUrl: selectedEditableImageUrl ?? "",
       },
     });
   }
@@ -114,6 +130,14 @@ export default function InvitationFlowEditScreen() {
     );
   }
 
+  const selectedEditableImageUrl =
+    template.editableImageUrl || template.imageUrl;
+
+  const editablePreviewImageUrl = getCacheBustedImageUrl(
+    selectedEditableImageUrl,
+    template.id,
+  );
+
   return (
     <ScreenContainer className="flex-1 bg-background">
       <ScrollView
@@ -130,7 +154,7 @@ export default function InvitationFlowEditScreen() {
 
         <View className="mt-6 gap-6">
           <InvitationPreviewCard
-            imageUrl={template.editableImageUrl}
+            imageUrl={editablePreviewImageUrl}
             formData={formData}
           />
 

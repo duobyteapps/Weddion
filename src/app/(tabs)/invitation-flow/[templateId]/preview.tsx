@@ -1,72 +1,114 @@
-import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, ScrollView, View } from "react-native";
-
 import { InvitationEditSteps } from "@/components/invitations/create/InvitationEditSteps";
 import { InvitationPreviewCard } from "@/components/invitations/create/InvitationPreviewCard";
 import { AppButton } from "@/components/ui/AppButton";
 import { AppText } from "@/components/ui/AppText";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { defaultInvitationContent } from "@/constants/invitationDefaultContent";
+import { useAppNavigation } from "@/hooks/useAppNavigation";
 import {
   getInvitationTemplateById,
   InvitationTemplateDto,
 } from "@/services/invitationTemplateService";
 import { InvitationFormData } from "@/types/invitation";
+import { useLocalSearchParams } from "expo-router";
+import { useEffect, useMemo, useState } from "react";
+import { ActivityIndicator, ScrollView, View } from "react-native";
+
+function getParamValue(value: string | string[] | undefined) {
+  if (Array.isArray(value)) {
+    return value[0];
+  }
+
+  return value;
+}
 
 export default function InvitationFlowPreviewScreen() {
+  const appRouter = useAppNavigation();
+
   const params = useLocalSearchParams<{
-    templateId: string;
-    brideName?: string;
-    groomName?: string;
-    brideParents?: string;
-    groomParents?: string;
-    brideSurname?: string;
-    groomSurname?: string;
-    date?: string;
-    time?: string;
-    description?: string;
-    venueName?: string;
-    venueLocation?: string;
+    templateId?: string | string[];
+    brideName?: string | string[];
+    groomName?: string | string[];
+    brideParents?: string | string[];
+    groomParents?: string | string[];
+    brideSurname?: string | string[];
+    groomSurname?: string | string[];
+    date?: string | string[];
+    time?: string | string[];
+    description?: string | string[];
+    venueName?: string | string[];
+    venueLocation?: string | string[];
+    editableImageUrl?: string | string[];
   }>();
 
   const [template, setTemplate] = useState<InvitationTemplateDto | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const formData = useMemo<InvitationFormData>(
-    () => ({
-      brideName: params.brideName ?? defaultInvitationContent.brideName,
-      groomName: params.groomName ?? defaultInvitationContent.groomName,
+  const templateId = useMemo(() => {
+    return getParamValue(params.templateId);
+  }, [params.templateId]);
+
+  const editableImageUrl = useMemo(() => {
+    return getParamValue(params.editableImageUrl);
+  }, [params.editableImageUrl]);
+
+  const formData = useMemo<InvitationFormData>(() => {
+    return {
+      brideName:
+        getParamValue(params.brideName) ?? defaultInvitationContent.brideName,
+      groomName:
+        getParamValue(params.groomName) ?? defaultInvitationContent.groomName,
       brideParents:
-        params.brideParents ?? defaultInvitationContent.brideParents,
+        getParamValue(params.brideParents) ??
+        defaultInvitationContent.brideParents,
       groomParents:
-        params.groomParents ?? defaultInvitationContent.groomParents,
+        getParamValue(params.groomParents) ??
+        defaultInvitationContent.groomParents,
       brideSurname:
-        params.brideSurname ?? defaultInvitationContent.brideSurname,
+        getParamValue(params.brideSurname) ??
+        defaultInvitationContent.brideSurname,
       groomSurname:
-        params.groomSurname ?? defaultInvitationContent.groomSurname,
-      date: params.date ?? defaultInvitationContent.date,
-      time: params.time ?? defaultInvitationContent.time,
-      description: params.description ?? defaultInvitationContent.description,
-      venueName: params.venueName ?? defaultInvitationContent.venueName,
+        getParamValue(params.groomSurname) ??
+        defaultInvitationContent.groomSurname,
+      date: getParamValue(params.date) ?? defaultInvitationContent.date,
+      time: getParamValue(params.time) ?? defaultInvitationContent.time,
+      description:
+        getParamValue(params.description) ??
+        defaultInvitationContent.description,
+      venueName:
+        getParamValue(params.venueName) ?? defaultInvitationContent.venueName,
       venueLocation:
-        params.venueLocation ?? defaultInvitationContent.venueLocation,
-    }),
-    [params],
-  );
+        getParamValue(params.venueLocation) ??
+        defaultInvitationContent.venueLocation,
+    };
+  }, [
+    params.brideName,
+    params.groomName,
+    params.brideParents,
+    params.groomParents,
+    params.brideSurname,
+    params.groomSurname,
+    params.date,
+    params.time,
+    params.description,
+    params.venueName,
+    params.venueLocation,
+  ]);
 
   useEffect(() => {
-    if (!params.templateId) {
+    fetchTemplate();
+  }, [templateId]);
+
+  async function fetchTemplate() {
+    if (!templateId) {
+      setTemplate(null);
+      setLoading(false);
       return;
     }
 
-    fetchTemplate();
-  }, [params.templateId]);
-
-  async function fetchTemplate() {
     try {
       setLoading(true);
-      const data = await getInvitationTemplateById(params.templateId);
+      const data = await getInvitationTemplateById(templateId);
       setTemplate(data);
     } catch (error) {
       console.log("Davetiye önizleme verisi alınamadı:", error);
@@ -77,10 +119,14 @@ export default function InvitationFlowPreviewScreen() {
   }
 
   function handleShareStep() {
-    router.push({
-      pathname: "/invitation-flow/[templateId]/share",
+    if (!templateId) {
+      return;
+    }
+
+    appRouter.push({
+      pathname: "/(tabs)/invitation-flow/[templateId]/share",
       params: {
-        templateId: params.templateId,
+        templateId,
         brideName: formData.brideName,
         groomName: formData.groomName,
         brideParents: formData.brideParents,
@@ -92,6 +138,11 @@ export default function InvitationFlowPreviewScreen() {
         description: formData.description,
         venueName: formData.venueName,
         venueLocation: formData.venueLocation,
+        editableImageUrl:
+          editableImageUrl ||
+          template?.editableImageUrl ||
+          template?.imageUrl ||
+          "",
       },
     });
   }
@@ -117,6 +168,9 @@ export default function InvitationFlowPreviewScreen() {
     );
   }
 
+  const previewImageUrl =
+    editableImageUrl || template.editableImageUrl || template.imageUrl;
+
   return (
     <ScreenContainer className="flex-1 bg-background">
       <ScrollView
@@ -127,7 +181,7 @@ export default function InvitationFlowPreviewScreen() {
 
         <View className="mt-6">
           <InvitationPreviewCard
-            imageUrl={template.editableImageUrl}
+            imageUrl={previewImageUrl}
             formData={formData}
           />
         </View>

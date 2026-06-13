@@ -6,12 +6,14 @@ import {
 import { InvitationTemplate } from "@/components/invitations/select/InvitationTemplateCard";
 import { InvitationTemplateList } from "@/components/invitations/select/InvitationTemplateList";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
+import { useAppNavigation } from "@/hooks/useAppNavigation";
 import { getInvitationTemplates } from "@/services/invitationTemplateService";
-import { router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 
 export default function InvitationSelectScreen() {
+  const appRouter = useAppNavigation();
+
   const [selectedCategory, setSelectedCategory] =
     useState<InvitationCategory>("all");
 
@@ -53,11 +55,10 @@ export default function InvitationSelectScreen() {
   };
 
   const handlePressTemplate = (template: InvitationTemplate) => {
-    router.push({
+    appRouter.push({
       pathname: "/(tabs)/invitation-flow/[templateId]/edit",
       params: {
         templateId: template.id,
-        returnTo: "/invitation-select",
       },
     });
   };

@@ -30,7 +30,7 @@ export function ScreenHeader({
   };
 
   return (
-    <View className="relative mb-8 mt-4 justify-center">
+    <View className="relative justify-center mb-8 mt-4">
       <AppBackButton
         onPress={handleBackPress}
         className="absolute left-0 z-10"

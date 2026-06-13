@@ -1,17 +1,18 @@
 import { AppText } from "@/components/ui/AppText";
 import { Colors } from "@/constants/Colors";
+import { useAppNavigation } from "@/hooks/useAppNavigation";
 import { Ionicons } from "@expo/vector-icons";
-import { Href, router } from "expo-router";
-import { Linking, Pressable, View } from "react-native";
+import { Href } from "expo-router";
+import { Pressable, View } from "react-native";
+
 import { AppCard } from "../ui/AppCard";
 import { AppDivider } from "../ui/AppDivider";
 
 type MenuItem = {
   label: string;
   icon: keyof typeof Ionicons.glyphMap;
-  danger?: boolean;
   route?: Href;
-  url?: string;
+  danger?: boolean;
   onPress?: () => void;
 };
 
@@ -21,29 +22,24 @@ type Props = {
 };
 
 export function ProfileMenuSection({ title, items }: Props) {
-  function handlePress(item: MenuItem) {
-    if (item.url) {
-      Linking.openURL(item.url).catch(() => {
-        Linking.openURL(
-          "https://play.google.com/store/apps/details?id=com.duobyteapps.weddion",
-        );
-      });
-      return;
-    }
+  const appRouter = useAppNavigation();
 
+  function handlePress(item: MenuItem) {
     if (item.onPress) {
       item.onPress();
       return;
     }
 
     if (item.route) {
-      router.push(item.route);
+      appRouter.push({
+        pathname: item.route,
+      });
     }
   }
 
   return (
     <AppCard>
-      <AppText variant="serifTitle" className="mb-3">
+      <AppText variant="subtitle" className="mb-2 text-textDark">
         {title}
       </AppText>
 
@@ -59,27 +55,29 @@ export function ProfileMenuSection({ title, items }: Props) {
                 isLast ? "pt-3 pb-0" : "py-3"
               }`}
             >
-              <View className="h-8 w-8 items-center justify-center rounded-xl bg-primarySoft">
-                <Ionicons name={item.icon} size={14} color={color} />
+              <View className="mr-3 h-10 w-10 items-center justify-center rounded-2xl bg-primary/10">
+                <Ionicons name={item.icon} size={20} color={color} />
               </View>
 
               <AppText
                 variant="body"
-                className={`ml-4 flex-1 font-manropeSemiBold ${
-                  item.danger ? "text-[#D24B5B]" : "text-textDark"
+                className={`flex-1 ${
+                  item.danger ? "text-danger" : "text-textDark"
                 }`}
               >
                 {item.label}
               </AppText>
 
-              <Ionicons
-                name="chevron-forward"
-                size={14}
-                color={Colors.textLight}
-              />
+              {!item.danger && (
+                <Ionicons
+                  name="chevron-forward"
+                  size={18}
+                  color={Colors.textMuted}
+                />
+              )}
             </Pressable>
 
-            {!isLast && <AppDivider className="ml-12" />}
+            {!isLast && <AppDivider />}
           </View>
         );
       })}
