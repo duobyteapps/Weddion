@@ -9,6 +9,7 @@ type Props = {
   invitation: UserInvitation;
   onEditPress: (invitation: UserInvitation) => void;
   onSharePress: (invitation: UserInvitation) => void;
+  onDeletePress: (invitation: UserInvitation) => void;
   onMenuPress?: (invitation: UserInvitation) => void;
 };
 
@@ -74,13 +75,14 @@ export function MyInvitationCard({
   invitation,
   onEditPress,
   onSharePress,
+  onDeletePress,
 }: Props) {
   const imageUri = normalizeImageUri(invitation.invitation_image_url);
   const title = formatInvitationTitle(invitation);
   const venue = formatVenue(invitation);
 
   return (
-    <AppCard noMargin noPadding className="overflow-hidden py-4">
+    <AppCard noMargin noPadding className="overflow-hidden px-4 py-4">
       <View className="flex-row gap-4">
         <View className="h-[126px] w-[126px] overflow-hidden rounded-2xl bg-primaryLight/30">
           {imageUri ? (
@@ -120,6 +122,14 @@ export function MyInvitationCard({
             >
               {truncateText(title, 25)}
             </AppText>
+
+            <Pressable
+              onPress={() => onDeletePress(invitation)}
+              hitSlop={8}
+              className="h-8 w-8 items-center justify-center rounded-full border border-red-100 bg-red-50"
+            >
+              <Feather name="trash-2" size={14} color="#D85C5C" />
+            </Pressable>
           </View>
 
           <View className="mt-3 gap-2">

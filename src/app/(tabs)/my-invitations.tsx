@@ -2,7 +2,6 @@ import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   RefreshControl,
   ScrollView,
   View,
@@ -12,9 +11,13 @@ import { ScreenHeader } from "@/components/common/ScreenHeader";
 import { CreateInvitationListCard } from "@/components/invitations/my/CreateInvitationListCard";
 import { MyInvitationsHero } from "@/components/invitations/my/MyInvitationsHero";
 import { MyInvitationsList } from "@/components/invitations/my/MyInvitationsList";
+import { useAppAlert } from "@/components/ui/AppAlert";
 import { AppText } from "@/components/ui/AppText";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
-import { getCurrentUserInvitations } from "@/services/invitationService";
+import {
+  deleteUserInvitation,
+  getCurrentUserInvitations,
+} from "@/services/invitationService";
 import { UserInvitation } from "@/types/invitation";
 
 function getInvitationRouteParams(invitation: UserInvitation) {
@@ -39,6 +42,8 @@ function getInvitationRouteParams(invitation: UserInvitation) {
 }
 
 export default function MyInvitationsScreen() {
+  const { showAlert } = useAppAlert();
+
   const [invitations, setInvitations] = useState<UserInvitation[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -50,15 +55,20 @@ export default function MyInvitationsScreen() {
   async function fetchInvitations() {
     try {
       setLoading(true);
+
       const data = await getCurrentUserInvitations();
+
       setInvitations(data);
     } catch (error) {
       console.log("Davetiyeler alınamadı:", error);
 
-      Alert.alert(
-        "Davetiyeler alınamadı",
-        "Davetiyeler yüklenirken bir sorun oluştu. Lütfen tekrar deneyin.",
-      );
+      showAlert({
+        title: "Davetiyeler alınamadı",
+        message:
+          "Davetiyeler yüklenirken bir sorun oluştu. Lütfen tekrar deneyin.",
+        type: "error",
+        confirmText: "Tamam",
+      });
     } finally {
       setLoading(false);
     }
@@ -67,10 +77,20 @@ export default function MyInvitationsScreen() {
   async function handleRefresh() {
     try {
       setRefreshing(true);
+
       const data = await getCurrentUserInvitations();
+
       setInvitations(data);
     } catch (error) {
       console.log("Davetiyeler yenilenemedi:", error);
+
+      showAlert({
+        title: "Yenileme başarısız",
+        message:
+          "Davetiyeler yenilenirken bir sorun oluştu. Lütfen tekrar deneyin.",
+        type: "error",
+        confirmText: "Tamam",
+      });
     } finally {
       setRefreshing(false);
     }
@@ -94,11 +114,54 @@ export default function MyInvitationsScreen() {
     });
   }
 
+  async function deleteInvitation(invitation: UserInvitation) {
+    try {
+      await deleteUserInvitation(invitation.id);
+
+      setInvitations((currentInvitations) =>
+        currentInvitations.filter((item) => item.id !== invitation.id),
+      );
+
+      showAlert({
+        title: "Davetiye silindi",
+        message: "Davetiye başarıyla silindi.",
+        type: "success",
+        confirmText: "Tamam",
+      });
+    } catch (error) {
+      console.log("Davetiye silinemedi:", error);
+
+      showAlert({
+        title: "Davetiye silinemedi",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Davetiye silinirken bir sorun oluştu. Lütfen tekrar deneyin.",
+        type: "error",
+        confirmText: "Tamam",
+      });
+    }
+  }
+
+  function handleDeleteInvitation(invitation: UserInvitation) {
+    showAlert({
+      title: "Davetiyeyi sil",
+      message: `${invitation.bride_name} & ${invitation.groom_name} davetiyesini silmek istediğinize emin misiniz? Bu işlem geri alınamaz.`,
+      type: "warning",
+      confirmText: "Sil",
+      onConfirm: () => {
+        deleteInvitation(invitation);
+      },
+    });
+  }
+
   function handleMenuPress(invitation: UserInvitation) {
-    Alert.alert(
-      "Davetiye İşlemleri",
-      `${invitation.bride_name} & ${invitation.groom_name} davetiyesi için işlemler daha sonra aktif edilecek.`,
-    );
+    showAlert({
+      title: "Davetiye İşlemleri",
+      message: `${invitation.bride_name} & ${invitation.groom_name} davetiyesi için işlemler daha sonra aktif edilecek.`,
+      type: "info",
+      confirmText: "Tamam",
+    });
   }
 
   if (loading) {
@@ -106,6 +169,7 @@ export default function MyInvitationsScreen() {
       <ScreenContainer className="bg-background">
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator color="#A875D1" />
+
           <AppText className="mt-3">Davetiyeleriniz hazırlanıyor...</AppText>
         </View>
       </ScreenContainer>
@@ -136,6 +200,7 @@ export default function MyInvitationsScreen() {
           invitations={invitations}
           onEditPress={handleEditInvitation}
           onSharePress={handleShareInvitation}
+          onDeletePress={handleDeleteInvitation}
           onMenuPress={handleMenuPress}
         />
 

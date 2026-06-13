@@ -238,6 +238,50 @@ export async function updateUserInvitation(
   }
 }
 
+export async function deleteUserInvitation(
+  invitationId: string,
+): Promise<void> {
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError) {
+    throw new Error(userError.message);
+  }
+
+  if (!user) {
+    throw new Error("Davetiye silmek için oturum açmalısınız.");
+  }
+
+  const { data: invitation, error: findError } = await supabase
+    .from("user_invitations")
+    .select("id, invitation_image_path")
+    .eq("id", invitationId)
+    .eq("user_id", user.id)
+    .single();
+
+  if (findError) {
+    throw new Error(findError.message);
+  }
+
+  const { error: deleteError } = await supabase
+    .from("user_invitations")
+    .delete()
+    .eq("id", invitationId)
+    .eq("user_id", user.id);
+
+  if (deleteError) {
+    throw new Error(deleteError.message);
+  }
+
+  if (invitation?.invitation_image_path) {
+    await supabase.storage
+      .from(INVITATION_IMAGES_BUCKET)
+      .remove([invitation.invitation_image_path]);
+  }
+}
+
 export async function getCurrentUserInvitations(): Promise<UserInvitation[]> {
   const {
     data: { user },

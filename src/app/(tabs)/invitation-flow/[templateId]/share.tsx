@@ -245,7 +245,10 @@ export default function InvitationFlowShareScreen() {
         <ScreenHeader
           title="Paylaş"
           description="Davetiyenizi Instagram için hazırlayın."
-          onBackPress={handleBackPress}
+          backTo={{
+            pathname: "/my-invitations",
+            params: getRouteParams(),
+          }}
         />
 
         <InvitationEditSteps activeStep={3} />

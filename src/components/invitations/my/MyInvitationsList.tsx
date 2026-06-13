@@ -7,6 +7,7 @@ type Props = {
   invitations: UserInvitation[];
   onEditPress: (invitation: UserInvitation) => void;
   onSharePress: (invitation: UserInvitation) => void;
+  onDeletePress: (invitation: UserInvitation) => void;
   onMenuPress?: (invitation: UserInvitation) => void;
 };
 
@@ -14,6 +15,7 @@ export function MyInvitationsList({
   invitations,
   onEditPress,
   onSharePress,
+  onDeletePress,
   onMenuPress,
 }: Props) {
   return (
@@ -24,6 +26,7 @@ export function MyInvitationsList({
           invitation={invitation}
           onEditPress={onEditPress}
           onSharePress={onSharePress}
+          onDeletePress={onDeletePress}
           onMenuPress={onMenuPress}
         />
       ))}
