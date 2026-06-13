@@ -15,6 +15,34 @@ import { useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, ScrollView } from "react-native";
 
+type EditParams = {
+  templateId?: string | string[];
+  invitationId?: string | string[];
+  shareSlug?: string | string[];
+  invitationImageUrl?: string | string[];
+  editableImageUrl?: string | string[];
+
+  brideName?: string | string[];
+  groomName?: string | string[];
+  brideParents?: string | string[];
+  groomParents?: string | string[];
+  brideSurname?: string | string[];
+  groomSurname?: string | string[];
+  date?: string | string[];
+  time?: string | string[];
+  description?: string | string[];
+  venueName?: string | string[];
+  venueLocation?: string | string[];
+};
+
+function getParamValue(value?: string | string[]) {
+  if (Array.isArray(value)) {
+    return value[0];
+  }
+
+  return value;
+}
+
 function getCacheBustedImageUrl(imageUrl?: string | null, version?: string) {
   if (!imageUrl) {
     return null;
@@ -25,23 +53,65 @@ function getCacheBustedImageUrl(imageUrl?: string | null, version?: string) {
   return `${imageUrl}${separator}v=${version ?? Date.now()}`;
 }
 
+function createInitialFormData(params: EditParams): InvitationFormData {
+  return {
+    brideName:
+      getParamValue(params.brideName) ?? defaultInvitationContent.brideName,
+    groomName:
+      getParamValue(params.groomName) ?? defaultInvitationContent.groomName,
+    brideParents:
+      getParamValue(params.brideParents) ??
+      defaultInvitationContent.brideParents,
+    groomParents:
+      getParamValue(params.groomParents) ??
+      defaultInvitationContent.groomParents,
+    brideSurname:
+      getParamValue(params.brideSurname) ??
+      defaultInvitationContent.brideSurname,
+    groomSurname:
+      getParamValue(params.groomSurname) ??
+      defaultInvitationContent.groomSurname,
+    date: getParamValue(params.date) ?? defaultInvitationContent.date,
+    time: getParamValue(params.time) ?? defaultInvitationContent.time,
+    description:
+      getParamValue(params.description) ?? defaultInvitationContent.description,
+    venueName:
+      getParamValue(params.venueName) ?? defaultInvitationContent.venueName,
+    venueLocation:
+      getParamValue(params.venueLocation) ??
+      defaultInvitationContent.venueLocation,
+  };
+}
+
 export default function InvitationFlowEditScreen() {
   const appRouter = useAppNavigation();
-  const params = useLocalSearchParams<{ templateId?: string | string[] }>();
+  const params = useLocalSearchParams<EditParams>();
 
   const templateId = useMemo(() => {
-    if (Array.isArray(params.templateId)) {
-      return params.templateId[0];
-    }
-
-    return params.templateId;
+    return getParamValue(params.templateId);
   }, [params.templateId]);
+
+  const invitationId = useMemo(() => {
+    return getParamValue(params.invitationId);
+  }, [params.invitationId]);
+
+  const shareSlug = useMemo(() => {
+    return getParamValue(params.shareSlug);
+  }, [params.shareSlug]);
+
+  const invitationImageUrl = useMemo(() => {
+    return getParamValue(params.invitationImageUrl);
+  }, [params.invitationImageUrl]);
+
+  const editableImageUrl = useMemo(() => {
+    return getParamValue(params.editableImageUrl);
+  }, [params.editableImageUrl]);
 
   const [template, setTemplate] = useState<InvitationTemplateDto | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const [formData, setFormData] = useState<InvitationFormData>(
-    defaultInvitationContent,
+  const [formData, setFormData] = useState<InvitationFormData>(() =>
+    createInitialFormData(params),
   );
 
   useEffect(() => {
@@ -83,12 +153,17 @@ export default function InvitationFlowEditScreen() {
     }
 
     const selectedEditableImageUrl =
-      template.editableImageUrl || template.imageUrl;
+      editableImageUrl || template.editableImageUrl || template.imageUrl;
 
     appRouter.push({
       pathname: "/(tabs)/invitation-flow/[templateId]/preview",
       params: {
         templateId: template.id,
+        invitationId: invitationId ?? "",
+        shareSlug: shareSlug ?? "",
+        invitationImageUrl: invitationImageUrl ?? "",
+        editableImageUrl: selectedEditableImageUrl ?? "",
+
         brideName: formData.brideName,
         groomName: formData.groomName,
         brideParents: formData.brideParents,
@@ -100,7 +175,6 @@ export default function InvitationFlowEditScreen() {
         description: formData.description,
         venueName: formData.venueName,
         venueLocation: formData.venueLocation,
-        editableImageUrl: selectedEditableImageUrl ?? "",
       },
     });
   }
@@ -131,7 +205,7 @@ export default function InvitationFlowEditScreen() {
   }
 
   const selectedEditableImageUrl =
-    template.editableImageUrl || template.imageUrl;
+    editableImageUrl || template.editableImageUrl || template.imageUrl;
 
   const editablePreviewImageUrl = getCacheBustedImageUrl(
     selectedEditableImageUrl,

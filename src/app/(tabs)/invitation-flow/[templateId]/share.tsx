@@ -1,4 +1,4 @@
-import { useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Alert, ScrollView, View } from "react-native";
 
@@ -21,6 +21,9 @@ type ShareParams = {
   templateId: string;
   invitationId?: string;
   shareSlug?: string;
+  invitationImageUrl?: string;
+  editableImageUrl?: string;
+
   brideName?: string;
   groomName?: string;
   brideParents?: string;
@@ -54,6 +57,14 @@ function createInvitationSlug(brideName: string, groomName: string) {
     .replaceAll("ç", "c")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
+}
+
+function cleanOptionalParam(value?: string) {
+  if (!value || value.trim().length === 0) {
+    return undefined;
+  }
+
+  return value;
 }
 
 export default function InvitationFlowShareScreen() {
@@ -95,9 +106,21 @@ export default function InvitationFlowShareScreen() {
     return getCapturedInvitationImageUri();
   }, []);
 
+  const backendInvitationImageUrl = useMemo(() => {
+    return cleanOptionalParam(params.invitationImageUrl);
+  }, [params.invitationImageUrl]);
+
   const finalInvitationImageUri = useMemo(() => {
-    return capturedInvitationImageUri || fallbackPreviewImageUrl;
-  }, [capturedInvitationImageUri, fallbackPreviewImageUrl]);
+    return (
+      capturedInvitationImageUri ||
+      backendInvitationImageUrl ||
+      fallbackPreviewImageUrl
+    );
+  }, [
+    capturedInvitationImageUri,
+    backendInvitationImageUrl,
+    fallbackPreviewImageUrl,
+  ]);
 
   const fallbackSlug = useMemo(() => {
     return createInvitationSlug(formData.brideName, formData.groomName);
@@ -130,6 +153,39 @@ export default function InvitationFlowShareScreen() {
     } finally {
       setLoading(false);
     }
+  }
+
+  function getRouteParams() {
+    return {
+      templateId: params.templateId,
+      invitationId: params.invitationId ?? "",
+      shareSlug: params.shareSlug ?? "",
+      invitationImageUrl: params.invitationImageUrl ?? "",
+      editableImageUrl:
+        params.editableImageUrl ??
+        template?.editableImageUrl ??
+        template?.imageUrl ??
+        "",
+
+      brideName: formData.brideName,
+      groomName: formData.groomName,
+      brideParents: formData.brideParents,
+      groomParents: formData.groomParents,
+      brideSurname: formData.brideSurname,
+      groomSurname: formData.groomSurname,
+      date: formData.date,
+      time: formData.time,
+      description: formData.description,
+      venueName: formData.venueName,
+      venueLocation: formData.venueLocation,
+    };
+  }
+
+  function handleBackPress() {
+    router.push({
+      pathname: "/invitation-flow/[templateId]/preview",
+      params: getRouteParams(),
+    });
   }
 
   function handleDownloadInstagramImage() {
@@ -189,6 +245,7 @@ export default function InvitationFlowShareScreen() {
         <ScreenHeader
           title="Paylaş"
           description="Davetiyenizi Instagram için hazırlayın."
+          onBackPress={handleBackPress}
         />
 
         <InvitationEditSteps activeStep={3} />

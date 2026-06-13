@@ -63,3 +63,11 @@ export type CreateUserInvitationPayload = {
   status?: UserInvitationStatus;
   capturedImageUri?: string | null;
 };
+
+export type UpdateUserInvitationPayload = {
+  invitationId: string;
+  templateId: string;
+  formData: InvitationFormData;
+  status?: UserInvitationStatus;
+  capturedImageUri?: string | null;
+};

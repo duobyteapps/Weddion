@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, Alert, ScrollView, View } from "react-native";
+import { ActivityIndicator, ScrollView, View } from "react-native";
 import { captureRef } from "react-native-view-shot";
 
 import { ScreenHeader } from "@/components/common/ScreenHeader";
@@ -8,10 +8,14 @@ import { InvitationEditSteps } from "@/components/invitations/create/InvitationE
 import { InvitationPreviewActions } from "@/components/invitations/create/InvitationPreviewActions";
 import { InvitationPreviewCard } from "@/components/invitations/create/InvitationPreviewCard";
 import { InvitationPreviewSuccessCard } from "@/components/invitations/create/InvitationPreviewSuccessCard";
+import { useAppAlert } from "@/components/ui/AppAlert";
 import { AppText } from "@/components/ui/AppText";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { defaultInvitationContent } from "@/constants/invitationDefaultContent";
-import { createUserInvitation } from "@/services/invitationService";
+import {
+  createUserInvitation,
+  updateUserInvitation,
+} from "@/services/invitationService";
 import {
   getInvitationTemplateById,
   InvitationTemplateDto,
@@ -21,6 +25,11 @@ import { setCapturedInvitationImageUri } from "@/utils/invitationCaptureStore";
 
 type PreviewParams = {
   templateId: string;
+  invitationId?: string;
+  shareSlug?: string;
+  invitationImageUrl?: string;
+  editableImageUrl?: string;
+
   brideName?: string;
   groomName?: string;
   brideParents?: string;
@@ -51,9 +60,18 @@ function waitForCaptureReady() {
   });
 }
 
+function cleanOptionalParam(value?: string) {
+  if (!value || value.trim().length === 0) {
+    return undefined;
+  }
+
+  return value;
+}
+
 export default function InvitationFlowPreviewScreen() {
   const params = useLocalSearchParams<PreviewParams>();
   const invitationCaptureRef = useRef<View>(null);
+  const { showAlert } = useAppAlert();
 
   const [template, setTemplate] = useState<InvitationTemplateDto | null>(null);
   const [loading, setLoading] = useState(true);
@@ -83,10 +101,12 @@ export default function InvitationFlowPreviewScreen() {
 
   const previewImageUrl = useMemo(() => {
     return getCacheBustedImageUrl(
-      template?.editableImageUrl ?? template?.imageUrl,
+      params.editableImageUrl ??
+        template?.editableImageUrl ??
+        template?.imageUrl,
       template?.id,
     );
-  }, [template]);
+  }, [params.editableImageUrl, template]);
 
   useEffect(() => {
     fetchTemplate();
@@ -113,6 +133,15 @@ export default function InvitationFlowPreviewScreen() {
   function getRouteParams() {
     return {
       templateId: params.templateId,
+      invitationId: params.invitationId ?? "",
+      shareSlug: params.shareSlug ?? "",
+      invitationImageUrl: params.invitationImageUrl ?? "",
+      editableImageUrl:
+        params.editableImageUrl ??
+        template?.editableImageUrl ??
+        template?.imageUrl ??
+        "",
+
       brideName: formData.brideName,
       groomName: formData.groomName,
       brideParents: formData.brideParents,
@@ -128,6 +157,10 @@ export default function InvitationFlowPreviewScreen() {
   }
 
   function handleEditStep() {
+    if (saving) {
+      return;
+    }
+
     router.push({
       pathname: "/invitation-flow/[templateId]/edit",
       params: getRouteParams(),
@@ -152,7 +185,11 @@ export default function InvitationFlowPreviewScreen() {
     }
 
     if (!params.templateId) {
-      Alert.alert("Hata", "Davetiye şablonu bulunamadı.");
+      showAlert({
+        type: "error",
+        title: "Hata",
+        message: "Davetiye şablonu bulunamadı.",
+      });
       return;
     }
 
@@ -170,28 +207,53 @@ export default function InvitationFlowPreviewScreen() {
         capturedImageUri = null;
       }
 
-      const savedInvitation = await createUserInvitation({
-        templateId: params.templateId,
-        formData,
-        status: "ready",
-        capturedImageUri,
-      });
+      const existingInvitationId = cleanOptionalParam(params.invitationId);
 
-      router.push({
-        pathname: "/invitation-flow/[templateId]/share",
-        params: {
-          ...getRouteParams(),
-          invitationId: savedInvitation.id,
-          shareSlug: savedInvitation.share_slug,
+      const savedInvitation = existingInvitationId
+        ? await updateUserInvitation({
+            invitationId: existingInvitationId,
+            templateId: params.templateId,
+            formData,
+            status: "ready",
+            capturedImageUri,
+          })
+        : await createUserInvitation({
+            templateId: params.templateId,
+            formData,
+            status: "ready",
+            capturedImageUri,
+          });
+
+      showAlert({
+        type: "success",
+        title: existingInvitationId
+          ? "Davetiye güncellendi"
+          : "Davetiye kaydedildi",
+        message: existingInvitationId
+          ? "Davetiyeniz başarıyla güncellendi. Şimdi paylaşım ekranına geçebilirsiniz."
+          : "Davetiyeniz başarıyla kaydedildi. Şimdi paylaşım ekranına geçebilirsiniz.",
+        confirmText: "Paylaş",
+        onConfirm: () => {
+          router.push({
+            pathname: "/invitation-flow/[templateId]/share",
+            params: {
+              ...getRouteParams(),
+              invitationId: savedInvitation.id,
+              shareSlug: savedInvitation.share_slug,
+              invitationImageUrl: savedInvitation.invitation_image_url ?? "",
+            },
+          });
         },
       });
     } catch (error) {
       console.log("Davetiye kaydedilemedi:", error);
 
-      Alert.alert(
-        "Kayıt başarısız",
-        "Davetiye kaydedilirken bir sorun oluştu. Lütfen tekrar deneyin.",
-      );
+      showAlert({
+        type: "error",
+        title: "Kayıt başarısız",
+        message:
+          "Davetiye kaydedilirken bir sorun oluştu. Lütfen tekrar deneyin.",
+      });
     } finally {
       setSaving(false);
     }
@@ -237,11 +299,7 @@ export default function InvitationFlowPreviewScreen() {
 
         <InvitationEditSteps activeStep={2} />
 
-        <View
-          ref={invitationCaptureRef}
-          collapsable={false}
-          className="bg-surface"
-        >
+        <View ref={invitationCaptureRef} collapsable={false}>
           <InvitationPreviewCard
             imageUrl={previewImageUrl}
             formData={formData}
@@ -250,20 +308,11 @@ export default function InvitationFlowPreviewScreen() {
 
         <InvitationPreviewSuccessCard />
 
-        {saving ? (
-          <View className="mx-5 mb-4 rounded-3xl bg-surface px-5 py-4">
-            <View className="flex-row items-center justify-center">
-              <ActivityIndicator color="#A875D1" />
-              <AppText className="ml-3 text-textDark">
-                Davetiye kaydediliyor...
-              </AppText>
-            </View>
-          </View>
-        ) : null}
-
         <InvitationPreviewActions
           onEditPress={handleEditStep}
           onSharePress={handleShareStep}
+          shareLoading={saving}
+          disabled={saving}
         />
       </ScrollView>
     </ScreenContainer>
