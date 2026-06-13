@@ -17,7 +17,9 @@ type AlertOptions = {
   message: string;
   type?: AlertType;
   confirmText?: string;
+  cancelText?: string;
   onConfirm?: () => void;
+  onCancel?: () => void;
 };
 
 type AlertContextValue = {
@@ -49,8 +51,9 @@ const alertStyles: Record<
 export function AppAlertProvider({ children }: { children: ReactNode }) {
   const [alert, setAlert] = useState<AlertOptions | null>(null);
 
-  const closeAlert = () => {
-    const callback = alert?.onConfirm;
+  const closeAlert = (action?: "confirm" | "cancel") => {
+    const callback = action === "confirm" ? alert?.onConfirm : alert?.onCancel;
+
     setAlert(null);
 
     setTimeout(() => {
@@ -60,6 +63,7 @@ export function AppAlertProvider({ children }: { children: ReactNode }) {
 
   const type = alert?.type ?? "info";
   const style = alertStyles[type];
+  const hasCancelButton = !!alert?.cancelText || !!alert?.onCancel;
 
   return (
     <AlertContext.Provider value={{ showAlert: setAlert }}>
@@ -70,6 +74,7 @@ export function AppAlertProvider({ children }: { children: ReactNode }) {
         transparent
         animationType="fade"
         statusBarTranslucent
+        onRequestClose={() => closeAlert("cancel")}
       >
         <View style={styles.overlay}>
           <View style={styles.card}>
@@ -92,10 +97,29 @@ export function AppAlertProvider({ children }: { children: ReactNode }) {
               {alert?.message}
             </AppText>
 
-            <AppButton
-              title={alert?.confirmText ?? "Tamam"}
-              onPress={closeAlert}
-            />
+            {hasCancelButton ? (
+              <View style={styles.buttonRow}>
+                <View style={styles.buttonWrapper}>
+                  <AppButton
+                    title={alert?.cancelText ?? "İptal"}
+                    variant="ghost"
+                    onPress={() => closeAlert("cancel")}
+                  />
+                </View>
+
+                <View style={styles.buttonWrapper}>
+                  <AppButton
+                    title={alert?.confirmText ?? "Tamam"}
+                    onPress={() => closeAlert("confirm")}
+                  />
+                </View>
+              </View>
+            ) : (
+              <AppButton
+                title={alert?.confirmText ?? "Tamam"}
+                onPress={() => closeAlert("confirm")}
+              />
+            )}
           </View>
         </View>
       </Modal>
@@ -146,5 +170,12 @@ const styles = StyleSheet.create({
     height: 96,
     alignSelf: "center",
     marginBottom: 24,
+  },
+  buttonRow: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  buttonWrapper: {
+    flex: 1,
   },
 });

@@ -78,6 +78,7 @@ export default function ProfileScreen() {
         "Profiliniz ve size ait tüm bilgiler kalıcı olarak silinecek. Bu işlem geri alınamaz.",
       type: "warning",
       confirmText: "Evet, Sil",
+      cancelText: "İptal",
       onConfirm: async () => {
         try {
           await deleteCurrentUserAccount();

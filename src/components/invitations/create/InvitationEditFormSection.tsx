@@ -139,7 +139,7 @@ export function InvitationEditFormSection({
               <AppInput
                 value={formData.date}
                 onChangeText={(value) => onChangeField("date", value)}
-                placeholder="22 AĞUSTOS 2026"
+                placeholder="22 Ağustos 2026"
                 maxLength={30}
                 size="compact"
                 inputClassName="text-textDark"

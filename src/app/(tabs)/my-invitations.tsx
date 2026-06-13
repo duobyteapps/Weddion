@@ -8,7 +8,6 @@ import {
 } from "react-native";
 
 import { ScreenHeader } from "@/components/common/ScreenHeader";
-import { CreateInvitationListCard } from "@/components/invitations/my/CreateInvitationListCard";
 import { MyInvitationsHero } from "@/components/invitations/my/MyInvitationsHero";
 import { MyInvitationsList } from "@/components/invitations/my/MyInvitationsList";
 import { useAppAlert } from "@/components/ui/AppAlert";
@@ -149,6 +148,7 @@ export default function MyInvitationsScreen() {
       message: `${invitation.bride_name} & ${invitation.groom_name} davetiyesini silmek istediğinize emin misiniz? Bu işlem geri alınamaz.`,
       type: "warning",
       confirmText: "Sil",
+      cancelText: "İptal",
       onConfirm: () => {
         deleteInvitation(invitation);
       },
@@ -202,9 +202,8 @@ export default function MyInvitationsScreen() {
           onSharePress={handleShareInvitation}
           onDeletePress={handleDeleteInvitation}
           onMenuPress={handleMenuPress}
+          onCreatePress={handleCreateInvitation}
         />
-
-        <CreateInvitationListCard onPress={handleCreateInvitation} />
       </ScrollView>
     </ScreenContainer>
   );

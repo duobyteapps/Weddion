@@ -1,5 +1,7 @@
 import { View } from "react-native";
 
+import { CreateInvitationListCard } from "@/components/invitations/my/CreateInvitationListCard";
+import { EmptyMyInvitations } from "@/components/invitations/my/EmptyMyInvitations";
 import { MyInvitationCard } from "@/components/invitations/my/MyInvitationCard";
 import { UserInvitation } from "@/types/invitation";
 
@@ -8,6 +10,7 @@ type Props = {
   onEditPress: (invitation: UserInvitation) => void;
   onSharePress: (invitation: UserInvitation) => void;
   onDeletePress: (invitation: UserInvitation) => void;
+  onCreatePress: () => void;
   onMenuPress?: (invitation: UserInvitation) => void;
 };
 
@@ -16,8 +19,19 @@ export function MyInvitationsList({
   onEditPress,
   onSharePress,
   onDeletePress,
+  onCreatePress,
   onMenuPress,
 }: Props) {
+  const hasInvitations = invitations.length > 0;
+
+  if (!hasInvitations) {
+    return (
+      <View className="mb-6">
+        <EmptyMyInvitations onCreatePress={onCreatePress} />
+      </View>
+    );
+  }
+
   return (
     <View className="mb-6 gap-4">
       {invitations.map((invitation) => (
@@ -30,6 +44,8 @@ export function MyInvitationsList({
           onMenuPress={onMenuPress}
         />
       ))}
+
+      <CreateInvitationListCard onPress={onCreatePress} />
     </View>
   );
 }
