@@ -9,3 +9,17 @@ export type InvitationTemplate = {
   is_premium: boolean;
   created_at?: string;
 };
+
+export type InvitationFormData = {
+  brideName: string;
+  groomName: string;
+  brideParents: string;
+  groomParents: string;
+  brideSurname: string;
+  groomSurname: string;
+  date: string;
+  time: string;
+  description: string;
+  venueName: string;
+  venueLocation: string;
+};

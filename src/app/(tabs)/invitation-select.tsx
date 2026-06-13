@@ -54,9 +54,10 @@ export default function InvitationSelectScreen() {
 
   const handlePressTemplate = (template: InvitationTemplate) => {
     router.push({
-      pathname: "/invitation-flow/[templateId]/edit",
+      pathname: "/(tabs)/invitation-flow/[templateId]/edit",
       params: {
         templateId: template.id,
+        returnTo: "/invitation-select",
       },
     });
   };

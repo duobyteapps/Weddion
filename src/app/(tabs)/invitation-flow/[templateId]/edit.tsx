@@ -8,20 +8,12 @@ import { InvitationEditSteps } from "@/components/invitations/create/InvitationE
 import { InvitationPreviewCard } from "@/components/invitations/create/InvitationPreviewCard";
 import { AppText } from "@/components/ui/AppText";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
+import { defaultInvitationContent } from "@/constants/invitationDefaultContent";
 import {
   getInvitationTemplateById,
   InvitationTemplateDto,
 } from "@/services/invitationTemplateService";
-
-function getCacheBustedImageUrl(imageUrl?: string | null, version?: string) {
-  if (!imageUrl) {
-    return null;
-  }
-
-  const separator = imageUrl.includes("?") ? "&" : "?";
-
-  return `${imageUrl}${separator}v=${version ?? Date.now()}`;
-}
+import { InvitationFormData } from "@/types/invitation";
 
 export default function InvitationFlowEditScreen() {
   const params = useLocalSearchParams<{ templateId?: string | string[] }>();
@@ -36,13 +28,9 @@ export default function InvitationFlowEditScreen() {
 
   const [template, setTemplate] = useState<InvitationTemplateDto | null>(null);
   const [loading, setLoading] = useState(true);
-
-  const [names, setNames] = useState("");
-  const [date, setDate] = useState("");
-  const [time, setTime] = useState("");
-  const [description, setDescription] = useState("");
-  const [venueName, setVenueName] = useState("");
-  const [venueLocation, setVenueLocation] = useState("");
+  const [formData, setFormData] = useState<InvitationFormData>(
+    defaultInvitationContent,
+  );
 
   useEffect(() => {
     fetchTemplate();
@@ -57,9 +45,7 @@ export default function InvitationFlowEditScreen() {
 
     try {
       setLoading(true);
-
       const data = await getInvitationTemplateById(templateId);
-
       setTemplate(data);
     } catch (error) {
       console.log("Davetiye şablonu alınamadı:", error);
@@ -69,106 +55,88 @@ export default function InvitationFlowEditScreen() {
     }
   }
 
+  function handleChangeField<K extends keyof InvitationFormData>(
+    field: K,
+    value: InvitationFormData[K],
+  ) {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  }
+
   function handleSave() {
     if (!template) {
       return;
     }
 
-    const selectedEditableImageUrl =
-      template.editableImageUrl || template.imageUrl;
-
     router.push({
       pathname: "/invitation-flow/[templateId]/preview",
       params: {
         templateId: template.id,
-        names,
-        date,
-        time,
-        description,
-        venueName,
-        venueLocation,
-        editableImageUrl: selectedEditableImageUrl,
+        brideName: formData.brideName,
+        groomName: formData.groomName,
+        brideParents: formData.brideParents,
+        groomParents: formData.groomParents,
+        brideSurname: formData.brideSurname,
+        groomSurname: formData.groomSurname,
+        date: formData.date,
+        time: formData.time,
+        description: formData.description,
+        venueName: formData.venueName,
+        venueLocation: formData.venueLocation,
       },
     });
   }
 
   if (loading) {
     return (
-      <ScreenContainer className="flex-1 bg-background">
-        <View className="flex-1 items-center justify-center px-6">
-          <ActivityIndicator color="#7C3AED" />
-
-          <AppText variant="caption" className="mt-3 text-textMuted">
-            Davetiye yükleniyor...
-          </AppText>
-        </View>
+      <ScreenContainer className="flex-1 items-center justify-center bg-background">
+        <ActivityIndicator />
+        <AppText variant="body" className="mt-3 text-textMuted">
+          Davetiye yükleniyor...
+        </AppText>
       </ScreenContainer>
     );
   }
 
   if (!template) {
     return (
-      <ScreenContainer className="flex-1 bg-background">
-        <View className="flex-1 items-center justify-center px-6">
-          <AppText variant="subtitle" className="text-center text-textDark">
-            Davetiye bulunamadı.
-          </AppText>
+      <ScreenContainer className="flex-1 items-center justify-center bg-background px-6">
+        <AppText variant="subtitle" className="text-center text-textDark">
+          Davetiye bulunamadı.
+        </AppText>
 
-          <AppText variant="body" className="mt-2 text-center text-textMuted">
-            Seçilen davetiye kaldırılmış veya pasif durumda olabilir.
-          </AppText>
-        </View>
+        <AppText variant="body" className="mt-2 text-center text-textMuted">
+          Seçilen davetiye kaldırılmış veya pasif durumda olabilir.
+        </AppText>
       </ScreenContainer>
     );
   }
-
-  const selectedEditableImageUrl =
-    template.editableImageUrl || template.imageUrl;
-
-  const editablePreviewImageUrl = getCacheBustedImageUrl(
-    selectedEditableImageUrl,
-    template.id,
-  );
 
   return (
     <ScreenContainer className="flex-1 bg-background">
       <ScrollView
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
         contentContainerClassName="pb-32"
       >
         <ScreenHeader
-          title="Davetiye Düzenle"
-          description="Davetiye içeriğinizi düzenleyin."
+          title="Davetiyeni Düzenle"
+          description="Bilgileri doldur, davetiyeni önizle."
         />
 
         <InvitationEditSteps activeStep={1} />
 
-        <View className="mt-5">
+        <View className="mt-6 gap-6">
           <InvitationPreviewCard
-            imageUrl={editablePreviewImageUrl}
-            names={names}
-            date={date}
-            time={time}
-            description={description}
-            venueName={venueName}
-            venueLocation={venueLocation}
+            imageUrl={template.editableImageUrl}
+            formData={formData}
           />
-        </View>
 
-        <View className="mt-5">
           <InvitationEditFormSection
-            names={names}
-            date={date}
-            time={time}
-            description={description}
-            venueName={venueName}
-            venueLocation={venueLocation}
-            onChangeNames={setNames}
-            onChangeDate={setDate}
-            onChangeTime={setTime}
-            onChangeDescription={setDescription}
-            onChangeVenueName={setVenueName}
-            onChangeVenueLocation={setVenueLocation}
+            formData={formData}
+            onChangeField={handleChangeField}
             onSave={handleSave}
           />
         </View>

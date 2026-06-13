@@ -5,123 +5,197 @@ import { AppButton } from "@/components/ui/AppButton";
 import { AppCard } from "@/components/ui/AppCard";
 import { AppInput } from "@/components/ui/AppInput";
 import { AppText } from "@/components/ui/AppText";
+import { InvitationFormData } from "@/types/invitation";
 
 type Props = {
-  names: string;
-  date: string;
-  time: string;
-  description: string;
-  venueName: string;
-  venueLocation: string;
-  onChangeNames: (value: string) => void;
-  onChangeDate: (value: string) => void;
-  onChangeTime: (value: string) => void;
-  onChangeDescription: (value: string) => void;
-  onChangeVenueName: (value: string) => void;
-  onChangeVenueLocation: (value: string) => void;
+  formData: InvitationFormData;
+  onChangeField: <K extends keyof InvitationFormData>(
+    field: K,
+    value: InvitationFormData[K],
+  ) => void;
   onSave: () => void;
 };
 
 type InvitationFormFieldProps = {
   label: string;
   children: ReactNode;
+  className?: string;
 };
 
-function InvitationFormField({ label, children }: InvitationFormFieldProps) {
+function InvitationFormField({
+  label,
+  children,
+  className = "",
+}: InvitationFormFieldProps) {
   return (
-    <View className="flex-row items-start gap-3">
-      <View className="w-[82px] pt-3">
-        <AppText variant="body" className="text-textMuted">
-          {label}
-        </AppText>
-      </View>
+    <View className={className}>
+      <AppText variant="caption" className="mb-2 text-textMuted">
+        {label}
+      </AppText>
 
-      <View className="flex-1">{children}</View>
+      {children}
     </View>
   );
 }
 
 export function InvitationEditFormSection({
-  names,
-  date,
-  time,
-  description,
-  venueName,
-  venueLocation,
-  onChangeNames,
-  onChangeDate,
-  onChangeTime,
-  onChangeDescription,
-  onChangeVenueName,
-  onChangeVenueLocation,
+  formData,
+  onChangeField,
   onSave,
 }: Props) {
   return (
-    <AppCard>
-      <View className="gap-3">
-        <InvitationFormField label="İsimler">
-          <AppInput
-            value={names}
-            onChangeText={onChangeNames}
-            maxLength={50}
-            size="compact"
-            inputClassName="text-textDark"
-          />
-        </InvitationFormField>
+    <AppCard className="rounded-[28px] px-5 py-6">
+      <View className="gap-5">
+        <View className="gap-4">
+          <InvitationFormField label="Gelin adı">
+            <AppInput
+              value={formData.brideName}
+              onChangeText={(value) => onChangeField("brideName", value)}
+              placeholder="Gelin adı"
+              maxLength={40}
+              size="compact"
+              inputClassName="text-textDark"
+            />
+          </InvitationFormField>
 
-        <InvitationFormField label="Tarih">
-          <AppInput
-            value={date}
-            onChangeText={onChangeDate}
-            maxLength={30}
-            size="compact"
-            inputClassName="text-textDark"
-          />
-        </InvitationFormField>
+          <View className="items-center">
+            <AppText
+              variant="serifSubtitle"
+              className="text-[24px] leading-7 text-primary"
+            >
+              &
+            </AppText>
+          </View>
 
-        <InvitationFormField label="Saat">
-          <AppInput
-            value={time}
-            onChangeText={onChangeTime}
-            maxLength={20}
-            size="compact"
-            inputClassName="text-textDark"
-          />
-        </InvitationFormField>
+          <InvitationFormField label="Damat adı">
+            <AppInput
+              value={formData.groomName}
+              onChangeText={(value) => onChangeField("groomName", value)}
+              placeholder="Damat adı"
+              maxLength={40}
+              size="compact"
+              inputClassName="text-textDark"
+            />
+          </InvitationFormField>
+        </View>
+
+        <View className="h-px bg-border/70" />
+
+        <View className="gap-4">
+          <View className="flex-row gap-3">
+            <InvitationFormField label="Gelin anne - baba" className="flex-1">
+              <AppInput
+                value={formData.brideParents}
+                onChangeText={(value) => onChangeField("brideParents", value)}
+                placeholder="Anne - Baba"
+                maxLength={60}
+                size="compact"
+                inputClassName="text-textDark"
+              />
+            </InvitationFormField>
+
+            <InvitationFormField label="Damat anne - baba" className="flex-1">
+              <AppInput
+                value={formData.groomParents}
+                onChangeText={(value) => onChangeField("groomParents", value)}
+                placeholder="Anne - Baba"
+                maxLength={60}
+                size="compact"
+                inputClassName="text-textDark"
+              />
+            </InvitationFormField>
+          </View>
+
+          <View className="flex-row gap-3">
+            <InvitationFormField label="Gelin soyad" className="flex-1">
+              <AppInput
+                value={formData.brideSurname}
+                onChangeText={(value) => onChangeField("brideSurname", value)}
+                placeholder="Soyad"
+                maxLength={40}
+                size="compact"
+                inputClassName="text-textDark"
+              />
+            </InvitationFormField>
+
+            <InvitationFormField label="Damat soyad" className="flex-1">
+              <AppInput
+                value={formData.groomSurname}
+                onChangeText={(value) => onChangeField("groomSurname", value)}
+                placeholder="Soyad"
+                maxLength={40}
+                size="compact"
+                inputClassName="text-textDark"
+              />
+            </InvitationFormField>
+          </View>
+        </View>
+
+        <View className="h-px bg-border/70" />
+
+        <View className="flex-row gap-3">
+          <InvitationFormField label="Tarih" className="flex-1">
+            <AppInput
+              value={formData.date}
+              onChangeText={(value) => onChangeField("date", value)}
+              placeholder="22 AĞUSTOS 2026"
+              maxLength={30}
+              size="compact"
+              inputClassName="text-textDark"
+            />
+          </InvitationFormField>
+
+          <InvitationFormField label="Saat" className="w-[105px]">
+            <AppInput
+              value={formData.time}
+              onChangeText={(value) => onChangeField("time", value)}
+              placeholder="19.00"
+              maxLength={20}
+              size="compact"
+              inputClassName="text-textDark"
+              keyboardType="numbers-and-punctuation"
+            />
+          </InvitationFormField>
+        </View>
 
         <InvitationFormField label="Açıklama">
           <AppInput
-            value={description}
-            onChangeText={onChangeDescription}
-            maxLength={120}
+            value={formData.description}
+            onChangeText={(value) => onChangeField("description", value)}
+            placeholder="Davet açıklaması"
+            maxLength={160}
             multiline
             textAlignVertical="top"
-            inputClassName="h-24 pt-3 text-textDark"
+            inputClassName="h-28 pt-3 text-textDark"
           />
         </InvitationFormField>
 
-        <InvitationFormField label="Mekan">
-          <AppInput
-            value={venueName}
-            onChangeText={onChangeVenueName}
-            maxLength={50}
-            size="compact"
-            inputClassName="text-textDark"
-          />
-        </InvitationFormField>
+        <View className="flex-row gap-3">
+          <InvitationFormField label="Mekan" className="flex-1">
+            <AppInput
+              value={formData.venueName}
+              onChangeText={(value) => onChangeField("venueName", value)}
+              placeholder="Mekan"
+              maxLength={60}
+              size="compact"
+              inputClassName="text-textDark"
+            />
+          </InvitationFormField>
 
-        <InvitationFormField label="Konum">
-          <AppInput
-            value={venueLocation}
-            onChangeText={onChangeVenueLocation}
-            maxLength={50}
-            size="compact"
-            inputClassName="text-textDark"
-          />
-        </InvitationFormField>
+          <InvitationFormField label="Konum" className="flex-1">
+            <AppInput
+              value={formData.venueLocation}
+              onChangeText={(value) => onChangeField("venueLocation", value)}
+              placeholder="Konum"
+              maxLength={80}
+              size="compact"
+              inputClassName="text-textDark"
+            />
+          </InvitationFormField>
+        </View>
       </View>
 
-      <View className="mt-6">
+      <View className="mt-7">
         <AppButton title="Kaydet ve Önizle" onPress={onSave} />
       </View>
     </AppCard>

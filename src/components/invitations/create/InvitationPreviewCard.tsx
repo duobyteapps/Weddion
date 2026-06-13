@@ -1,152 +1,111 @@
-import { ImageBackground, StyleSheet, View } from "react-native";
+import { ImageBackground, View } from "react-native";
 
 import { AppCard } from "@/components/ui/AppCard";
 import { AppText } from "@/components/ui/AppText";
+import { InvitationFormData } from "@/types/invitation";
 
 type Props = {
   imageUrl?: string | null;
-  names: string;
-  date: string;
-  time: string;
-  description: string;
-  venueName: string;
-  venueLocation: string;
+  formData: InvitationFormData;
 };
 
-const INVITATION_IMAGE_ASPECT_RATIO = 3 / 4;
-
-export function InvitationPreviewCard({
-  imageUrl,
-  names,
-  date,
-  time,
-  description,
-  venueName,
-  venueLocation,
-}: Props) {
-  const nameParts = names
-    .split("&")
-    .map((item) => item.trim())
-    .filter(Boolean);
-
-  const firstName = nameParts[0] ?? "";
-  const secondName = nameParts[1] ?? "";
-
-  const hasFirstName = firstName.length > 0;
-  const hasSecondName = secondName.length > 0;
-  const hasNames = hasFirstName || hasSecondName;
-
-  const hasDate = date.trim().length > 0;
-  const hasTime = time.trim().length > 0;
-  const hasDescription = description.trim().length > 0;
-  const hasVenueName = venueName.trim().length > 0;
-  const hasVenueLocation = venueLocation.trim().length > 0;
-
+export function InvitationPreviewCard({ imageUrl, formData }: Props) {
   const content = (
-    <View className="absolute inset-0 items-center justify-center !px-1 py-1">
-      {hasNames ? (
-        <>
-          {hasFirstName ? (
-            <AppText
-              variant="serifTitle"
-              className="mt-8 text-center text-[52px] leading-[58px] text-textDark"
-            >
-              {firstName}
-            </AppText>
-          ) : null}
-
-          {hasFirstName && hasSecondName ? (
-            <AppText
-              variant="serifTitle"
-              className="mt-2 text-center text-[38px] leading-[42px] text-primaryDark"
-            >
-              &
-            </AppText>
-          ) : null}
-
-          {hasSecondName ? (
-            <AppText
-              variant="serifTitle"
-              className="mt-2 text-center text-[52px] leading-[58px] text-textDark"
-            >
-              {secondName}
-            </AppText>
-          ) : null}
-        </>
-      ) : null}
-
-      {hasDate ? (
+    <View className="h-full w-full items-center justify-center px-7 py-10">
+      <View className="w-full flex-1 items-center justify-center">
         <AppText
-          variant="subtitle"
-          className="mt-9 text-center text-[17px] text-primaryDark"
+          variant="serifTitle"
+          className="text-center text-[30px] leading-9 text-textDark"
         >
-          {date}
+          {formData.brideName}
         </AppText>
-      ) : null}
 
-      {hasTime ? (
         <AppText
-          variant="captionStrong"
-          className="mt-2 text-center text-textDark"
+          variant="serifTitle"
+          className="my-1 text-center text-[28px] text-textDark"
         >
-          {time}
+          &
         </AppText>
-      ) : null}
 
-      {hasDescription ? (
-        <>
-          <View className="my-7 h-[1px] w-28 bg-border" />
+        <AppText
+          variant="serifTitle"
+          className="text-center text-[30px] leading-9 text-textDark"
+        >
+          {formData.groomName}
+        </AppText>
+
+        <View className="mt-8 w-full flex-row items-start justify-between gap-4">
+          <View className="flex-1 items-center">
+            <AppText variant="caption" className="text-center text-textMuted">
+              {formData.brideParents}
+            </AppText>
+
+            <AppText
+              variant="body"
+              className="mt-1 text-center font-semibold text-textDark"
+            >
+              {formData.brideSurname}
+            </AppText>
+          </View>
+
+          <View className="flex-1 items-center">
+            <AppText variant="caption" className="text-center text-textMuted">
+              {formData.groomParents}
+            </AppText>
+
+            <AppText
+              variant="body"
+              className="mt-1 text-center font-semibold text-textDark"
+            >
+              {formData.groomSurname}
+            </AppText>
+          </View>
+        </View>
+
+        <View className="mt-8 w-full flex-row items-center justify-center gap-5">
+          <AppText variant="body" className="text-center text-textDark">
+            {formData.date}
+          </AppText>
+
+          <View className="h-4 w-px bg-border" />
 
           <AppText variant="body" className="text-center text-textDark">
-            {description}
+            {formData.time}
           </AppText>
-        </>
-      ) : null}
+        </View>
 
-      {hasVenueName ? (
         <AppText
-          variant="captionStrong"
-          className="mt-9 text-center text-primaryDark"
+          variant="body"
+          className="mt-6 text-center leading-6 text-textMuted"
         >
-          {venueName}
+          {formData.description}
         </AppText>
-      ) : null}
 
-      {hasVenueLocation ? (
-        <AppText variant="caption" className="mt-1 text-center text-textDark">
-          {venueLocation}
+        <AppText
+          variant="serifSubtitle"
+          className="mt-7 text-center text-[20px] text-textDark"
+        >
+          {formData.venueName}
         </AppText>
-      ) : null}
+
+        <AppText variant="caption" className="mt-2 text-center text-textMuted">
+          {formData.venueLocation}
+        </AppText>
+      </View>
     </View>
   );
 
   return (
-    <AppCard noPadding className="overflow-hidden bg-surface py-1 !px-1">
-      {imageUrl ? (
-        <ImageBackground
-          key={imageUrl}
-          source={{ uri: imageUrl }}
-          resizeMode="contain"
-          imageClassName="rounded-2xl"
-          className="w-full overflow-hidden rounded-2xl bg-surfaceLight"
-          style={styles.imageContainer}
-        >
-          {content}
-        </ImageBackground>
-      ) : (
-        <View
-          className="w-full overflow-hidden rounded-2xl border border-borderSoft bg-surfaceLight"
-          style={styles.imageContainer}
-        >
-          {content}
-        </View>
-      )}
+    <AppCard noPadding className="overflow-hidden py-1 !px-1">
+      <View className="aspect-[3/4] w-full overflow-hidden rounded-2xl bg-card">
+        {imageUrl ? (
+          <ImageBackground source={{ uri: imageUrl }} resizeMode="cover">
+            {content}
+          </ImageBackground>
+        ) : (
+          content
+        )}
+      </View>
     </AppCard>
   );
 }
-
-const styles = StyleSheet.create({
-  imageContainer: {
-    aspectRatio: INVITATION_IMAGE_ASPECT_RATIO,
-  },
-});
