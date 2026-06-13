@@ -26,3 +26,36 @@ export type InvitationFormData = {
   venueName: string;
   venueLocation: string;
 };
+
+export type UserInvitationStatus = "draft" | "ready" | "shared";
+
+export type UserInvitation = {
+  id: string;
+  user_id: string;
+  template_id: string;
+
+  bride_name: string;
+  groom_name: string;
+  bride_parents: string | null;
+  groom_parents: string | null;
+  bride_surname: string | null;
+  groom_surname: string | null;
+
+  event_date: string;
+  event_time: string | null;
+  description: string | null;
+  venue_name: string | null;
+  venue_location: string | null;
+
+  status: UserInvitationStatus;
+  share_slug: string;
+
+  created_at: string;
+  updated_at: string;
+};
+
+export type CreateUserInvitationPayload = {
+  templateId: string;
+  formData: InvitationFormData;
+  status?: UserInvitationStatus;
+};

@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, ScrollView, View } from "react-native";
+import { ActivityIndicator, Alert, ScrollView, View } from "react-native";
 import { captureRef } from "react-native-view-shot";
 
 import { ScreenHeader } from "@/components/common/ScreenHeader";
@@ -11,11 +11,13 @@ import { InvitationPreviewSuccessCard } from "@/components/invitations/create/In
 import { AppText } from "@/components/ui/AppText";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { defaultInvitationContent } from "@/constants/invitationDefaultContent";
+import { createUserInvitation } from "@/services/invitationService";
 import {
   getInvitationTemplateById,
   InvitationTemplateDto,
 } from "@/services/invitationTemplateService";
 import { InvitationFormData } from "@/types/invitation";
+import { setCapturedInvitationImageUri } from "@/utils/invitationCaptureStore";
 
 type PreviewParams = {
   templateId: string;
@@ -55,6 +57,7 @@ export default function InvitationFlowPreviewScreen() {
 
   const [template, setTemplate] = useState<InvitationTemplateDto | null>(null);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   const formData: InvitationFormData = useMemo(
     () => ({
@@ -131,28 +134,62 @@ export default function InvitationFlowPreviewScreen() {
     });
   }
 
-  async function handleShareStep() {
-    try {
-      await waitForCaptureReady();
+  async function captureInvitationImage() {
+    await waitForCaptureReady();
 
-      const capturedImageUri = await captureRef(invitationCaptureRef, {
-        format: "png",
-        quality: 1,
-        result: "tmpfile",
+    const capturedImageUri = await captureRef(invitationCaptureRef, {
+      format: "png",
+      quality: 1,
+      result: "data-uri",
+    });
+
+    return capturedImageUri;
+  }
+
+  async function handleShareStep() {
+    if (saving) {
+      return;
+    }
+
+    if (!params.templateId) {
+      Alert.alert("Hata", "Davetiye şablonu bulunamadı.");
+      return;
+    }
+
+    try {
+      setSaving(true);
+
+      const savedInvitation = await createUserInvitation({
+        templateId: params.templateId,
+        formData,
+        status: "ready",
       });
+
+      try {
+        const capturedImageUri = await captureInvitationImage();
+        setCapturedInvitationImageUri(capturedImageUri);
+      } catch (captureError) {
+        console.log("Davetiye görseli oluşturulamadı:", captureError);
+        setCapturedInvitationImageUri(null);
+      }
 
       router.push({
         pathname: "/invitation-flow/[templateId]/share",
         params: {
           ...getRouteParams(),
-          capturedImageUri: encodeURIComponent(capturedImageUri),
+          invitationId: savedInvitation.id,
+          shareSlug: savedInvitation.share_slug,
         },
       });
-    } catch {
-      router.push({
-        pathname: "/invitation-flow/[templateId]/share",
-        params: getRouteParams(),
-      });
+    } catch (error) {
+      console.log("Davetiye kaydedilemedi:", error);
+
+      Alert.alert(
+        "Kayıt başarısız",
+        "Davetiye kaydedilirken bir sorun oluştu. Lütfen tekrar deneyin.",
+      );
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -208,6 +245,17 @@ export default function InvitationFlowPreviewScreen() {
         </View>
 
         <InvitationPreviewSuccessCard />
+
+        {saving ? (
+          <View className="mx-5 mb-4 rounded-3xl bg-surface px-5 py-4">
+            <View className="flex-row items-center justify-center">
+              <ActivityIndicator color="#A875D1" />
+              <AppText className="ml-3 text-textDark">
+                Davetiye kaydediliyor...
+              </AppText>
+            </View>
+          </View>
+        ) : null}
 
         <InvitationPreviewActions
           onEditPress={handleEditStep}

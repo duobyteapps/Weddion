@@ -16,6 +16,7 @@ function normalizeImageUri(imageUrl: string | null) {
   }
 
   if (
+    imageUrl.startsWith("data:image") ||
     imageUrl.startsWith("file://") ||
     imageUrl.startsWith("http://") ||
     imageUrl.startsWith("https://") ||
@@ -67,12 +68,12 @@ export function InvitationShareReadyCard({
           </AppText>
 
           <AppText className="mt-3 leading-6 text-textMuted">
-            Davetiyenizi hikaye veya gönderi olarak paylaşmak için görseli
-            indirebilirsiniz.
+            Davetiyenizin son hali hazır. Önizleme görseli paylaşım ekranında
+            gösteriliyor.
           </AppText>
 
           <AppButton
-            title="Görselini İndir"
+            title="Görsel Hazır"
             variant="primary"
             onPress={onDownloadImagePress}
             loading={loading}

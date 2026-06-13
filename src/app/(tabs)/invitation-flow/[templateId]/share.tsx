@@ -7,7 +7,6 @@ import { InvitationEditSteps } from "@/components/invitations/create/InvitationE
 import { InvitationQrShareCard } from "@/components/invitations/create/InvitationQrShareCard";
 import { InvitationShareNoteCard } from "@/components/invitations/create/InvitationShareNoteCard";
 import { InvitationShareReadyCard } from "@/components/invitations/create/InvitationShareReadyCard";
-import { AppButton } from "@/components/ui/AppButton";
 import { AppText } from "@/components/ui/AppText";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { defaultInvitationContent } from "@/constants/invitationDefaultContent";
@@ -16,9 +15,12 @@ import {
   InvitationTemplateDto,
 } from "@/services/invitationTemplateService";
 import { InvitationFormData } from "@/types/invitation";
+import { getCapturedInvitationImageUri } from "@/utils/invitationCaptureStore";
 
 type ShareParams = {
   templateId: string;
+  invitationId?: string;
+  shareSlug?: string;
   brideName?: string;
   groomName?: string;
   brideParents?: string;
@@ -30,7 +32,6 @@ type ShareParams = {
   description?: string;
   venueName?: string;
   venueLocation?: string;
-  capturedImageUri?: string;
 };
 
 function getCacheBustedImageUrl(imageUrl?: string | null, version?: string) {
@@ -90,17 +91,24 @@ export default function InvitationFlowShareScreen() {
     );
   }, [template]);
 
-  const finalInvitationImageUri = useMemo(() => {
-    return params.capturedImageUri || fallbackPreviewImageUrl;
-  }, [params.capturedImageUri, fallbackPreviewImageUrl]);
+  const capturedInvitationImageUri = useMemo(() => {
+    return getCapturedInvitationImageUri();
+  }, []);
 
-  const invitationSlug = useMemo(() => {
+  const finalInvitationImageUri = useMemo(() => {
+    return capturedInvitationImageUri || fallbackPreviewImageUrl;
+  }, [capturedInvitationImageUri, fallbackPreviewImageUrl]);
+
+  const fallbackSlug = useMemo(() => {
     return createInvitationSlug(formData.brideName, formData.groomName);
   }, [formData.brideName, formData.groomName]);
 
   const qrValue = useMemo(() => {
-    return `weddion://gallery-upload?invitationId=${params.templateId}&slug=${invitationSlug}`;
-  }, [params.templateId, invitationSlug]);
+    const invitationId = params.invitationId ?? params.templateId;
+    const slug = params.shareSlug ?? fallbackSlug;
+
+    return `weddion://gallery-upload?invitationId=${invitationId}&slug=${slug}`;
+  }, [params.invitationId, params.templateId, params.shareSlug, fallbackSlug]);
 
   useEffect(() => {
     fetchTemplate();
@@ -127,14 +135,14 @@ export default function InvitationFlowShareScreen() {
   function handleDownloadInstagramImage() {
     Alert.alert(
       "Görsel hazır",
-      "Expo Go içinde galeriye kaydetme işlemi kapalıdır. Görsel kaydetme işlemi development build ile aktif edilebilir.",
+      "Görsel indirme işlemi şu anda kapalı. Davetiye önizlemesi paylaşım ekranında gösteriliyor.",
     );
   }
 
   function handleCopyQrLink() {
     Alert.alert(
       "QR bağlantısı",
-      "Fotoğraf yükleme bağlantısı hazır. Kopyalama işlemi daha sonra aktif edilecek.",
+      `Fotoğraf yükleme bağlantısı hazır.\n\n${qrValue}`,
     );
   }
 
@@ -143,10 +151,6 @@ export default function InvitationFlowShareScreen() {
       "QR kod hazır",
       "Expo Go içinde QR indirme işlemi kapalıdır. Development build ile aktif edilebilir.",
     );
-  }
-
-  function handleSave() {
-    Alert.alert("Kaydedildi", "Davetiyeniz başarıyla kaydedildi.");
   }
 
   if (loading) {
@@ -201,13 +205,6 @@ export default function InvitationFlowShareScreen() {
         />
 
         <InvitationShareNoteCard />
-
-        <AppButton
-          title="Kaydet"
-          variant="primary"
-          onPress={handleSave}
-          className="mt-6 h-14 rounded-full"
-        />
       </ScrollView>
     </ScreenContainer>
   );
