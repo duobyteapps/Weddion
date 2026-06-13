@@ -13,7 +13,7 @@ import {
 import { InvitationFormData } from "@/types/invitation";
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, ScrollView, View } from "react-native";
+import { ActivityIndicator, ScrollView } from "react-native";
 
 function getCacheBustedImageUrl(imageUrl?: string | null, version?: string) {
   if (!imageUrl) {
@@ -152,18 +152,16 @@ export default function InvitationFlowEditScreen() {
 
         <InvitationEditSteps activeStep={1} />
 
-        <View className="mt-6 gap-6">
-          <InvitationPreviewCard
-            imageUrl={editablePreviewImageUrl}
-            formData={formData}
-          />
+        <InvitationPreviewCard
+          imageUrl={editablePreviewImageUrl}
+          formData={formData}
+        />
 
-          <InvitationEditFormSection
-            formData={formData}
-            onChangeField={handleChangeField}
-            onSave={handleSave}
-          />
-        </View>
+        <InvitationEditFormSection
+          formData={formData}
+          onChangeField={handleChangeField}
+          onSave={handleSave}
+        />
       </ScrollView>
     </ScreenContainer>
   );

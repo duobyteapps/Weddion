@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { View } from "react-native";
 
 import { AppText } from "@/components/ui/AppText";
@@ -14,29 +15,34 @@ const steps = [
 
 export function InvitationEditSteps({ activeStep }: Props) {
   return (
-    <View className="flex-row items-center justify-center">
+    <View className="flex-row items-center justify-center mb-6">
       {steps.map((step, index) => {
         const isActive = step.id === activeStep;
+        const isCompleted = step.id < activeStep;
 
         return (
           <View key={step.id} className="flex-row items-center">
             <View
               className={`h-8 w-8 items-center justify-center rounded-full ${
-                isActive ? "bg-primary" : "bg-primarySoft"
+                isActive || isCompleted ? "bg-primary" : "bg-primarySoft"
               }`}
             >
-              <AppText
-                variant="captionStrong"
-                className={isActive ? "text-white" : "text-primaryDark"}
-              >
-                {step.id}
-              </AppText>
+              {isCompleted ? (
+                <Ionicons name="checkmark" size={18} color="#FFFFFF" />
+              ) : (
+                <AppText
+                  variant="captionStrong"
+                  className={isActive ? "text-white" : "text-primaryDark"}
+                >
+                  {step.id}
+                </AppText>
+              )}
             </View>
 
             <AppText
               variant="captionStrong"
               className={`ml-2 ${
-                isActive ? "text-primaryDark" : "text-textMuted"
+                isActive || isCompleted ? "text-primaryDark" : "text-textMuted"
               }`}
             >
               {step.title}

@@ -4,6 +4,9 @@ export type InvitationTemplate = {
   category: string;
   category_title: string;
   image_url: string;
+  editable_image_url?: string | null;
+  content_image_url?: string | null;
+  generated_image_url?: string | null;
   is_active: boolean;
   sort_order: number;
   is_premium: boolean;

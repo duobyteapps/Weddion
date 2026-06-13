@@ -12,6 +12,7 @@ type AppButtonProps = PressableProps & {
   variant?: AppButtonVariant;
   loading?: boolean;
   className?: string;
+  textClassName?: string;
 };
 
 export function AppButton({
@@ -20,6 +21,7 @@ export function AppButton({
   loading = false,
   disabled,
   className = "",
+  textClassName = "",
   ...props
 }: AppButtonProps) {
   const isDisabled = disabled || loading;
@@ -65,6 +67,7 @@ export function AppButton({
           className={`
             font-manropeSemiBold
             ${textVariants[variant]}
+            ${textClassName}
           `}
         >
           {title}
