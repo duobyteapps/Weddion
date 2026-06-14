@@ -6,6 +6,7 @@ import {
 } from "@/types/invitation";
 
 const INVITATION_IMAGES_BUCKET = "invitation-images";
+const GUEST_PHOTOS_BUCKET = "guest-photos";
 
 function cleanText(value: string) {
   const trimmed = value.trim();
@@ -70,6 +71,40 @@ async function createSignedInvitationImageUrl(imagePath: string) {
   }
 
   return data.signedUrl;
+}
+
+async function deleteGuestPhotosForInvitation(invitationId: string) {
+  const { data: guestPhotos, error: guestPhotosError } = await supabase
+    .from("invitation_guest_photos")
+    .select("id, storage_path")
+    .eq("invitation_id", invitationId);
+
+  if (guestPhotosError) {
+    throw new Error(guestPhotosError.message);
+  }
+
+  const storagePaths = (guestPhotos ?? [])
+    .map((photo) => photo.storage_path)
+    .filter(Boolean);
+
+  if (storagePaths.length > 0) {
+    const { error: storageDeleteError } = await supabase.storage
+      .from(GUEST_PHOTOS_BUCKET)
+      .remove(storagePaths);
+
+    if (storageDeleteError) {
+      throw new Error(storageDeleteError.message);
+    }
+  }
+
+  const { error: rowsDeleteError } = await supabase
+    .from("invitation_guest_photos")
+    .delete()
+    .eq("invitation_id", invitationId);
+
+  if (rowsDeleteError) {
+    throw new Error(rowsDeleteError.message);
+  }
 }
 
 export async function createUserInvitation(
@@ -265,6 +300,8 @@ export async function deleteUserInvitation(
     throw new Error(findError.message);
   }
 
+  await deleteGuestPhotosForInvitation(invitationId);
+
   const { error: deleteError } = await supabase
     .from("user_invitations")
     .delete()
@@ -276,9 +313,13 @@ export async function deleteUserInvitation(
   }
 
   if (invitation?.invitation_image_path) {
-    await supabase.storage
+    const { error: invitationImageDeleteError } = await supabase.storage
       .from(INVITATION_IMAGES_BUCKET)
       .remove([invitation.invitation_image_path]);
+
+    if (invitationImageDeleteError) {
+      throw new Error(invitationImageDeleteError.message);
+    }
   }
 }
 
