@@ -19,7 +19,7 @@ export function GuestPhotoSelectedSection({
 }: Props) {
   return (
     <>
-      <AppDivider className="my-6" />
+      <AppDivider />
 
       <View className="mb-4 flex-row items-center justify-between">
         <View className="flex-row items-center gap-3">

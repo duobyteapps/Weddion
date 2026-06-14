@@ -60,7 +60,7 @@ export default function HomeScreen() {
 
             <View className="gap-4">
               <Pressable
-                onPress={() => router.push("/guest-photo-access")}
+                onPress={() => router.push("/guest-qr-scan" as never)}
                 className="flex-row items-center rounded-xl border border-primaryLight p-3"
               >
                 <View className="items-center justify-center rounded-xl bg-white">

@@ -1,41 +1,129 @@
-import { router } from "expo-router";
-import { useState } from "react";
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  View,
-} from "react-native";
-
+import { AuthHeader } from "@/components/auth/AuthHeader";
 import { useAppAlert } from "@/components/ui/AppAlert";
+import { AppBackButton } from "@/components/ui/AppBackButton";
 import { AppButton } from "@/components/ui/AppButton";
-import { AppInput } from "@/components/ui/AppInput";
+import { AppCard } from "@/components/ui/AppCard";
 import { AppText } from "@/components/ui/AppText";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { getInvitationByGuestCode } from "@/services/guestPhotoService";
-import type { GuestInvitationAccess } from "@/types/invitation";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { Fragment, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  TextInput,
+  View,
+} from "react-native";
+
+const CODE_LENGTH = 9;
+const CODE_PREFIX_LENGTH = 3;
+
+function cleanCode(value: string) {
+  return value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+}
 
 function normalizeCode(value: string) {
-  return value.trim().toUpperCase();
+  const cleanedCode = cleanCode(value);
+
+  if (cleanedCode.length <= CODE_PREFIX_LENGTH) {
+    return cleanedCode;
+  }
+
+  return `${cleanedCode.slice(0, CODE_PREFIX_LENGTH)}-${cleanedCode.slice(
+    CODE_PREFIX_LENGTH,
+  )}`;
 }
 
 export default function GuestPhotoAccessScreen() {
+  const router = useRouter();
   const { showAlert } = useAppAlert();
 
-  const [code, setCode] = useState("");
+  const inputRefs = useRef<Array<TextInput | null>>([]);
+
+  const [code, setCode] = useState<string[]>(Array(CODE_LENGTH).fill(""));
+  const [activeInputIndex, setActiveInputIndex] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
-  const [invitation, setInvitation] = useState<GuestInvitationAccess | null>(
-    null,
-  );
+
+  const eventCode = code.join("");
+
+  function handleChangeCode(value: string, index: number) {
+    const normalizedValue = cleanCode(value);
+    const nextCode = [...code];
+
+    if (normalizedValue.length > 1) {
+      const characters = normalizedValue
+        .slice(0, CODE_LENGTH - index)
+        .split("");
+
+      characters.forEach((character, characterIndex) => {
+        nextCode[index + characterIndex] = character;
+      });
+
+      setCode(nextCode);
+
+      const nextFocusIndex = Math.min(
+        index + characters.length,
+        CODE_LENGTH - 1,
+      );
+
+      inputRefs.current[nextFocusIndex]?.focus();
+      return;
+    }
+
+    const lastCharacter = normalizedValue.slice(-1);
+    const wasEmpty = !nextCode[index];
+
+    nextCode[index] = lastCharacter;
+    setCode(nextCode);
+
+    if (lastCharacter && wasEmpty && index < CODE_LENGTH - 1) {
+      inputRefs.current[index + 1]?.focus();
+    }
+  }
+
+  function handleKeyPress(key: string, index: number) {
+    if (key !== "Backspace") {
+      return;
+    }
+
+    if (code[index]) {
+      const nextCode = [...code];
+      nextCode[index] = "";
+      setCode(nextCode);
+      return;
+    }
+
+    if (index > 0) {
+      inputRefs.current[index - 1]?.focus();
+
+      const nextCode = [...code];
+      nextCode[index - 1] = "";
+      setCode(nextCode);
+    }
+  }
 
   async function handleSubmitCode() {
-    const normalizedCode = normalizeCode(code);
+    const normalizedCode = normalizeCode(eventCode);
 
-    if (!normalizedCode) {
+    if (!eventCode) {
       showAlert({
         title: "Kod gerekli",
         message: "Fotoğraf yüklemek için davet kodunu girin.",
+        type: "warning",
+        confirmText: "Tamam",
+      });
+      return;
+    }
+
+    if (eventCode.length !== CODE_LENGTH) {
+      showAlert({
+        title: "Kod eksik",
+        message: "Lütfen davet kodunu eksiksiz girin.",
         type: "warning",
         confirmText: "Tamam",
       });
@@ -48,8 +136,6 @@ export default function GuestPhotoAccessScreen() {
       const data = await getInvitationByGuestCode(normalizedCode);
 
       if (!data) {
-        setInvitation(null);
-
         showAlert({
           title: "Kod bulunamadı",
           message:
@@ -61,7 +147,19 @@ export default function GuestPhotoAccessScreen() {
         return;
       }
 
-      setInvitation(data);
+      router.push({
+        pathname: "/guest-photo-upload",
+        params: {
+          invitationId: data.id,
+          guestUploadCode: data.guest_upload_code,
+          guestUploadSlug: data.guest_upload_slug,
+          brideName: data.bride_name,
+          groomName: data.groom_name,
+          eventDate: data.event_date ?? "",
+          eventTime: data.event_time ?? "",
+          venueName: data.venue_name ?? "",
+        },
+      });
     } catch (error) {
       console.log("Davet kodu kontrol edilemedi:", error);
 
@@ -79,112 +177,173 @@ export default function GuestPhotoAccessScreen() {
     }
   }
 
-  function handleContinue() {
-    if (!invitation) {
-      return;
-    }
-
-    router.push({
-      pathname: "/guest-photo-upload",
-      params: {
-        invitationId: invitation.id,
-        guestUploadCode: invitation.guest_upload_code,
-        guestUploadSlug: invitation.guest_upload_slug,
-        brideName: invitation.bride_name,
-        groomName: invitation.groom_name,
-        eventDate: invitation.event_date ?? "",
-        eventTime: invitation.event_time ?? "",
-        venueName: invitation.venue_name ?? "",
-      },
-    });
+  function handleQrScan() {
+    router.push("/guest-qr-scan");
   }
 
   return (
     <ScreenContainer className="bg-background">
-      <KeyboardAvoidingView
-        className="flex-1"
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-          contentContainerClassName="flex-grow px-5 pb-32 pt-8"
+      <View className="relative flex-1 pb-8 pt-4">
+        <Image
+          source={require("../../assets/images/backgrounds/wedding-floral.png")}
+          className="absolute -right-8 top-0 h-44 w-44 opacity-80"
+          resizeMode="contain"
+        />
+
+        <AppBackButton onPress={() => router.replace("/")} />
+
+        <AuthHeader
+          description="Online davetiye ve etkinlik platformu"
+          descriptionClassName="mt-3 px-6 text-center text-textMuted"
+        />
+
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          className="flex-1"
         >
-          <View className="flex-1 justify-center gap-6">
-            <View className="gap-3">
-              <AppText className="text-center text-2xl font-bold text-textDark">
-                Fotoğraf Yükle
-              </AppText>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={{ flexGrow: 1 }}
+          >
+            <View className="flex-1 justify-between">
+              <View>
+                <AppCard className="mt-7">
+                  <View className="flex-row items-center gap-4">
+                    <View className="h-14 w-14 items-center justify-center rounded-xl bg-accentLight">
+                      <Ionicons name="keypad" size={28} color="#8F63D4" />
+                    </View>
 
-              <AppText className="text-center text-sm leading-6 text-textMuted">
-                Davet kodunu girerek giriş yapmadan fotoğraf yükleyebilirsiniz.
-              </AppText>
-            </View>
+                    <View className="flex-1">
+                      <AppText variant="serifTitle" className="text-text">
+                        Etkinlik Kodunu Gir
+                      </AppText>
 
-            <View className="gap-4 rounded-3xl bg-white p-5 shadow-sm">
-              <View className="gap-2">
-                <AppText className="text-sm font-semibold text-textDark">
-                  Davet Kodu
-                </AppText>
+                      <AppText variant="body" className="mt-2 text-textMuted">
+                        Size verilen etkinlik kodunu girerek fotoğraflarınızı
+                        yükleyin ve anıları paylaşın.
+                      </AppText>
+                    </View>
+                  </View>
 
-                <AppInput
-                  value={code}
-                  onChangeText={(value) => {
-                    setCode(value.toUpperCase());
-                    setInvitation(null);
-                  }}
-                  placeholder="Örn: WDN-50B719"
-                  autoCapitalize="characters"
-                  autoCorrect={false}
-                  editable={!loading}
-                />
-              </View>
+                  <View className="my-5 h-[1px] bg-border" />
 
-              <AppButton
-                title={loading ? "Kontrol ediliyor..." : "Kodu Kontrol Et"}
-                onPress={handleSubmitCode}
-                disabled={loading}
-              />
-
-              {loading ? (
-                <View className="items-center py-2">
-                  <ActivityIndicator color="#A875D1" />
-                </View>
-              ) : null}
-            </View>
-
-            {invitation ? (
-              <View className="gap-4 rounded-3xl bg-white p-5 shadow-sm">
-                <View className="gap-2">
-                  <AppText className="text-center text-lg font-bold text-textDark">
-                    {invitation.bride_name} & {invitation.groom_name}
+                  <AppText variant="subtitle" className="mb-4 text-textLight">
+                    Etkinlik Kodu
                   </AppText>
 
-                  {invitation.event_date ? (
-                    <AppText className="text-center text-sm text-textMuted">
-                      {invitation.event_date}
-                      {invitation.event_time
-                        ? ` • ${invitation.event_time}`
-                        : ""}
-                    </AppText>
-                  ) : null}
+                  <View className="flex-row items-center gap-2">
+                    {code.map((character, index) => {
+                      const isActive = activeInputIndex === index;
 
-                  {invitation.venue_name ? (
-                    <AppText className="text-center text-sm text-textMuted">
-                      {invitation.venue_name}
-                    </AppText>
-                  ) : null}
-                </View>
+                      return (
+                        <Fragment key={index}>
+                          <View className="relative flex-1">
+                            <TextInput
+                              ref={(ref) => {
+                                inputRefs.current[index] = ref;
+                              }}
+                              value={character}
+                              onChangeText={(value) =>
+                                handleChangeCode(value, index)
+                              }
+                              onKeyPress={({ nativeEvent }) =>
+                                handleKeyPress(nativeEvent.key, index)
+                              }
+                              onFocus={() => setActiveInputIndex(index)}
+                              onBlur={() => {
+                                setActiveInputIndex((currentIndex) =>
+                                  currentIndex === index ? null : currentIndex,
+                                );
+                              }}
+                              maxLength={CODE_LENGTH}
+                              autoCapitalize="characters"
+                              autoCorrect={false}
+                              editable={!loading}
+                              keyboardType="default"
+                              textAlign="center"
+                              selectTextOnFocus
+                              caretHidden
+                              selectionColor="#8F63D4"
+                              placeholder="-"
+                              placeholderTextColor="#BDB3CC"
+                              className={`h-[54px] rounded-xl border bg-white text-center font-manropeSemiBold text-lg text-text ${
+                                isActive
+                                  ? "border-primary"
+                                  : "border-primaryLight"
+                              }`}
+                            />
 
-                <AppButton
-                  title="Fotoğraf Yüklemeye Devam Et"
-                  onPress={handleContinue}
+                            {isActive && !character ? (
+                              <View
+                                pointerEvents="none"
+                                className="absolute top-[16px] h-6 w-[1px] bg-primary"
+                                style={{ left: "50%" }}
+                              />
+                            ) : null}
+                          </View>
+
+                          {index === CODE_PREFIX_LENGTH - 1 ? (
+                            <AppText
+                              variant="subtitle"
+                              className="text-primary"
+                            >
+                              -
+                            </AppText>
+                          ) : null}
+                        </Fragment>
+                      );
+                    })}
+                  </View>
+
+                  <View className="mt-7 gap-3">
+                    <AppButton
+                      title={
+                        loading ? "Kontrol ediliyor..." : "Kodu Kontrol Et"
+                      }
+                      onPress={handleSubmitCode}
+                      disabled={loading}
+                    />
+
+                    {loading ? (
+                      <View className="items-center py-1">
+                        <ActivityIndicator color="#A875D1" />
+                      </View>
+                    ) : null}
+
+                    <Pressable
+                      onPress={handleQrScan}
+                      disabled={loading}
+                      className="h-14 flex-row items-center justify-center rounded-xl border border-primaryLight bg-white active:opacity-80 disabled:opacity-60"
+                    >
+                      <Ionicons name="qr-code" size={26} color="#9B6BD3" />
+
+                      <AppText variant="subtitle" className="ml-3 text-primary">
+                        QR Kod Okut
+                      </AppText>
+                    </Pressable>
+                  </View>
+                </AppCard>
+              </View>
+
+              <View className="mt-7 items-center px-5">
+                <AppText
+                  variant="caption"
+                  className="text-center text-textLight"
+                >
+                  Weddion ile davetiyeler artık daha romantik ve modern.
+                </AppText>
+
+                <Image
+                  source={require("../../assets/images/wedding-divider.png")}
+                  className="mt-3 h-5 w-40 opacity-70"
+                  resizeMode="contain"
                 />
               </View>
-            ) : null}
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </View>
     </ScreenContainer>
   );
 }

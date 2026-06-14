@@ -10,6 +10,7 @@ import { GuestPhotoSourceActions } from "@/components/guest-photo/guest-photo-up
 import { GuestPhotoUploadIntro } from "@/components/guest-photo/guest-photo-upload/GuestPhotoUploadIntro";
 import type { SelectedPhoto } from "@/components/guest-photo/guest-photo-upload/types";
 import { useAppAlert } from "@/components/ui/AppAlert";
+import { AppBackButton } from "@/components/ui/AppBackButton";
 import { AppButton } from "@/components/ui/AppButton";
 import { AppText } from "@/components/ui/AppText";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
@@ -195,14 +196,14 @@ export default function GuestPhotoUploadScreen() {
         });
       }
 
+      setSelectedPhotos([]);
+
       showAlert({
         title: "Fotoğraflar yüklendi",
-        message: "Seçtiğiniz fotoğraflar başarıyla gönderildi.",
+        message:
+          "Seçtiğiniz fotoğraflar başarıyla gönderildi. İsterseniz yeni fotoğraf eklemeye devam edebilirsiniz.",
         type: "success",
         confirmText: "Tamam",
-        onConfirm: () => {
-          router.replace("/guest-photo-access");
-        },
       });
     } catch (error) {
       console.log("Fotoğraflar yüklenemedi:", error);
@@ -221,12 +222,23 @@ export default function GuestPhotoUploadScreen() {
     }
   }
 
+  function handleBack() {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+
+    router.replace("/");
+  }
+
   return (
     <ScreenContainer className="bg-background">
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerClassName="px-5 pb-32 pt-8"
+        contentContainerClassName="pb-32"
       >
+        <AppBackButton onPress={handleBack} />
+
         <GuestPhotoEventHeader title={eventTitle} date={eventDateText} />
 
         <GuestPhotoUploadIntro />
