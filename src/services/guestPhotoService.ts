@@ -1,5 +1,5 @@
 import { decode } from "base64-arraybuffer";
-import * as FileSystem from "expo-file-system";
+import * as FileSystem from "expo-file-system/legacy";
 
 import { supabase } from "@/lib/supabase";
 import type {
@@ -117,6 +117,7 @@ export const uploadGuestPhoto = async ({
   guestNote,
 }: UploadGuestPhotoParams) => {
   const normalizedCode = normalizeGuestUploadCode(guestUploadCode);
+
   const { storagePath, contentType } = buildGuestPhotoPath(
     invitationId,
     normalizedCode,
@@ -138,7 +139,7 @@ export const uploadGuestPhoto = async ({
     throw new Error(uploadError.message);
   }
 
-  const { data, error: insertError } = await supabase
+  const { error: insertError } = await supabase
     .from("invitation_guest_photos")
     .insert({
       invitation_id: invitationId,
@@ -148,16 +149,17 @@ export const uploadGuestPhoto = async ({
       guest_note: guestNote?.trim() || null,
       upload_code: normalizedCode,
       status: "pending",
-    })
-    .select("*")
-    .single();
+    });
 
   if (insertError) {
+    console.log("Guest photo table insert failed:", insertError);
+
     await supabase.storage.from(GUEST_PHOTOS_BUCKET).remove([storagePath]);
+
     throw new Error(insertError.message);
   }
 
-  return data as InvitationGuestPhoto;
+  return true;
 };
 
 export const getGuestPhotosByInvitation = async (invitationId: string) => {
