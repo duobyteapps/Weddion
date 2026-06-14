@@ -8,13 +8,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useRef, useState } from "react";
 import {
-    Image,
-    KeyboardAvoidingView,
-    Platform,
-    Pressable,
-    ScrollView,
-    TextInput,
-    View,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  TextInput,
+  View,
 } from "react-native";
 
 const CODE_LENGTH = 6;
@@ -71,22 +71,17 @@ export default function GuestPhotoAccessScreen() {
       return;
     }
 
-    /*
-      Fotoğraf yükleme sayfan hazır olduğunda burayı bağla.
-
-      router.push({
-        pathname: "/guest-photo-upload",
-        params: { code: normalizedCode },
-      });
-    */
+    router.push({
+      pathname: "/guest-photo-upload",
+      params: { code: normalizedCode },
+    });
   }
 
   function handleQrScan() {
-    /*
-      QR scanner sayfan hazır olduğunda burayı bağla.
-
-      router.push("/guest-qr-scan");
-    */
+    router.push({
+      pathname: "/guest-photo-upload",
+      params: { code: "QR" },
+    });
   }
 
   return (
