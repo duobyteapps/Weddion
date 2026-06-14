@@ -1,6 +1,4 @@
-import { AppText } from "@/components/ui/AppText";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { ScrollView, TouchableOpacity, View } from "react-native";
+import { AppFilterTabItem, AppFilterTabs } from "@/components/ui/AppFilterTabs";
 
 export type InvitationCategory =
   | "all"
@@ -9,14 +7,7 @@ export type InvitationCategory =
   | "classic"
   | "modern";
 
-type CategoryItem = {
-  id: InvitationCategory;
-  title: string;
-  icon: keyof typeof Ionicons.glyphMap;
-  iconSet?: "ionicons" | "material";
-};
-
-const categories: CategoryItem[] = [
+const categories: AppFilterTabItem<InvitationCategory>[] = [
   { id: "all", title: "Tümü", icon: "grid-outline" },
   {
     id: "flower",
@@ -39,51 +30,10 @@ export function InvitationCategoryFilter({
   onChangeCategory,
 }: Props) {
   return (
-    <View className="mb-3">
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerClassName="gap-2"
-      >
-        {categories.map((item) => {
-          const isActive = selectedCategory === item.id;
-
-          return (
-            <TouchableOpacity
-              key={item.id}
-              activeOpacity={0.85}
-              onPress={() => onChangeCategory(item.id)}
-              className={[
-                "h-10 px-4 rounded-xl flex-row items-center gap-1.5 shadow-sm",
-                isActive ? "bg-primary" : "bg-white",
-              ].join(" ")}
-            >
-              {item.iconSet === "material" ? (
-                <MaterialCommunityIcons
-                  name={item.icon as any}
-                  size={14}
-                  color={isActive ? "#FFFFFF" : "#18214D"}
-                />
-              ) : (
-                <Ionicons
-                  name={item.icon}
-                  size={14}
-                  color={isActive ? "#FFFFFF" : "#18214D"}
-                />
-              )}
-
-              <AppText
-                className={[
-                  "text-xs",
-                  isActive ? "text-white" : "text-[#18214D]",
-                ].join(" ")}
-              >
-                {item.title}
-              </AppText>
-            </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
-    </View>
+    <AppFilterTabs
+      items={categories}
+      selectedValue={selectedCategory}
+      onChangeValue={onChangeCategory}
+    />
   );
 }

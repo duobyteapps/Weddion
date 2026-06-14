@@ -6,6 +6,7 @@ import { Linking, Platform, Pressable, View } from "react-native";
 
 import { AppCard } from "../ui/AppCard";
 import { AppDivider } from "../ui/AppDivider";
+import { AppIconBox } from "../ui/AppIconBox";
 
 type MenuItem = {
   label: string;
@@ -87,9 +88,12 @@ export function ProfileMenuSection({ title, items }: Props) {
                   isLast ? "pt-3 pb-0" : "py-3"
                 }`}
               >
-                <View className="mr-4 h-11 w-11 items-center justify-center rounded-2xl bg-primary/10">
-                  <Ionicons name={item.icon} size={21} color={color} />
-                </View>
+                <AppIconBox
+                  icon={item.icon}
+                  color={color}
+                  size={21}
+                  className="mr-4 rounded-xl bg-primarySoft"
+                />
 
                 <AppText
                   variant="body"

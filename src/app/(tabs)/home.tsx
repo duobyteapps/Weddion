@@ -7,8 +7,11 @@ import { PromoCard } from "@/components/home/PromoCard";
 import { QuickActionCard } from "@/components/home/QuickActionCard";
 import { AppText } from "@/components/ui/AppText";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
+import { useAppNavigation } from "@/hooks/useAppNavigation";
 
 export default function HomeScreen() {
+  const appRouter = useAppNavigation();
+
   return (
     <ScreenContainer className="bg-background">
       <View className="flex-1">
@@ -41,6 +44,11 @@ export default function HomeScreen() {
               icon="images-outline"
               title="Galeri"
               subtitle="45 fotoğraf"
+              onPress={() =>
+                appRouter.push({
+                  pathname: "/(tabs)/gallery",
+                })
+              }
             />
 
             <QuickActionCard
