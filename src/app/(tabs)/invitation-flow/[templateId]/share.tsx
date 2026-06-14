@@ -1,3 +1,4 @@
+import * as Clipboard from "expo-clipboard";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Alert, ScrollView, View } from "react-native";
@@ -23,6 +24,10 @@ type ShareParams = {
   shareSlug?: string;
   invitationImageUrl?: string;
   editableImageUrl?: string;
+
+  guestUploadCode?: string;
+  guestUploadSlug?: string;
+  guestUploadQrValue?: string;
 
   brideName?: string;
   groomName?: string;
@@ -95,6 +100,18 @@ export default function InvitationFlowShareScreen() {
     [params],
   );
 
+  const guestUploadCode = useMemo(() => {
+    return cleanOptionalParam(params.guestUploadCode) ?? null;
+  }, [params.guestUploadCode]);
+
+  const guestUploadSlug = useMemo(() => {
+    return cleanOptionalParam(params.guestUploadSlug) ?? null;
+  }, [params.guestUploadSlug]);
+
+  const guestUploadQrValue = useMemo(() => {
+    return cleanOptionalParam(params.guestUploadQrValue) ?? null;
+  }, [params.guestUploadQrValue]);
+
   const fallbackPreviewImageUrl = useMemo(() => {
     return getCacheBustedImageUrl(
       template?.editableImageUrl ?? template?.imageUrl,
@@ -127,11 +144,14 @@ export default function InvitationFlowShareScreen() {
   }, [formData.brideName, formData.groomName]);
 
   const qrValue = useMemo(() => {
-    const invitationId = params.invitationId ?? params.templateId;
-    const slug = params.shareSlug ?? fallbackSlug;
+    if (guestUploadQrValue) {
+      return guestUploadQrValue;
+    }
 
-    return `weddion://gallery-upload?invitationId=${invitationId}&slug=${slug}`;
-  }, [params.invitationId, params.templateId, params.shareSlug, fallbackSlug]);
+    const slug = guestUploadSlug ?? params.shareSlug ?? fallbackSlug;
+
+    return `weddion://guest-upload/${slug}`;
+  }, [guestUploadQrValue, guestUploadSlug, params.shareSlug, fallbackSlug]);
 
   useEffect(() => {
     fetchTemplate();
@@ -167,6 +187,10 @@ export default function InvitationFlowShareScreen() {
         template?.imageUrl ??
         "",
 
+      guestUploadCode: guestUploadCode ?? "",
+      guestUploadSlug: guestUploadSlug ?? "",
+      guestUploadQrValue: guestUploadQrValue ?? "",
+
       brideName: formData.brideName,
       groomName: formData.groomName,
       brideParents: formData.brideParents,
@@ -181,13 +205,6 @@ export default function InvitationFlowShareScreen() {
     };
   }
 
-  function handleBackPress() {
-    router.push({
-      pathname: "/invitation-flow/[templateId]/preview",
-      params: getRouteParams(),
-    });
-  }
-
   function handleDownloadInstagramImage() {
     Alert.alert(
       "Görsel hazır",
@@ -195,18 +212,41 @@ export default function InvitationFlowShareScreen() {
     );
   }
 
-  function handleCopyQrLink() {
+  async function handleCopyCodePress() {
+    if (!guestUploadCode) {
+      Alert.alert(
+        "Kod bulunamadı",
+        "Bu davetiye için fotoğraf yükleme kodu henüz oluşmamış.",
+      );
+      return;
+    }
+
+    await Clipboard.setStringAsync(guestUploadCode);
+
+    Alert.alert("Kod kopyalandı", "Davet kodu panoya kopyalandı.");
+  }
+
+  async function handleCopyLinkPress() {
+    await Clipboard.setStringAsync(qrValue);
+
     Alert.alert(
-      "QR bağlantısı",
-      `Fotoğraf yükleme bağlantısı hazır.\n\n${qrValue}`,
+      "Bağlantı kopyalandı",
+      "Fotoğraf yükleme bağlantısı panoya kopyalandı.",
     );
   }
 
-  function handleDownloadQr() {
+  function handleDownloadQrPress() {
     Alert.alert(
       "QR kod hazır",
       "Expo Go içinde QR indirme işlemi kapalıdır. Development build ile aktif edilebilir.",
     );
+  }
+
+  function handleBackPress() {
+    router.push({
+      pathname: "/invitation-flow/[templateId]/preview",
+      params: getRouteParams(),
+    });
   }
 
   if (loading) {
@@ -260,8 +300,10 @@ export default function InvitationFlowShareScreen() {
 
         <InvitationQrShareCard
           qrValue={qrValue}
-          onCopyLinkPress={handleCopyQrLink}
-          onDownloadQrPress={handleDownloadQr}
+          guestUploadCode={guestUploadCode}
+          onCopyCodePress={handleCopyCodePress}
+          onCopyLinkPress={handleCopyLinkPress}
+          onDownloadQrPress={handleDownloadQrPress}
         />
 
         <InvitationShareNoteCard />

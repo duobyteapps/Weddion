@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, ScrollView, View } from "react-native";
+import { ActivityIndicator, Alert, ScrollView, View } from "react-native";
 import { captureRef } from "react-native-view-shot";
 
 import { ScreenHeader } from "@/components/common/ScreenHeader";
@@ -8,7 +8,6 @@ import { InvitationEditSteps } from "@/components/invitations/create/InvitationE
 import { InvitationPreviewActions } from "@/components/invitations/create/InvitationPreviewActions";
 import { InvitationPreviewCard } from "@/components/invitations/create/InvitationPreviewCard";
 import { InvitationPreviewSuccessCard } from "@/components/invitations/create/InvitationPreviewSuccessCard";
-import { useAppAlert } from "@/components/ui/AppAlert";
 import { AppText } from "@/components/ui/AppText";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { defaultInvitationContent } from "@/constants/invitationDefaultContent";
@@ -20,7 +19,7 @@ import {
   getInvitationTemplateById,
   InvitationTemplateDto,
 } from "@/services/invitationTemplateService";
-import { InvitationFormData } from "@/types/invitation";
+import { InvitationFormData, UserInvitation } from "@/types/invitation";
 import { setCapturedInvitationImageUri } from "@/utils/invitationCaptureStore";
 
 type PreviewParams = {
@@ -29,6 +28,10 @@ type PreviewParams = {
   shareSlug?: string;
   invitationImageUrl?: string;
   editableImageUrl?: string;
+
+  guestUploadCode?: string;
+  guestUploadSlug?: string;
+  guestUploadQrValue?: string;
 
   brideName?: string;
   groomName?: string;
@@ -71,7 +74,6 @@ function cleanOptionalParam(value?: string) {
 export default function InvitationFlowPreviewScreen() {
   const params = useLocalSearchParams<PreviewParams>();
   const invitationCaptureRef = useRef<View>(null);
-  const { showAlert } = useAppAlert();
 
   const [template, setTemplate] = useState<InvitationTemplateDto | null>(null);
   const [loading, setLoading] = useState(true);
@@ -101,12 +103,10 @@ export default function InvitationFlowPreviewScreen() {
 
   const previewImageUrl = useMemo(() => {
     return getCacheBustedImageUrl(
-      params.editableImageUrl ??
-        template?.editableImageUrl ??
-        template?.imageUrl,
+      template?.editableImageUrl ?? template?.imageUrl,
       template?.id,
     );
-  }, [params.editableImageUrl, template]);
+  }, [template]);
 
   useEffect(() => {
     fetchTemplate();
@@ -130,7 +130,7 @@ export default function InvitationFlowPreviewScreen() {
     }
   }
 
-  function getRouteParams() {
+  function getBaseRouteParams() {
     return {
       templateId: params.templateId,
       invitationId: params.invitationId ?? "",
@@ -141,6 +141,10 @@ export default function InvitationFlowPreviewScreen() {
         template?.editableImageUrl ??
         template?.imageUrl ??
         "",
+
+      guestUploadCode: params.guestUploadCode ?? "",
+      guestUploadSlug: params.guestUploadSlug ?? "",
+      guestUploadQrValue: params.guestUploadQrValue ?? "",
 
       brideName: formData.brideName,
       groomName: formData.groomName,
@@ -156,14 +160,28 @@ export default function InvitationFlowPreviewScreen() {
     };
   }
 
-  function handleEditStep() {
-    if (saving) {
-      return;
-    }
+  function getShareRouteParams(invitation: UserInvitation) {
+    return {
+      ...getBaseRouteParams(),
+      invitationId: invitation.id,
+      shareSlug: invitation.share_slug ?? params.shareSlug ?? "",
+      invitationImageUrl:
+        cleanOptionalParam(invitation.invitation_image_url ?? undefined) ??
+        params.invitationImageUrl ??
+        "",
+      guestUploadCode:
+        cleanOptionalParam(invitation.guest_upload_code ?? undefined) ?? "",
+      guestUploadSlug:
+        cleanOptionalParam(invitation.guest_upload_slug ?? undefined) ?? "",
+      guestUploadQrValue:
+        cleanOptionalParam(invitation.guest_upload_qr_value ?? undefined) ?? "",
+    };
+  }
 
+  function handleEditStep() {
     router.push({
       pathname: "/invitation-flow/[templateId]/edit",
-      params: getRouteParams(),
+      params: getBaseRouteParams(),
     });
   }
 
@@ -173,10 +191,31 @@ export default function InvitationFlowPreviewScreen() {
     const capturedImageUri = await captureRef(invitationCaptureRef, {
       format: "png",
       quality: 1,
-      result: "data-uri",
+      result: "tmpfile",
     });
 
+    setCapturedInvitationImageUri(capturedImageUri);
+
     return capturedImageUri;
+  }
+
+  async function saveInvitation(capturedImageUri?: string) {
+    if (params.invitationId) {
+      return updateUserInvitation({
+        invitationId: params.invitationId,
+        templateId: params.templateId,
+        formData,
+        status: "ready",
+        capturedImageUri,
+      });
+    }
+
+    return createUserInvitation({
+      templateId: params.templateId,
+      formData,
+      status: "ready",
+      capturedImageUri,
+    });
   }
 
   async function handleShareStep() {
@@ -184,76 +223,30 @@ export default function InvitationFlowPreviewScreen() {
       return;
     }
 
-    if (!params.templateId) {
-      showAlert({
-        type: "error",
-        title: "Hata",
-        message: "Davetiye şablonu bulunamadı.",
-      });
-      return;
-    }
-
     try {
       setSaving(true);
 
-      let capturedImageUri: string | null = null;
+      let capturedImageUri: string | undefined;
 
       try {
         capturedImageUri = await captureInvitationImage();
-        setCapturedInvitationImageUri(capturedImageUri);
-      } catch (captureError) {
-        console.log("Davetiye görseli oluşturulamadı:", captureError);
-        setCapturedInvitationImageUri(null);
-        capturedImageUri = null;
+      } catch {
+        capturedImageUri = undefined;
       }
 
-      const existingInvitationId = cleanOptionalParam(params.invitationId);
+      const invitation = await saveInvitation(capturedImageUri);
 
-      const savedInvitation = existingInvitationId
-        ? await updateUserInvitation({
-            invitationId: existingInvitationId,
-            templateId: params.templateId,
-            formData,
-            status: "ready",
-            capturedImageUri,
-          })
-        : await createUserInvitation({
-            templateId: params.templateId,
-            formData,
-            status: "ready",
-            capturedImageUri,
-          });
-
-      showAlert({
-        type: "success",
-        title: existingInvitationId
-          ? "Davetiye güncellendi"
-          : "Davetiye kaydedildi",
-        message: existingInvitationId
-          ? "Davetiyeniz başarıyla güncellendi. Şimdi paylaşım ekranına geçebilirsiniz."
-          : "Davetiyeniz başarıyla kaydedildi. Şimdi paylaşım ekranına geçebilirsiniz.",
-        confirmText: "Tamam",
-        onConfirm: () => {
-          router.push({
-            pathname: "/invitation-flow/[templateId]/share",
-            params: {
-              ...getRouteParams(),
-              invitationId: savedInvitation.id,
-              shareSlug: savedInvitation.share_slug,
-              invitationImageUrl: savedInvitation.invitation_image_url ?? "",
-            },
-          });
-        },
+      router.push({
+        pathname: "/invitation-flow/[templateId]/share",
+        params: getShareRouteParams(invitation),
       });
     } catch (error) {
-      console.log("Davetiye kaydedilemedi:", error);
-
-      showAlert({
-        type: "error",
-        title: "Kayıt başarısız",
-        message:
-          "Davetiye kaydedilirken bir sorun oluştu. Lütfen tekrar deneyin.",
-      });
+      Alert.alert(
+        "Davetiye kaydedilemedi",
+        error instanceof Error
+          ? error.message
+          : "Davetiye kaydedilirken bir hata oluştu.",
+      );
     } finally {
       setSaving(false);
     }
@@ -294,7 +287,11 @@ export default function InvitationFlowPreviewScreen() {
       >
         <ScreenHeader
           title="Önizle"
-          description="Davetiyenizi son haliyle görüntüleyin."
+          description="Davetiyenizin son halini kontrol edin."
+          backTo={{
+            pathname: "/invitation-flow/[templateId]/edit",
+            params: getBaseRouteParams(),
+          }}
         />
 
         <InvitationEditSteps activeStep={2} />
@@ -311,8 +308,6 @@ export default function InvitationFlowPreviewScreen() {
         <InvitationPreviewActions
           onEditPress={handleEditStep}
           onSharePress={handleShareStep}
-          shareLoading={saving}
-          disabled={saving}
         />
       </ScrollView>
     </ScreenContainer>

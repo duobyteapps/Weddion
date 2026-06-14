@@ -53,8 +53,44 @@ export type UserInvitation = {
   status: UserInvitationStatus;
   share_slug: string;
 
+  guest_upload_code: string | null;
+  guest_upload_slug: string | null;
+  guest_upload_enabled: boolean;
+  guest_upload_expires_at: string | null;
+  guest_upload_qr_value: string | null;
+
   created_at: string;
   updated_at: string;
+};
+
+export type InvitationGuestPhotoStatus = "pending" | "approved" | "rejected";
+
+export type InvitationGuestPhoto = {
+  id: string;
+  invitation_id: string;
+
+  storage_path: string;
+  public_url: string | null;
+
+  guest_name: string | null;
+  guest_note: string | null;
+
+  upload_code: string;
+  status: InvitationGuestPhotoStatus;
+
+  created_at: string;
+};
+
+export type GuestInvitationAccess = {
+  id: string;
+  bride_name: string;
+  groom_name: string;
+  event_date: string | null;
+  event_time: string | null;
+  venue_name: string | null;
+  guest_upload_code: string;
+  guest_upload_slug: string;
+  guest_upload_enabled: boolean;
 };
 
 export type CreateUserInvitationPayload = {

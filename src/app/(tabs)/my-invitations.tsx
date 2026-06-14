@@ -26,6 +26,10 @@ function getInvitationRouteParams(invitation: UserInvitation) {
     shareSlug: invitation.share_slug,
     invitationImageUrl: invitation.invitation_image_url ?? "",
 
+    guestUploadCode: invitation.guest_upload_code ?? "",
+    guestUploadSlug: invitation.guest_upload_slug ?? "",
+    guestUploadQrValue: invitation.guest_upload_qr_value ?? "",
+
     brideName: invitation.bride_name,
     groomName: invitation.groom_name,
     brideParents: invitation.bride_parents ?? "",
