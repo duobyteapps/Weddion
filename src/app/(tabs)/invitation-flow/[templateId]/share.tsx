@@ -1,13 +1,14 @@
 import * as Clipboard from "expo-clipboard";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Alert, ScrollView, View } from "react-native";
+import { ActivityIndicator, ScrollView, View } from "react-native";
 
 import { ScreenHeader } from "@/components/common/ScreenHeader";
 import { InvitationEditSteps } from "@/components/invitations/create/InvitationEditSteps";
 import { InvitationQrShareCard } from "@/components/invitations/create/InvitationQrShareCard";
 import { InvitationShareNoteCard } from "@/components/invitations/create/InvitationShareNoteCard";
 import { InvitationShareReadyCard } from "@/components/invitations/create/InvitationShareReadyCard";
+import { useAppAlert } from "@/components/ui/AppAlert";
 import { AppText } from "@/components/ui/AppText";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { defaultInvitationContent } from "@/constants/invitationDefaultContent";
@@ -74,6 +75,7 @@ function cleanOptionalParam(value?: string) {
 
 export default function InvitationFlowShareScreen() {
   const params = useLocalSearchParams<ShareParams>();
+  const { showAlert } = useAppAlert();
 
   const [template, setTemplate] = useState<InvitationTemplateDto | null>(null);
   const [loading, setLoading] = useState(true);
@@ -206,40 +208,56 @@ export default function InvitationFlowShareScreen() {
   }
 
   function handleDownloadInstagramImage() {
-    Alert.alert(
-      "Görsel hazır",
-      "Görsel indirme işlemi şu anda kapalı. Davetiye önizlemesi paylaşım ekranında gösteriliyor.",
-    );
+    showAlert({
+      type: "info",
+      title: "Görsel hazır",
+      message:
+        "Görsel indirme işlemi şu anda kapalı. Davetiye önizlemesi paylaşım ekranında gösteriliyor.",
+      confirmText: "Tamam",
+    });
   }
 
   async function handleCopyCodePress() {
     if (!guestUploadCode) {
-      Alert.alert(
-        "Kod bulunamadı",
-        "Bu davetiye için fotoğraf yükleme kodu henüz oluşmamış.",
-      );
+      showAlert({
+        type: "warning",
+        title: "Kod bulunamadı",
+        message: "Bu davetiye için fotoğraf yükleme kodu henüz oluşmamış.",
+        confirmText: "Tamam",
+      });
+
       return;
     }
 
     await Clipboard.setStringAsync(guestUploadCode);
 
-    Alert.alert("Kod kopyalandı", "Davet kodu panoya kopyalandı.");
+    showAlert({
+      type: "success",
+      title: "Kod kopyalandı",
+      message: "Davet kodu panoya kopyalandı.",
+      confirmText: "Tamam",
+    });
   }
 
   async function handleCopyLinkPress() {
     await Clipboard.setStringAsync(qrValue);
 
-    Alert.alert(
-      "Bağlantı kopyalandı",
-      "Fotoğraf yükleme bağlantısı panoya kopyalandı.",
-    );
+    showAlert({
+      type: "success",
+      title: "Bağlantı kopyalandı",
+      message: "Fotoğraf yükleme bağlantısı panoya kopyalandı.",
+      confirmText: "Tamam",
+    });
   }
 
   function handleDownloadQrPress() {
-    Alert.alert(
-      "QR kod hazır",
-      "Expo Go içinde QR indirme işlemi kapalıdır. Development build ile aktif edilebilir.",
-    );
+    showAlert({
+      type: "info",
+      title: "QR kod hazır",
+      message:
+        "Expo Go içinde QR indirme işlemi kapalıdır. Development build ile aktif edilebilir.",
+      confirmText: "Tamam",
+    });
   }
 
   function handleBackPress() {
