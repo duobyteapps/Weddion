@@ -173,9 +173,33 @@ export const getGuestPhotosByInvitation = async (invitationId: string) => {
     throw new Error(error.message);
   }
 
-  return (data ?? []) as InvitationGuestPhoto[];
-};
+  const photos = (data ?? []) as InvitationGuestPhoto[];
 
+  const photosWithSignedUrls = await Promise.all(
+    photos.map(async (photo) => {
+      const { data: signedUrlData, error: signedUrlError } =
+        await supabase.storage
+          .from(GUEST_PHOTOS_BUCKET)
+          .createSignedUrl(photo.storage_path, 60 * 60);
+
+      if (signedUrlError) {
+        console.log("Guest photo signed url oluşturulamadı:", signedUrlError);
+
+        return {
+          ...photo,
+          public_url: null,
+        };
+      }
+
+      return {
+        ...photo,
+        public_url: signedUrlData.signedUrl,
+      };
+    }),
+  );
+
+  return photosWithSignedUrls;
+};
 export const updateGuestPhotoStatus = async ({
   photoId,
   status,
