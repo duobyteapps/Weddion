@@ -11,12 +11,17 @@ import {
 } from "@/components/gallery/GalleryEventSummaryCard";
 import { GalleryPhotoGrid } from "@/components/gallery/GalleryPhotoGrid";
 import { GalleryQrInfoCard } from "@/components/gallery/GalleryQrInfoCard";
+import { useAppAlert } from "@/components/ui/AppAlert";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
-import { getGuestPhotosByInvitation } from "@/services/guestPhotoService";
+import {
+  deleteGuestPhoto,
+  getGuestPhotosByInvitation,
+} from "@/services/guestPhotoService";
 import { getCurrentUserInvitations } from "@/services/invitationService";
 import { InvitationGuestPhoto, UserInvitation } from "@/types/invitation";
 
 type GalleryPhotos = ComponentProps<typeof GalleryPhotoGrid>["photos"];
+type GalleryPhoto = GalleryPhotos[number];
 
 function formatEventTitle(invitation: UserInvitation) {
   const brideName = invitation.bride_name ?? "";
@@ -45,7 +50,7 @@ function formatEventDate(date?: string | null) {
 
 function mapGuestPhotoToGalleryPhoto(
   photo: InvitationGuestPhoto,
-): GalleryPhotos[number] {
+): GalleryPhoto {
   return {
     id: photo.id,
     imageUrl: photo.public_url ?? "",
@@ -54,11 +59,15 @@ function mapGuestPhotoToGalleryPhoto(
 }
 
 export default function GalleryScreen() {
+  const { showAlert } = useAppAlert();
+
   const [invitations, setInvitations] = useState<UserInvitation[]>([]);
   const [selectedInvitationId, setSelectedInvitationId] = useState<string>();
+  const [guestPhotos, setGuestPhotos] = useState<InvitationGuestPhoto[]>([]);
   const [photos, setPhotos] = useState<GalleryPhotos>([]);
   const [loadingInvitations, setLoadingInvitations] = useState(true);
   const [loadingPhotos, setLoadingPhotos] = useState(false);
+  const [deletingPhotoId, setDeletingPhotoId] = useState<string | null>(null);
 
   const isMountedRef = useRef(true);
 
@@ -73,6 +82,7 @@ export default function GalleryScreen() {
 
   useEffect(() => {
     if (!selectedInvitationId) {
+      setGuestPhotos([]);
       setPhotos([]);
       return;
     }
@@ -99,6 +109,13 @@ export default function GalleryScreen() {
       }
     } catch (error) {
       console.log("Galeri davetiyeleri alınamadı:", error);
+
+      showAlert({
+        type: "error",
+        title: "Davetler alınamadı",
+        message: "Davetler yüklenirken bir hata oluştu. Lütfen tekrar deneyin.",
+        confirmText: "Tamam",
+      });
     } finally {
       if (isMountedRef.current) {
         setLoadingInvitations(false);
@@ -118,17 +135,29 @@ export default function GalleryScreen() {
         return;
       }
 
-      const galleryPhotos = data
-        .filter((photo) => Boolean(photo.public_url))
-        .map(mapGuestPhotoToGalleryPhoto);
+      const visibleGuestPhotos = data.filter((photo) =>
+        Boolean(photo.public_url),
+      );
 
+      const galleryPhotos = visibleGuestPhotos.map(mapGuestPhotoToGalleryPhoto);
+
+      setGuestPhotos(visibleGuestPhotos);
       setPhotos(galleryPhotos);
     } catch (error) {
       console.log("Galeri fotoğrafları alınamadı:", error);
 
       if (isMountedRef.current) {
+        setGuestPhotos([]);
         setPhotos([]);
       }
+
+      showAlert({
+        type: "error",
+        title: "Fotoğraflar alınamadı",
+        message:
+          "Misafir fotoğrafları yüklenirken bir hata oluştu. Lütfen tekrar deneyin.",
+        confirmText: "Tamam",
+      });
     } finally {
       if (isMountedRef.current) {
         setLoadingPhotos(false);
@@ -189,6 +218,76 @@ export default function GalleryScreen() {
     });
   };
 
+  const removePhotoFromState = (photoId: string) => {
+    setGuestPhotos((currentPhotos) =>
+      currentPhotos.filter((photo) => photo.id !== photoId),
+    );
+
+    setPhotos((currentPhotos) =>
+      currentPhotos.filter((photo) => photo.id !== photoId),
+    );
+  };
+
+  const handleDeletePhoto = (photo: GalleryPhoto) => {
+    const targetPhoto = guestPhotos.find(
+      (guestPhoto) => guestPhoto.id === photo.id,
+    );
+
+    if (!targetPhoto) {
+      showAlert({
+        type: "error",
+        title: "Fotoğraf bulunamadı",
+        message: "Silmek istediğiniz fotoğraf artık mevcut değil.",
+        confirmText: "Tamam",
+      });
+
+      return;
+    }
+
+    showAlert({
+      type: "warning",
+      title: "Fotoğraf silinsin mi?",
+      message:
+        "Bu fotoğraf galeriden ve depolama alanından silinecek. Bu işlem geri alınamaz.",
+      cancelText: "Vazgeç",
+      confirmText: "Sil",
+      onConfirm: async () => {
+        try {
+          setDeletingPhotoId(targetPhoto.id);
+
+          await deleteGuestPhoto(targetPhoto);
+
+          if (!isMountedRef.current) {
+            return;
+          }
+
+          removePhotoFromState(targetPhoto.id);
+
+          showAlert({
+            type: "success",
+            title: "Fotoğraf silindi",
+            message: "Misafir fotoğrafı başarıyla silindi.",
+            confirmText: "Tamam",
+          });
+        } catch (error) {
+          console.log("Fotoğraf silinemedi:", error);
+
+          showAlert({
+            type: "error",
+            title: "Silme başarısız",
+            message:
+              "Fotoğraf silinirken bir hata oluştu. Lütfen tekrar deneyin.",
+            confirmText: "Tamam",
+          });
+        } finally {
+          if (isMountedRef.current) {
+            setDeletingPhotoId(null);
+          }
+        }
+      },
+    });
+  };
+
   return (
     <ScreenContainer className="flex-1 bg-background">
       <ScrollView
@@ -221,7 +320,10 @@ export default function GalleryScreen() {
                 <ActivityIndicator />
               </View>
             ) : hasPhotos ? (
-              <GalleryPhotoGrid photos={photos} />
+              <GalleryPhotoGrid
+                photos={photos}
+                onDeletePhoto={handleDeletePhoto}
+              />
             ) : (
               <EmptyGalleryNoPhotos onPressShareQrCode={handlePressQrCode} />
             )}
