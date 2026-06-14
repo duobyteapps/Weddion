@@ -1,6 +1,7 @@
 import { useAuth } from "@/context/AuthContext";
+import { Ionicons } from "@expo/vector-icons";
 import { Redirect, useRouter } from "expo-router";
-import { ActivityIndicator, Image, View } from "react-native";
+import { ActivityIndicator, Image, Pressable, View } from "react-native";
 
 import { AppButton } from "@/components/ui/AppButton";
 import { AppCard } from "@/components/ui/AppCard";
@@ -69,36 +70,75 @@ export default function HomeScreen() {
             </View>
 
             <AppText variant="body" className="mt-5 text-textMuted">
-              Misafirlerini yönet, QR kod ile katılım al ve etkinlik anılarını
-              tek yerde topla.
+              Misafirlerini yönet, katılım al ve etkinlik anılarını tek yerde
+              topla.
             </AppText>
 
             <View className="my-5 h-[1px] bg-border" />
 
-            <View className="flex-row items-center gap-4">
-              <View className="h-[116px] w-[116px] items-center justify-center rounded-2xl border border-primaryLight bg-backgroundSoft">
-                <Image
-                  source={require("../../assets/images/qr-code/qr-code.png")}
-                  className="h-[96px] w-[96px]"
-                  resizeMode="contain"
-                />
-              </View>
+            <View className="gap-4">
+              <Pressable
+                onPress={() => {
+                  /*
+                    QR scanner sayfasını oluşturduğunda burayı bağla.
+                    Örnek:
+                    router.push("/guest/qr-scan");
+                  */
+                }}
+                className="flex-row items-center rounded-xl border border-primaryLight p-3"
+              >
+                <View className="h-[112px] w-[112px] items-center justify-center rounded-2xl bg-white">
+                  <View className="h-10 w-10 items-center justify-center rounded-xl border border-primaryLight bg-background">
+                    <Ionicons name="camera-outline" size={28} color="#8F63D4" />
+                  </View>
 
-              <View className="flex-1">
-                <Image
-                  source={require("../../assets/images/double-heart.png")}
-                  className="mb-2 h-7 w-7 opacity-80"
-                  resizeMode="contain"
-                />
+                  <View className="absolute left-4 top-4 h-5 w-5 rounded-tl-lg border-l-2 border-t-2 border-primary" />
+                  <View className="absolute right-4 top-4 h-5 w-5 rounded-tr-lg border-r-2 border-t-2 border-primary" />
+                  <View className="absolute bottom-4 left-4 h-5 w-5 rounded-bl-lg border-b-2 border-l-2 border-primary" />
+                  <View className="absolute bottom-4 right-4 h-5 w-5 rounded-br-lg border-b-2 border-r-2 border-primary" />
+                </View>
 
-                <AppText variant="serifSubtitle" className="text-text">
-                  QR kod ile fotoğraflarınızı saklayın
-                </AppText>
+                <View className="ml-4 flex-1">
+                  <AppText variant="serifSubtitle">
+                    QR kod okutarak fotoğraf yükle
+                  </AppText>
 
-                <AppText variant="body" className="mt-2 text-textMuted">
-                  Misafirleriniz anıları kolayca yüklesin ve görüntülesin.
-                </AppText>
-              </View>
+                  <AppText variant="body">
+                    Misafirleriniz anıları kolayca yüklensin ve görüntülensin.
+                  </AppText>
+                </View>
+
+                <Ionicons name="chevron-forward" size={24} color="#8D8796" />
+              </Pressable>
+
+              <Pressable
+                onPress={() => {
+                  /*
+                    Kod girme modalını veya kod sayfasını oluşturduğunda burayı bağla.
+                    Örnek:
+                    router.push("/guest/code-upload");
+                  */
+                }}
+                className="flex-row items-center rounded-xl border border-primaryLight p-3"
+              >
+                <View className="h-[112px] w-[112px] items-center justify-center rounded-2xl bg-white">
+                  <View className="h-10 w-10 items-center justify-center rounded-xl border border-primaryLight bg-background">
+                    <Ionicons name="keypad-outline" size={28} color="#8F63D4" />
+                  </View>
+                </View>
+
+                <View className="ml-4 flex-1">
+                  <AppText variant="serifSubtitle">
+                    Kod girerek fotoğraf yükle
+                  </AppText>
+
+                  <AppText variant="body">
+                    Etkinlik kodunu girerek fotoğraflarınızı yükleyin.
+                  </AppText>
+                </View>
+
+                <Ionicons name="chevron-forward" size={24} color="#8D8796" />
+              </Pressable>
             </View>
           </AppCard>
 

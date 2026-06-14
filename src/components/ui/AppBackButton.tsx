@@ -13,9 +13,7 @@ export function AppBackButton({ onPress, className = "" }: AppBackButtonProps) {
       onPress={onPress}
       className={`mb-4 h-11 w-11 items-center justify-center rounded-full ${className}`}
     >
-      <AppText className="font-manropeBold text-[38px] leading-[40px] text-text">
-        ‹
-      </AppText>
+      <AppText className="!text-[50px] leading-[40px]">‹</AppText>
     </Pressable>
   );
 }
