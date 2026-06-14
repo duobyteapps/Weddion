@@ -3,9 +3,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { Redirect, useRouter } from "expo-router";
 import { ActivityIndicator, Image, Pressable, View } from "react-native";
 
+import { AuthHeader } from "@/components/auth/AuthHeader";
 import { AppButton } from "@/components/ui/AppButton";
 import { AppCard } from "@/components/ui/AppCard";
-import { AppLogo } from "@/components/ui/AppLogo";
 import { AppText } from "@/components/ui/AppText";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 
@@ -29,29 +29,11 @@ export default function HomeScreen() {
 
   return (
     <ScreenContainer className="bg-background">
-      <View className="relative flex-1 justify-between pb-8 pt-14">
-        <Image
-          source={require("@/assets/images/backgrounds/lavender-bloom.png")}
-          className="absolute -left-28 -top-1 h-60 w-60 opacity-85"
-          resizeMode="contain"
+      <View className="relative flex-1 justify-between pb-8 pt-10">
+        <AuthHeader
+          description="Online davetiye ve etkinlik platformu"
+          descriptionClassName="mt-3 px-6 text-center text-textMuted"
         />
-
-        <Image
-          source={require("@/assets/images/backgrounds/floral-corner.png")}
-          className="absolute -right-28 -top-1 h-60 w-60 opacity-85"
-          resizeMode="contain"
-        />
-
-        <View className="items-center">
-          <AppLogo size="lg" />
-
-          <AppText
-            variant="body"
-            className="mt-3 px-6 text-center text-textMuted"
-          >
-            Online davetiye ve etkinlik platformu
-          </AppText>
-        </View>
 
         <View className="gap-5">
           <AppCard>
@@ -78,24 +60,13 @@ export default function HomeScreen() {
 
             <View className="gap-4">
               <Pressable
-                onPress={() => {
-                  /*
-                    QR scanner sayfasını oluşturduğunda burayı bağla.
-                    Örnek:
-                    router.push("/guest/qr-scan");
-                  */
-                }}
+                onPress={() => router.push("/guest-photo-access")}
                 className="flex-row items-center rounded-xl border border-primaryLight p-3"
               >
-                <View className="h-[112px] w-[112px] items-center justify-center rounded-2xl bg-white">
+                <View className="items-center justify-center rounded-xl bg-white">
                   <View className="h-10 w-10 items-center justify-center rounded-xl border border-primaryLight bg-background">
                     <Ionicons name="camera-outline" size={28} color="#8F63D4" />
                   </View>
-
-                  <View className="absolute left-4 top-4 h-5 w-5 rounded-tl-lg border-l-2 border-t-2 border-primary" />
-                  <View className="absolute right-4 top-4 h-5 w-5 rounded-tr-lg border-r-2 border-t-2 border-primary" />
-                  <View className="absolute bottom-4 left-4 h-5 w-5 rounded-bl-lg border-b-2 border-l-2 border-primary" />
-                  <View className="absolute bottom-4 right-4 h-5 w-5 rounded-br-lg border-b-2 border-r-2 border-primary" />
                 </View>
 
                 <View className="ml-4 flex-1">
@@ -112,16 +83,10 @@ export default function HomeScreen() {
               </Pressable>
 
               <Pressable
-                onPress={() => {
-                  /*
-                    Kod girme modalını veya kod sayfasını oluşturduğunda burayı bağla.
-                    Örnek:
-                    router.push("/guest/code-upload");
-                  */
-                }}
+                onPress={() => router.push("/guest-photo-access")}
                 className="flex-row items-center rounded-xl border border-primaryLight p-3"
               >
-                <View className="h-[112px] w-[112px] items-center justify-center rounded-2xl bg-white">
+                <View className="items-center justify-center rounded-xl bg-white">
                   <View className="h-10 w-10 items-center justify-center rounded-xl border border-primaryLight bg-background">
                     <Ionicons name="keypad-outline" size={28} color="#8F63D4" />
                   </View>
