@@ -13,10 +13,16 @@ export function AppSwitch({
   onValueChange,
   disabled = false,
 }: AppSwitchProps) {
+  function handlePress() {
+    if (disabled) return;
+
+    onValueChange(!value);
+  }
+
   return (
     <Pressable
+      onPress={handlePress}
       disabled={disabled}
-      onPress={() => onValueChange(!value)}
       className="h-[22px] w-[42px] justify-center rounded-full px-[2px]"
       style={{
         backgroundColor: value ? Colors.primary : Colors.primarySoft,
@@ -27,10 +33,6 @@ export function AppSwitch({
         className="h-[18px] w-[18px] rounded-full bg-white"
         style={{
           alignSelf: value ? "flex-end" : "flex-start",
-          shadowColor: Colors.primaryDark,
-          shadowOpacity: 0.15,
-          shadowRadius: 5,
-          elevation: 2,
         }}
       />
     </Pressable>

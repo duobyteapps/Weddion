@@ -22,10 +22,7 @@ export default function PersonalInfoScreen() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [birthDate, setBirthDate] = useState("");
-
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [emailNotifications, setEmailNotifications] = useState(true);
-  const [smsNotifications, setSmsNotifications] = useState(true);
 
   async function loadProfile() {
     try {
@@ -39,8 +36,6 @@ export default function PersonalInfoScreen() {
       setPhone(profile.phone ?? "");
       setBirthDate(profile.birth_date ?? "");
       setAvatarUrl(profile.avatar_url);
-      setEmailNotifications(profile.email_notifications ?? true);
-      setSmsNotifications(profile.sms_notifications ?? true);
     } catch (error) {
       console.log(error);
 
@@ -67,8 +62,6 @@ export default function PersonalInfoScreen() {
         phone,
         birth_date: birthDate,
         avatar_url: avatarUrl,
-        email_notifications: emailNotifications,
-        sms_notifications: smsNotifications,
       });
 
       showAlert({
@@ -81,7 +74,10 @@ export default function PersonalInfoScreen() {
 
       showAlert({
         title: "Profil Güncellenemedi",
-        message: "Profil bilgileriniz güncellenemedi.",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Profil bilgileriniz güncellenemedi.",
         type: "error",
       });
     } finally {
@@ -95,41 +91,46 @@ export default function PersonalInfoScreen() {
 
   if (loading) {
     return (
-      <ScreenContainer className="flex-1 items-center justify-center bg-background">
-        <ActivityIndicator />
+      <ScreenContainer>
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator />
+        </View>
       </ScreenContainer>
     );
   }
 
   return (
-    <ScreenContainer className="flex-1 bg-background">
+    <ScreenContainer>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerClassName="pb-32"
+        contentContainerClassName="pb-28"
       >
         <PersonalInfoHeader />
 
-        <ProfilePhotoSection avatarUrl={avatarUrl} />
+        <ProfilePhotoSection
+          avatarUrl={avatarUrl}
+          onChangeAvatarUrl={setAvatarUrl}
+        />
 
-        <View className="mt-8">
-          <PersonalInfoCard
-            firstName={firstName}
-            lastName={lastName}
-            email={email}
-            phone={phone}
-            birthDate={birthDate}
-            onChangeFirstName={setFirstName}
-            onChangeLastName={setLastName}
-            onChangePhone={setPhone}
-            onChangeBirthDate={setBirthDate}
+        <PersonalInfoCard
+          firstName={firstName}
+          lastName={lastName}
+          email={email}
+          phone={phone}
+          birthDate={birthDate}
+          onChangeFirstName={setFirstName}
+          onChangeLastName={setLastName}
+          onChangePhone={setPhone}
+          onChangeBirthDate={setBirthDate}
+        />
+
+        <View className="mt-6">
+          <AppButton
+            title={saving ? "Kaydediliyor..." : "Bilgileri Kaydet"}
+            onPress={handleSave}
+            disabled={saving}
           />
         </View>
-
-        <AppButton
-          title={saving ? "Kaydediliyor..." : "Değişiklikleri Kaydet"}
-          onPress={handleSave}
-          disabled={saving}
-        />
       </ScrollView>
     </ScreenContainer>
   );

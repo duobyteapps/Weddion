@@ -7,8 +7,6 @@ export type Profile = {
   phone: string | null;
   birth_date: string | null;
   avatar_url: string | null;
-  email_notifications: boolean | null;
-  sms_notifications: boolean | null;
 };
 
 export type UpdateProfilePayload = {
@@ -17,8 +15,6 @@ export type UpdateProfilePayload = {
   phone: string;
   birth_date: string;
   avatar_url?: string | null;
-  email_notifications: boolean;
-  sms_notifications: boolean;
 };
 
 export async function getCurrentUserProfile() {
@@ -61,8 +57,6 @@ export async function getCurrentUserProfile() {
       phone: null,
       birth_date: null,
       avatar_url: null,
-      email_notifications: true,
-      sms_notifications: true,
       updated_at: new Date().toISOString(),
     })
     .select("*")
@@ -99,8 +93,6 @@ export async function updateCurrentUserProfile(payload: UpdateProfilePayload) {
     phone: payload.phone.trim() || null,
     birth_date: payload.birth_date || null,
     avatar_url: payload.avatar_url ?? null,
-    email_notifications: payload.email_notifications,
-    sms_notifications: payload.sms_notifications,
     updated_at: new Date().toISOString(),
   });
 

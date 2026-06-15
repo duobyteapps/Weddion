@@ -1,56 +1,41 @@
-import { AppButton } from "@/components/ui/AppButton";
-import { AppText } from "@/components/ui/AppText";
-import { Colors } from "@/constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
-import { Image, View } from "react-native";
+import { Image, TouchableOpacity, View } from "react-native";
+
+import { AppText } from "@/components/ui/AppText";
 
 type Props = {
   avatarUrl: string | null;
+  onChangeAvatarUrl: (avatarUrl: string | null) => void;
 };
 
-export function ProfilePhotoSection({ avatarUrl }: Props) {
-  const avatarSource = avatarUrl
-    ? { uri: avatarUrl }
-    : require("@/assets/images/profile/profile.png");
-
+export function ProfilePhotoSection({ avatarUrl, onChangeAvatarUrl }: Props) {
   return (
-    <View className="mt-6">
-      <Image
-        source={require("@/assets/images/backgrounds/wedding-floral.png")}
-        className="absolute -right-1 h-44 w-44 opacity-70"
-        resizeMode="contain"
-      />
-
-      <View className="flex-row items-center">
-        <View>
-          <Image
-            source={avatarSource}
-            className="h-20 w-20 rounded-full"
-            resizeMode="cover"
-          />
-
-          <View className="absolute -bottom-1 -right-1 h-11 w-11 items-center justify-center rounded-full bg-primary">
-            <Ionicons name="camera" size={21} color={Colors.white} />
-          </View>
+    <View className="mt-8 items-center">
+      <View className="relative">
+        <View className="h-28 w-28 items-center justify-center overflow-hidden rounded-full bg-primarySoft">
+          {avatarUrl ? (
+            <Image
+              source={{ uri: avatarUrl }}
+              className="h-full w-full"
+              resizeMode="cover"
+            />
+          ) : (
+            <Ionicons name="person-outline" size={42} color="#A56AD6" />
+          )}
         </View>
 
-        <View className="ml-5 flex-1">
-          <AppText variant="serifSubtitle" numberOfLines={1}>
-            Profil Fotoğrafı
-          </AppText>
-
-          <AppText variant="caption" numberOfLines={1} className="mt-1 mb-1">
-            JPG, PNG veya WEBP. Maksimum 5MB.
-          </AppText>
-
-          <AppButton
-            title="Fotoğrafı Değiştir"
-            variant="secondary"
-            className="h-12 px-6"
-            onPress={() => {}}
-          />
-        </View>
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => onChangeAvatarUrl(avatarUrl)}
+          className="absolute bottom-0 right-0 h-10 w-10 items-center justify-center rounded-full bg-primary"
+        >
+          <Ionicons name="camera-outline" size={20} color="#FFFFFF" />
+        </TouchableOpacity>
       </View>
+
+      <AppText className="mt-3 text-center text-sm text-textSoft">
+        Profil fotoğrafınızı düzenleyin
+      </AppText>
     </View>
   );
 }
