@@ -26,25 +26,21 @@ export function QuickActionCard({
       disabled={!onPress}
       className={`w-[48%] ${className}`}
     >
-      <AppCard className="min-h-[80px] flex-row items-center border-0">
-        <View className="mr-3 h-11 w-11 items-center justify-center rounded-2xl bg-primaryLight">
-          <Ionicons name={icon} size={23} color="#A875D1" />
+      <AppCard noMargin className="mb-4 flex-row items-center border-0">
+        <View className="mr-3 h-10 w-10 items-center justify-center rounded-xl bg-primaryLight">
+          <Ionicons name={icon} size={20} color="#A875D1" />
         </View>
 
         <View className="flex-1">
           <AppText
-            variant="body"
+            variant="serifSubtitle"
             numberOfLines={1}
-            className="font-manropeBold text-text"
+            className="!text-[14px]"
           >
             {title}
           </AppText>
 
-          <AppText
-            variant="caption"
-            numberOfLines={1}
-            className="mt-1 text-textMuted"
-          >
+          <AppText variant="caption" numberOfLines={1}>
             {subtitle}
           </AppText>
         </View>

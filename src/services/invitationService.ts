@@ -342,3 +342,29 @@ export async function getCurrentUserInvitations(): Promise<UserInvitation[]> {
 
   return invitationsWithSignedUrls;
 }
+
+export async function getCurrentUserInvitationCount(): Promise<number> {
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError) {
+    throw new Error(userError.message);
+  }
+
+  if (!user) {
+    throw new Error("Oturum bulunamadı.");
+  }
+
+  const { count, error } = await supabase
+    .from("user_invitations")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", user.id);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return count ?? 0;
+}

@@ -1,4 +1,6 @@
 // src/app/(tabs)/home.tsx
+import { router, useFocusEffect } from "expo-router";
+import { useCallback, useState } from "react";
 import { ScrollView, View } from "react-native";
 
 import { AppHeader } from "@/components/common/AppHeader";
@@ -7,10 +9,68 @@ import { PromoCard } from "@/components/home/PromoCard";
 import { QuickActionCard } from "@/components/home/QuickActionCard";
 import { AppText } from "@/components/ui/AppText";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
-import { useAppNavigation } from "@/hooks/useAppNavigation";
+import { getCurrentUserGuestPhotoCount } from "@/services/guestPhotoService";
+import { getCurrentUserInvitationCount } from "@/services/invitationService";
+
+type HomeQuickStats = {
+  invitationCount: number;
+  galleryPhotoCount: number;
+};
+
+function formatInvitationSubtitle(count: number, loading: boolean) {
+  if (loading) {
+    return "Yükleniyor...";
+  }
+
+  return `${count} aktif davetiye`;
+}
+
+function formatGallerySubtitle(count: number, loading: boolean) {
+  if (loading) {
+    return "Yükleniyor...";
+  }
+
+  return `${count} fotoğraf`;
+}
 
 export default function HomeScreen() {
-  const appRouter = useAppNavigation();
+  const [stats, setStats] = useState<HomeQuickStats>({
+    invitationCount: 0,
+    galleryPhotoCount: 0,
+  });
+
+  const [loadingStats, setLoadingStats] = useState(true);
+
+  const fetchQuickStats = useCallback(async () => {
+    try {
+      setLoadingStats(true);
+
+      const [invitationCount, galleryPhotoCount] = await Promise.all([
+        getCurrentUserInvitationCount(),
+        getCurrentUserGuestPhotoCount(),
+      ]);
+
+      setStats({
+        invitationCount,
+        galleryPhotoCount,
+      });
+    } catch (error) {
+      console.log("Home kısayol verileri alınamadı:", error);
+
+      setStats({
+        invitationCount: 0,
+        galleryPhotoCount: 0,
+      });
+    } finally {
+      setLoadingStats(false);
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchQuickStats();
+    }, [fetchQuickStats]),
+  );
 
   return (
     <ScreenContainer className="bg-background">
@@ -30,31 +90,34 @@ export default function HomeScreen() {
           <View className="w-full flex-row flex-wrap justify-between">
             <QuickActionCard
               icon="mail-outline"
-              title="Davetiyelerim"
-              subtitle="3 aktif davetiye"
-            />
-
-            <QuickActionCard
-              icon="people"
-              title="Misafir Listem"
-              subtitle="120 misafir"
+              title="Davetlerim"
+              subtitle={formatInvitationSubtitle(
+                stats.invitationCount,
+                loadingStats,
+              )}
+              onPress={() => router.push("/(tabs)/my-invitations")}
             />
 
             <QuickActionCard
               icon="images-outline"
               title="Galeri"
-              subtitle="45 fotoğraf"
-              onPress={() =>
-                appRouter.push({
-                  pathname: "/(tabs)/gallery",
-                })
-              }
+              subtitle={formatGallerySubtitle(
+                stats.galleryPhotoCount,
+                loadingStats,
+              )}
+              onPress={() => router.push("/(tabs)/gallery")}
             />
 
             <QuickActionCard
               icon="calendar"
               title="Etkinlikler"
               subtitle="2 yaklaşan etkinlik"
+            />
+
+            <QuickActionCard
+              icon="gift-outline"
+              title="Çeyiz Listesi"
+              subtitle="Eşyalarını planla"
             />
           </View>
 

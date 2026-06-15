@@ -236,3 +236,44 @@ export const deleteGuestPhoto = async (photo: InvitationGuestPhoto) => {
 
   return true;
 };
+
+export async function getCurrentUserGuestPhotoCount(): Promise<number> {
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError) {
+    throw new Error(userError.message);
+  }
+
+  if (!user) {
+    throw new Error("Oturum bulunamadı.");
+  }
+
+  const { data: invitations, error: invitationsError } = await supabase
+    .from("user_invitations")
+    .select("id")
+    .eq("user_id", user.id);
+
+  if (invitationsError) {
+    throw new Error(invitationsError.message);
+  }
+
+  const invitationIds = (invitations ?? []).map((invitation) => invitation.id);
+
+  if (invitationIds.length === 0) {
+    return 0;
+  }
+
+  const { count, error } = await supabase
+    .from("invitation_guest_photos")
+    .select("id", { count: "exact", head: true })
+    .in("invitation_id", invitationIds);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return count ?? 0;
+}
