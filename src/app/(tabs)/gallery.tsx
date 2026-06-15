@@ -20,6 +20,8 @@ import {
 import { getCurrentUserInvitations } from "@/services/invitationService";
 import { InvitationGuestPhoto, UserInvitation } from "@/types/invitation";
 
+const MAX_GUEST_PHOTOS_PER_INVITATION = 200;
+
 type GalleryPhotos = ComponentProps<typeof GalleryPhotoGrid>["photos"];
 type GalleryPhoto = GalleryPhotos[number];
 
@@ -322,6 +324,8 @@ export default function GalleryScreen() {
             ) : hasPhotos ? (
               <GalleryPhotoGrid
                 photos={photos}
+                photoCount={photos.length}
+                photoLimit={MAX_GUEST_PHOTOS_PER_INVITATION}
                 onDeletePhoto={handleDeletePhoto}
               />
             ) : (

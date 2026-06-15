@@ -7,6 +7,8 @@ import { GalleryPhoto, GalleryPhotoCard } from "./GalleryPhotoCard";
 type Props = {
   title?: string;
   photos: GalleryPhoto[];
+  photoLimit?: number;
+  photoCount?: number;
   onPressPhoto?: (photo: GalleryPhoto) => void;
   onDownloadPhoto?: (photo: GalleryPhoto) => void;
   onDeletePhoto?: (photo: GalleryPhoto) => void;
@@ -15,10 +17,14 @@ type Props = {
 export function GalleryPhotoGrid({
   title = "Tüm Fotoğraflar",
   photos,
+  photoLimit,
+  photoCount,
   onPressPhoto,
   onDownloadPhoto,
   onDeletePhoto,
 }: Props) {
+  const currentPhotoCount = photoCount ?? photos.length;
+
   const rows = photos.reduce<GalleryPhoto[][]>((acc, photo, index) => {
     const rowIndex = Math.floor(index / 3);
 
@@ -33,9 +39,17 @@ export function GalleryPhotoGrid({
 
   return (
     <View className="mt-7">
-      <AppText variant="title" className="text-textDark">
-        {title}
-      </AppText>
+      <View className="flex-row items-center justify-between">
+        <AppText variant="title" className="text-textDark">
+          {title}
+        </AppText>
+
+        {typeof photoLimit === "number" ? (
+          <AppText className="text-sm font-bold text-primary">
+            {currentPhotoCount}/{photoLimit}
+          </AppText>
+        ) : null}
+      </View>
 
       <GalleryFilterTabs />
 
