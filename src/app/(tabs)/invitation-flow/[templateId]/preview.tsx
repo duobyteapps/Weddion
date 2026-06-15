@@ -308,6 +308,8 @@ export default function InvitationFlowPreviewScreen() {
         <InvitationPreviewActions
           onEditPress={handleEditStep}
           onSharePress={handleShareStep}
+          shareLoading={saving}
+          disabled={saving}
         />
       </ScrollView>
     </ScreenContainer>
