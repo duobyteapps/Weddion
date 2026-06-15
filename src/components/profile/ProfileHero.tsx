@@ -1,7 +1,7 @@
 import { AppText } from "@/components/ui/AppText";
 import { Colors } from "@/constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
-import { Image, Pressable, View } from "react-native";
+import { Image, View } from "react-native";
 
 type ProfileHeroProps = {
   fullName: string;
@@ -29,17 +29,11 @@ export function ProfileHero({
       />
 
       <View className="flex-row items-center">
-        <View>
-          <Image
-            source={avatarSource}
-            className="h-20 w-20 rounded-full"
-            resizeMode="cover"
-          />
-
-          <Pressable className="absolute -bottom-1 -right-1 h-11 w-11 items-center justify-center rounded-full bg-primary">
-            <Ionicons name="camera" size={21} color={Colors.white} />
-          </Pressable>
-        </View>
+        <Image
+          source={avatarSource}
+          className="h-20 w-20 rounded-full"
+          resizeMode="cover"
+        />
 
         <View className="ml-5 flex-1">
           <AppText

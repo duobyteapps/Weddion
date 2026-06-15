@@ -168,13 +168,13 @@ export function ProfilePhotoSection({
           </AppText>
 
           <AppButton
-            title={
-              changingPhoto ? "Fotoğraf Hazırlanıyor..." : "Fotoğrafı Değiştir"
-            }
+            title={changingPhoto ? "Hazırlanıyor..." : "Fotoğrafı Değiştir"}
             variant="secondary"
             onPress={handleChangePhoto}
             disabled={changingPhoto}
             loading={changingPhoto}
+            className="h-10 w-44 self-start px-3"
+            textClassName="text-sm"
           />
         </View>
       </View>

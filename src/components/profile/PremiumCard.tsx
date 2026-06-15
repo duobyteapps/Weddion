@@ -8,28 +8,34 @@ import { AppCard } from "../ui/AppCard";
 
 export function PremiumCard() {
   return (
-    <AppCard className="flex-row items-center">
-      <View className="h-14 w-14 items-center justify-center rounded-xl bg-primary">
-        <Ionicons name="diamond-outline" size={25} color={Colors.white} />
-      </View>
+    <AppCard noMargin noPadding className="mb-6 py-4">
+      <View className="flex-row items-center gap-4">
+        <View className="h-10 w-10 items-center justify-center rounded-xl bg-primary">
+          <Ionicons name="diamond-outline" size={20} color={Colors.white} />
+        </View>
 
-      <View className="ml-3 flex-1">
-        <AppText variant="subtitle" className="text-textDark">
-          Premium’a Geç
-        </AppText>
+        <View className="flex-1">
+          <AppText variant="captionStrong" className="mb-1">
+            Premium’a Geç
+          </AppText>
 
-        <AppText variant="body" className="mt-1">
-          Daha fazla özellikle etkinliğini bir üst seviyeye taşı!
-        </AppText>
+          <AppText variant="caption" className="!text-[10px]">
+            Daha fazla özellikle etkinliğini bir üst seviyeye taşı!
+          </AppText>
+        </View>
+
+        <AppButton
+          title="Keşfet"
+          className="h-9 rounded-xl px-4 z-10"
+          textClassName="text-[11px]"
+        />
       </View>
 
       <Image
         source={require("@/assets/images/backgrounds/floral-corner.png")}
-        className="absolute -right-5 -top-5 h-24 w-24"
+        className="absolute -right-5 h-24 w-24"
         resizeMode="contain"
       />
-
-      <AppButton title="Keşfet" className="rounded-xl h-11" />
     </AppCard>
   );
 }
