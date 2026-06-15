@@ -34,14 +34,17 @@ type R2FunctionParams = {
 };
 
 async function getFunctionErrorMessage(error: unknown) {
-  if (
+  const context =
     error &&
     typeof error === "object" &&
     "context" in error &&
     error.context instanceof Response
-  ) {
+      ? error.context
+      : null;
+
+  if (context) {
     try {
-      const errorBody = await error.context.json();
+      const errorBody = await context.clone().json();
 
       if (errorBody?.message) {
         return String(errorBody.message);
@@ -54,7 +57,7 @@ async function getFunctionErrorMessage(error: unknown) {
       return JSON.stringify(errorBody);
     } catch {
       try {
-        const errorText = await error.context.text();
+        const errorText = await context.clone().text();
 
         if (errorText) {
           return errorText;

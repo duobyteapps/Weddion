@@ -21,12 +21,13 @@ async function uploadInvitationImage(params: {
   invitationId: string;
   capturedImageUri: string;
 }) {
-  const imagePath = `invitations/${params.userId}/${params.invitationId}/invitation.png`;
+  const imagePath = `user-invitations/${params.userId}/${params.invitationId}/invitation.png`;
 
   await uploadImageToR2({
     imageUri: params.capturedImageUri,
     key: imagePath,
     contentType: "image/png",
+    requireAuth: true,
   });
 
   return {
@@ -35,7 +36,29 @@ async function uploadInvitationImage(params: {
 }
 
 async function createSignedInvitationImageUrl(imagePath: string) {
-  return getR2SignedUrl(imagePath);
+  return getR2SignedUrl(imagePath, true);
+}
+
+async function addSignedImageUrlToInvitation(
+  invitation: UserInvitation,
+): Promise<UserInvitation> {
+  if (!invitation.invitation_image_path) {
+    return invitation;
+  }
+
+  try {
+    const signedImageUrl = await createSignedInvitationImageUrl(
+      invitation.invitation_image_path,
+    );
+
+    return {
+      ...invitation,
+      invitation_image_url: signedImageUrl,
+    };
+  } catch (error) {
+    console.log("Davetiye signed URL oluşturulamadı:", error);
+    return invitation;
+  }
 }
 
 async function deleteGuestPhotosForInvitation(invitationId: string) {
@@ -55,7 +78,7 @@ async function deleteGuestPhotosForInvitation(invitationId: string) {
   if (storagePaths.length > 0) {
     await Promise.all(
       storagePaths.map(async (storagePath) => {
-        await deleteR2Object(storagePath);
+        await deleteR2Object(storagePath, true);
       }),
     );
   }
@@ -74,7 +97,6 @@ export async function createUserInvitation(
   payload: CreateUserInvitationPayload,
 ): Promise<UserInvitation> {
   const user = await getAuthenticatedUser();
-
   const { formData } = payload;
 
   const { data: createdInvitation, error: createError } = await supabase
@@ -97,7 +119,6 @@ export async function createUserInvitation(
       venue_location: cleanText(formData.venueLocation),
 
       status: payload.status ?? "ready",
-      invitation_image_url: null,
       invitation_image_path: null,
       updated_at: new Date().toISOString(),
     })
@@ -122,7 +143,6 @@ export async function createUserInvitation(
     .from("user_invitations")
     .update({
       invitation_image_path: uploadedImage.imagePath,
-      invitation_image_url: null,
       updated_at: new Date().toISOString(),
     })
     .eq("id", createdInvitation.id)
@@ -132,7 +152,7 @@ export async function createUserInvitation(
 
   if (updateError) {
     try {
-      await deleteR2Object(uploadedImage.imagePath);
+      await deleteR2Object(uploadedImage.imagePath, true);
     } catch (deleteError) {
       console.log("R2 invitation image rollback delete failed:", deleteError);
     }
@@ -140,21 +160,13 @@ export async function createUserInvitation(
     throw new Error(updateError.message);
   }
 
-  const signedImageUrl = await createSignedInvitationImageUrl(
-    uploadedImage.imagePath,
-  );
-
-  return {
-    ...(updatedInvitation as UserInvitation),
-    invitation_image_url: signedImageUrl,
-  };
+  return addSignedImageUrlToInvitation(updatedInvitation as UserInvitation);
 }
 
 export async function updateUserInvitation(
   payload: UpdateUserInvitationPayload,
 ): Promise<UserInvitation> {
   const user = await getAuthenticatedUser();
-
   const { formData } = payload;
 
   const updatePayload: Record<string, string | null> = {
@@ -185,7 +197,6 @@ export async function updateUserInvitation(
     });
 
     updatePayload.invitation_image_path = uploadedImage.imagePath;
-    updatePayload.invitation_image_url = null;
   }
 
   const { data: updatedInvitation, error: updateError } = await supabase
@@ -199,7 +210,7 @@ export async function updateUserInvitation(
   if (updateError) {
     if (updatePayload.invitation_image_path) {
       try {
-        await deleteR2Object(updatePayload.invitation_image_path);
+        await deleteR2Object(updatePayload.invitation_image_path, true);
       } catch (deleteError) {
         console.log("R2 invitation image rollback delete failed:", deleteError);
       }
@@ -208,24 +219,7 @@ export async function updateUserInvitation(
     throw new Error(updateError.message);
   }
 
-  const invitation = updatedInvitation as UserInvitation;
-
-  if (!invitation.invitation_image_path) {
-    return invitation;
-  }
-
-  try {
-    const signedImageUrl = await createSignedInvitationImageUrl(
-      invitation.invitation_image_path,
-    );
-
-    return {
-      ...invitation,
-      invitation_image_url: signedImageUrl,
-    };
-  } catch {
-    return invitation;
-  }
+  return addSignedImageUrlToInvitation(updatedInvitation as UserInvitation);
 }
 
 export async function deleteUserInvitation(
@@ -257,7 +251,7 @@ export async function deleteUserInvitation(
   }
 
   if (invitation?.invitation_image_path) {
-    await deleteR2Object(invitation.invitation_image_path);
+    await deleteR2Object(invitation.invitation_image_path, true);
   }
 }
 
@@ -276,28 +270,7 @@ export async function getCurrentUserInvitations(): Promise<UserInvitation[]> {
 
   const invitations = (data ?? []) as UserInvitation[];
 
-  const invitationsWithSignedUrls = await Promise.all(
-    invitations.map(async (invitation) => {
-      if (!invitation.invitation_image_path) {
-        return invitation;
-      }
-
-      try {
-        const signedImageUrl = await createSignedInvitationImageUrl(
-          invitation.invitation_image_path,
-        );
-
-        return {
-          ...invitation,
-          invitation_image_url: signedImageUrl,
-        };
-      } catch {
-        return invitation;
-      }
-    }),
-  );
-
-  return invitationsWithSignedUrls;
+  return Promise.all(invitations.map(addSignedImageUrlToInvitation));
 }
 
 export async function getCurrentUserInvitationCount(): Promise<number> {

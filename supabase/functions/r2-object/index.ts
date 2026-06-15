@@ -22,7 +22,12 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const allowedPrefixes = ["invitations/", "guest-photos/", "profile-photos/"];
+const allowedPrefixes = [
+  "user-invitations/",
+  "guest-photos/",
+  "profile-photos/",
+  "invitation-templates/",
+];
 
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -196,6 +201,8 @@ serve(async (req: Request) => {
       400,
     );
   } catch (error) {
+    console.log("R2 Edge Function error:", error);
+
     return jsonResponse(
       {
         success: false,

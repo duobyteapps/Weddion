@@ -96,7 +96,7 @@ export function ProfileMenuSection({ title, items }: Props) {
                 />
 
                 <AppText
-                  variant="body"
+                  variant="caption"
                   className={`flex-1 ${
                     item.danger ? "text-[#D24B5B]" : "text-text"
                   }`}
