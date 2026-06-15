@@ -1,3 +1,4 @@
+import { router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, ScrollView, View } from "react-native";
 
@@ -13,6 +14,7 @@ import {
   updateCurrentUserNotificationSettings,
   type UpdateNotificationSettingsPayload,
 } from "@/services/notificationSettingsService";
+import { SESSION_EXPIRED_MESSAGE } from "@/services/sessionService";
 
 type NotificationState = UpdateNotificationSettingsPayload;
 
@@ -76,6 +78,31 @@ export default function NotificationSettingsScreen() {
     return !areSettingsEqual(initialSettings, settings);
   }, [initialSettings, settings]);
 
+  function handleServiceError(params: {
+    error: unknown;
+    fallbackTitle: string;
+    fallbackMessage: string;
+  }) {
+    const message =
+      params.error instanceof Error
+        ? params.error.message
+        : params.fallbackMessage;
+
+    const isSessionExpired = message === SESSION_EXPIRED_MESSAGE;
+
+    showAlert({
+      title: isSessionExpired ? "Oturum Süresi Doldu" : params.fallbackTitle,
+      message,
+      type: isSessionExpired ? "warning" : "error",
+      confirmText: isSessionExpired ? "Giriş Yap" : "Tamam",
+      onConfirm: () => {
+        if (isSessionExpired) {
+          router.replace("/auth/login");
+        }
+      },
+    });
+  }
+
   async function loadSettings() {
     try {
       setLoading(true);
@@ -98,15 +125,12 @@ export default function NotificationSettingsScreen() {
       setInitialSettings(normalizedSettings);
       setSettings(normalizedSettings);
     } catch (error) {
-      console.log(error);
+      console.log("Bildirim ayarları alınamadı:", error);
 
-      showAlert({
-        title: "Bildirim Ayarları Alınamadı",
-        message:
-          error instanceof Error
-            ? error.message
-            : "Bildirim ayarları alınamadı.",
-        type: "error",
+      handleServiceError({
+        error,
+        fallbackTitle: "Bildirim Ayarları Alınamadı",
+        fallbackMessage: "Bildirim ayarları alınamadı.",
       });
     } finally {
       setLoading(false);
@@ -131,15 +155,12 @@ export default function NotificationSettingsScreen() {
         type: "success",
       });
     } catch (error) {
-      console.log(error);
+      console.log("Bildirim ayarları kaydedilemedi:", error);
 
-      showAlert({
-        title: "Bildirim Ayarları Kaydedilemedi",
-        message:
-          error instanceof Error
-            ? error.message
-            : "Bildirim ayarları kaydedilemedi.",
-        type: "error",
+      handleServiceError({
+        error,
+        fallbackTitle: "Bildirim Ayarları Kaydedilemedi",
+        fallbackMessage: "Bildirim ayarları kaydedilemedi.",
       });
     } finally {
       setSaving(false);
@@ -222,6 +243,7 @@ export default function NotificationSettingsScreen() {
         <ScreenHeader
           title="Bildirim Ayarları"
           description="Hangi bildirimleri almak istediğinizi yönetin."
+          backTo="/(tabs)/profile"
         />
 
         <View className="flex-1 items-center justify-center">

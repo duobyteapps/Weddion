@@ -11,6 +11,7 @@ import {
   deleteCurrentUserAccount,
   getCurrentUserProfile,
   Profile,
+  SESSION_EXPIRED_MESSAGE,
 } from "@/services/profileService";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
@@ -34,12 +35,37 @@ export default function ProfileScreen() {
       async function fetchProfile() {
         try {
           setLoading(true);
+
           const { user, profile } = await getCurrentUserProfile();
 
           if (!isActive) return;
 
           setProfile(profile);
           setEmail(user.email ?? "");
+        } catch (error) {
+          if (!isActive) return;
+
+          const message =
+            error instanceof Error
+              ? error.message
+              : "Profil bilgileri alınırken bir hata oluştu.";
+
+          const isSessionExpired = message === SESSION_EXPIRED_MESSAGE;
+
+          setProfile(null);
+          setEmail("");
+
+          showAlert({
+            title: isSessionExpired ? "Oturum Süresi Doldu" : "Profil Hatası",
+            message,
+            type: isSessionExpired ? "warning" : "error",
+            confirmText: isSessionExpired ? "Giriş Yap" : "Tamam",
+            onConfirm: () => {
+              if (isSessionExpired) {
+                router.replace("/auth/login");
+              }
+            },
+          });
         } finally {
           if (isActive) setLoading(false);
         }
@@ -50,7 +76,7 @@ export default function ProfileScreen() {
       return () => {
         isActive = false;
       };
-    }, []),
+    }, [showAlert]),
   );
 
   const handleLogout = async () => {
@@ -82,7 +108,6 @@ export default function ProfileScreen() {
       onConfirm: async () => {
         try {
           await deleteCurrentUserAccount();
-
           router.replace("/auth/login");
         } catch (error) {
           const message =

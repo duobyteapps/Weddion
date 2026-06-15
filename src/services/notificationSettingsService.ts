@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { getAuthenticatedUser } from "@/services/sessionService";
 
 export type NotificationSettings = {
   id: string;
@@ -28,30 +29,13 @@ const DEFAULT_NOTIFICATION_SETTINGS: UpdateNotificationSettingsPayload = {
   system_notifications: true,
 };
 
-async function getCurrentUserId() {
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  if (!user) {
-    throw new Error("Oturum bulunamadı.");
-  }
-
-  return user.id;
-}
-
-export async function getCurrentUserNotificationSettings() {
-  const userId = await getCurrentUserId();
+export async function getCurrentUserNotificationSettings(): Promise<NotificationSettings> {
+  const user = await getAuthenticatedUser();
 
   const { data, error } = await supabase
     .from("notification_settings")
     .select("*")
-    .eq("user_id", userId)
+    .eq("user_id", user.id)
     .maybeSingle();
 
   if (error) {
@@ -67,7 +51,7 @@ export async function getCurrentUserNotificationSettings() {
   const { data: createdSettings, error: createError } = await supabase
     .from("notification_settings")
     .insert({
-      user_id: userId,
+      user_id: user.id,
       ...DEFAULT_NOTIFICATION_SETTINGS,
       created_at: now,
       updated_at: now,
@@ -84,14 +68,14 @@ export async function getCurrentUserNotificationSettings() {
 
 export async function updateCurrentUserNotificationSettings(
   payload: UpdateNotificationSettingsPayload,
-) {
-  const userId = await getCurrentUserId();
+): Promise<void> {
+  const user = await getAuthenticatedUser();
 
   const now = new Date().toISOString();
 
   const { error } = await supabase.from("notification_settings").upsert(
     {
-      user_id: userId,
+      user_id: user.id,
       all_notifications: payload.all_notifications,
       app_notifications: payload.app_notifications,
       email_notifications: payload.email_notifications,

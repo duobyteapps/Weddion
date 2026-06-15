@@ -1,4 +1,9 @@
 import { supabase } from "@/lib/supabase";
+import {
+  getAuthenticatedSession,
+  getAuthenticatedUser,
+} from "@/services/sessionService";
+import type { User } from "@supabase/supabase-js";
 
 export type Profile = {
   id: string;
@@ -17,19 +22,11 @@ export type UpdateProfilePayload = {
   avatar_url?: string | null;
 };
 
-export async function getCurrentUserProfile() {
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-
-  if (userError) {
-    throw new Error(userError.message);
-  }
-
-  if (!user) {
-    throw new Error("Oturum bulunamadı.");
-  }
+export async function getCurrentUserProfile(): Promise<{
+  user: User;
+  profile: Profile;
+}> {
+  const user = await getAuthenticatedUser();
 
   const { data: profile, error } = await supabase
     .from("profiles")
@@ -73,18 +70,7 @@ export async function getCurrentUserProfile() {
 }
 
 export async function updateCurrentUserProfile(payload: UpdateProfilePayload) {
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-
-  if (userError) {
-    throw new Error(userError.message);
-  }
-
-  if (!user) {
-    throw new Error("Oturum bulunamadı.");
-  }
+  const user = await getAuthenticatedUser();
 
   const { error } = await supabase.from("profiles").upsert({
     id: user.id,
@@ -102,18 +88,7 @@ export async function updateCurrentUserProfile(payload: UpdateProfilePayload) {
 }
 
 export async function deleteCurrentUserAccount() {
-  const {
-    data: { session },
-    error: sessionError,
-  } = await supabase.auth.getSession();
-
-  if (sessionError) {
-    throw new Error(sessionError.message);
-  }
-
-  if (!session) {
-    throw new Error("Oturum bulunamadı.");
-  }
+  const session = await getAuthenticatedSession();
 
   const { data, error } = await supabase.functions.invoke("delete-account", {
     headers: {

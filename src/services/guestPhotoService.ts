@@ -4,6 +4,7 @@ import {
   getR2SignedUrl,
   uploadImageToR2,
 } from "@/services/r2ImageService";
+import { getAuthenticatedUser } from "@/services/sessionService";
 import type {
   GuestInvitationAccess,
   InvitationGuestPhoto,
@@ -165,7 +166,11 @@ export const uploadGuestPhoto = async ({
   return true;
 };
 
-export const getGuestPhotosByInvitation = async (invitationId: string) => {
+export const getGuestPhotosByInvitation = async (
+  invitationId: string,
+): Promise<InvitationGuestPhoto[]> => {
+  await getAuthenticatedUser();
+
   const { data, error } = await supabase
     .from("invitation_guest_photos")
     .select("*")
@@ -207,7 +212,9 @@ export const getGuestPhotosByInvitation = async (invitationId: string) => {
 export const updateGuestPhotoStatus = async ({
   photoId,
   status,
-}: UpdateGuestPhotoStatusParams) => {
+}: UpdateGuestPhotoStatusParams): Promise<InvitationGuestPhoto> => {
+  await getAuthenticatedUser();
+
   const { data, error } = await supabase
     .from("invitation_guest_photos")
     .update({ status })
@@ -223,6 +230,8 @@ export const updateGuestPhotoStatus = async ({
 };
 
 export const deleteGuestPhoto = async (photo: InvitationGuestPhoto) => {
+  await getAuthenticatedUser();
+
   await deleteR2Object(photo.storage_path);
 
   const { error: deleteError } = await supabase
@@ -238,18 +247,7 @@ export const deleteGuestPhoto = async (photo: InvitationGuestPhoto) => {
 };
 
 export async function getCurrentUserGuestPhotoCount(): Promise<number> {
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-
-  if (userError) {
-    throw new Error(userError.message);
-  }
-
-  if (!user) {
-    throw new Error("Oturum bulunamadı.");
-  }
+  const user = await getAuthenticatedUser();
 
   const { data: invitations, error: invitationsError } = await supabase
     .from("user_invitations")

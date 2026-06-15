@@ -17,6 +17,7 @@ import {
   deleteUserInvitation,
   getCurrentUserInvitations,
 } from "@/services/invitationService";
+import { SESSION_EXPIRED_MESSAGE } from "@/services/sessionService";
 import { UserInvitation } from "@/types/invitation";
 
 function getInvitationRouteParams(invitation: UserInvitation) {
@@ -55,6 +56,31 @@ export default function MyInvitationsScreen() {
     fetchInvitations();
   }, []);
 
+  function handleServiceError(params: {
+    error: unknown;
+    fallbackTitle: string;
+    fallbackMessage: string;
+  }) {
+    const message =
+      params.error instanceof Error
+        ? params.error.message
+        : params.fallbackMessage;
+
+    const isSessionExpired = message === SESSION_EXPIRED_MESSAGE;
+
+    showAlert({
+      title: isSessionExpired ? "Oturum Süresi Doldu" : params.fallbackTitle,
+      message,
+      type: isSessionExpired ? "warning" : "error",
+      confirmText: isSessionExpired ? "Giriş Yap" : "Tamam",
+      onConfirm: () => {
+        if (isSessionExpired) {
+          router.replace("/auth/login");
+        }
+      },
+    });
+  }
+
   async function fetchInvitations() {
     try {
       setLoading(true);
@@ -65,12 +91,13 @@ export default function MyInvitationsScreen() {
     } catch (error) {
       console.log("Davetiyeler alınamadı:", error);
 
-      showAlert({
-        title: "Davetiyeler alınamadı",
-        message:
+      setInvitations([]);
+
+      handleServiceError({
+        error,
+        fallbackTitle: "Davetiyeler alınamadı",
+        fallbackMessage:
           "Davetiyeler yüklenirken bir sorun oluştu. Lütfen tekrar deneyin.",
-        type: "error",
-        confirmText: "Tamam",
       });
     } finally {
       setLoading(false);
@@ -87,12 +114,11 @@ export default function MyInvitationsScreen() {
     } catch (error) {
       console.log("Davetiyeler yenilenemedi:", error);
 
-      showAlert({
-        title: "Yenileme başarısız",
-        message:
+      handleServiceError({
+        error,
+        fallbackTitle: "Yenileme başarısız",
+        fallbackMessage:
           "Davetiyeler yenilenirken bir sorun oluştu. Lütfen tekrar deneyin.",
-        type: "error",
-        confirmText: "Tamam",
       });
     } finally {
       setRefreshing(false);
@@ -143,14 +169,11 @@ export default function MyInvitationsScreen() {
     } catch (error) {
       console.log("Davetiye silinemedi:", error);
 
-      showAlert({
-        title: "Davetiye silinemedi",
-        message:
-          error instanceof Error
-            ? error.message
-            : "Davetiye silinirken bir sorun oluştu. Lütfen tekrar deneyin.",
-        type: "error",
-        confirmText: "Tamam",
+      handleServiceError({
+        error,
+        fallbackTitle: "Davetiye silinemedi",
+        fallbackMessage:
+          "Davetiye silinirken bir sorun oluştu. Lütfen tekrar deneyin.",
       });
     }
   }

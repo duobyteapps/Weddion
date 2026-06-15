@@ -4,6 +4,7 @@ import {
   getR2SignedUrl,
   uploadImageToR2,
 } from "@/services/r2ImageService";
+import { getAuthenticatedUser } from "@/services/sessionService";
 import {
   CreateUserInvitationPayload,
   UpdateUserInvitationPayload,
@@ -72,18 +73,7 @@ async function deleteGuestPhotosForInvitation(invitationId: string) {
 export async function createUserInvitation(
   payload: CreateUserInvitationPayload,
 ): Promise<UserInvitation> {
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-
-  if (userError) {
-    throw new Error(userError.message);
-  }
-
-  if (!user) {
-    throw new Error("Davetiye kaydetmek için oturum açmalısınız.");
-  }
+  const user = await getAuthenticatedUser();
 
   const { formData } = payload;
 
@@ -163,18 +153,7 @@ export async function createUserInvitation(
 export async function updateUserInvitation(
   payload: UpdateUserInvitationPayload,
 ): Promise<UserInvitation> {
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-
-  if (userError) {
-    throw new Error(userError.message);
-  }
-
-  if (!user) {
-    throw new Error("Davetiye güncellemek için oturum açmalısınız.");
-  }
+  const user = await getAuthenticatedUser();
 
   const { formData } = payload;
 
@@ -252,18 +231,7 @@ export async function updateUserInvitation(
 export async function deleteUserInvitation(
   invitationId: string,
 ): Promise<void> {
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-
-  if (userError) {
-    throw new Error(userError.message);
-  }
-
-  if (!user) {
-    throw new Error("Davetiye silmek için oturum açmalısınız.");
-  }
+  const user = await getAuthenticatedUser();
 
   const { data: invitation, error: findError } = await supabase
     .from("user_invitations")
@@ -294,18 +262,7 @@ export async function deleteUserInvitation(
 }
 
 export async function getCurrentUserInvitations(): Promise<UserInvitation[]> {
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-
-  if (userError) {
-    throw new Error(userError.message);
-  }
-
-  if (!user) {
-    throw new Error("Oturum bulunamadı.");
-  }
+  const user = await getAuthenticatedUser();
 
   const { data, error } = await supabase
     .from("user_invitations")
@@ -344,18 +301,7 @@ export async function getCurrentUserInvitations(): Promise<UserInvitation[]> {
 }
 
 export async function getCurrentUserInvitationCount(): Promise<number> {
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-
-  if (userError) {
-    throw new Error(userError.message);
-  }
-
-  if (!user) {
-    throw new Error("Oturum bulunamadı.");
-  }
+  const user = await getAuthenticatedUser();
 
   const { count, error } = await supabase
     .from("user_invitations")

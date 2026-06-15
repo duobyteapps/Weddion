@@ -1,6 +1,7 @@
 import * as FileSystem from "expo-file-system/legacy";
 
 import { supabase } from "@/lib/supabase";
+import { getAuthenticatedSession } from "@/services/sessionService";
 
 type R2Action = "upload-url" | "get-url" | "delete";
 
@@ -15,23 +16,38 @@ type R2ObjectResponse = {
 type GetR2UploadUrlParams = {
   key: string;
   contentType: string;
+  requireAuth?: boolean;
 };
 
 type UploadImageToR2Params = {
   imageUri: string;
   key: string;
   contentType: string;
+  requireAuth?: boolean;
 };
 
-async function callR2ObjectFunction(params: {
+type R2FunctionParams = {
   action: R2Action;
   key: string;
   contentType?: string;
-}) {
+  requireAuth?: boolean;
+};
+
+async function callR2ObjectFunction({
+  requireAuth = false,
+  ...params
+}: R2FunctionParams) {
+  const session = requireAuth ? await getAuthenticatedSession() : null;
+
   const { data, error } = await supabase.functions.invoke<R2ObjectResponse>(
     "r2-object",
     {
       body: params,
+      headers: session
+        ? {
+            Authorization: `Bearer ${session.access_token}`,
+          }
+        : undefined,
     },
   );
 
@@ -49,11 +65,13 @@ async function callR2ObjectFunction(params: {
 export async function getR2UploadUrl({
   key,
   contentType,
+  requireAuth = false,
 }: GetR2UploadUrlParams) {
   const data = await callR2ObjectFunction({
     action: "upload-url",
     key,
     contentType,
+    requireAuth,
   });
 
   if (!data.uploadUrl) {
@@ -63,10 +81,11 @@ export async function getR2UploadUrl({
   return data.uploadUrl;
 }
 
-export async function getR2SignedUrl(key: string) {
+export async function getR2SignedUrl(key: string, requireAuth = false) {
   const data = await callR2ObjectFunction({
     action: "get-url",
     key,
+    requireAuth,
   });
 
   if (!data.signedUrl) {
@@ -76,10 +95,11 @@ export async function getR2SignedUrl(key: string) {
   return data.signedUrl;
 }
 
-export async function deleteR2Object(key: string) {
+export async function deleteR2Object(key: string, requireAuth = false) {
   await callR2ObjectFunction({
     action: "delete",
     key,
+    requireAuth,
   });
 
   return true;
@@ -89,10 +109,12 @@ export async function uploadImageToR2({
   imageUri,
   key,
   contentType,
+  requireAuth = false,
 }: UploadImageToR2Params) {
   const uploadUrl = await getR2UploadUrl({
     key,
     contentType,
+    requireAuth,
   });
 
   const fileBase64 = await FileSystem.readAsStringAsync(imageUri, {

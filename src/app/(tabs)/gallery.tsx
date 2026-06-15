@@ -18,6 +18,7 @@ import {
   getGuestPhotosByInvitation,
 } from "@/services/guestPhotoService";
 import { getCurrentUserInvitations } from "@/services/invitationService";
+import { SESSION_EXPIRED_MESSAGE } from "@/services/sessionService";
 import { InvitationGuestPhoto, UserInvitation } from "@/types/invitation";
 
 const MAX_GUEST_PHOTOS_PER_INVITATION = 200;
@@ -93,6 +94,31 @@ export default function GalleryScreen() {
     fetchPhotos(selectedInvitationId);
   }, [selectedInvitationId]);
 
+  function handleServiceError(params: {
+    error: unknown;
+    fallbackTitle: string;
+    fallbackMessage: string;
+  }) {
+    const message =
+      params.error instanceof Error
+        ? params.error.message
+        : params.fallbackMessage;
+
+    const isSessionExpired = message === SESSION_EXPIRED_MESSAGE;
+
+    showAlert({
+      title: isSessionExpired ? "Oturum Süresi Doldu" : params.fallbackTitle,
+      message,
+      type: isSessionExpired ? "warning" : "error",
+      confirmText: isSessionExpired ? "Giriş Yap" : "Tamam",
+      onConfirm: () => {
+        if (isSessionExpired) {
+          router.replace("/auth/login");
+        }
+      },
+    });
+  }
+
   const fetchInvitations = async () => {
     try {
       if (isMountedRef.current) {
@@ -120,11 +146,16 @@ export default function GalleryScreen() {
     } catch (error) {
       console.log("Galeri davetiyeleri alınamadı:", error);
 
-      showAlert({
-        type: "error",
-        title: "Davetler alınamadı",
-        message: "Davetler yüklenirken bir hata oluştu. Lütfen tekrar deneyin.",
-        confirmText: "Tamam",
+      if (isMountedRef.current) {
+        setInvitations([]);
+        setSelectedInvitationId(undefined);
+      }
+
+      handleServiceError({
+        error,
+        fallbackTitle: "Davetler alınamadı",
+        fallbackMessage:
+          "Davetler yüklenirken bir hata oluştu. Lütfen tekrar deneyin.",
       });
     } finally {
       if (isMountedRef.current) {
@@ -161,12 +192,11 @@ export default function GalleryScreen() {
         setPhotos([]);
       }
 
-      showAlert({
-        type: "error",
-        title: "Fotoğraflar alınamadı",
-        message:
+      handleServiceError({
+        error,
+        fallbackTitle: "Fotoğraflar alınamadı",
+        fallbackMessage:
           "Misafir fotoğrafları yüklenirken bir hata oluştu. Lütfen tekrar deneyin.",
-        confirmText: "Tamam",
       });
     } finally {
       if (isMountedRef.current) {
@@ -282,12 +312,11 @@ export default function GalleryScreen() {
         } catch (error) {
           console.log("Fotoğraf silinemedi:", error);
 
-          showAlert({
-            type: "error",
-            title: "Silme başarısız",
-            message:
+          handleServiceError({
+            error,
+            fallbackTitle: "Silme başarısız",
+            fallbackMessage:
               "Fotoğraf silinirken bir hata oluştu. Lütfen tekrar deneyin.",
-            confirmText: "Tamam",
           });
         } finally {
           if (isMountedRef.current) {

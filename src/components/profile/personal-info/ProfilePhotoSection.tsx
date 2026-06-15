@@ -2,21 +2,24 @@ import { AppButton } from "@/components/ui/AppButton";
 import { AppText } from "@/components/ui/AppText";
 import { Colors } from "@/constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
-import { Image, View } from "react-native";
+import { Image, Pressable, View } from "react-native";
 
 type Props = {
   avatarUrl: string | null;
-  onChangeAvatarUrl?: (avatarUrl: string | null) => void;
+  changingPhoto?: boolean;
+  onPressChangePhoto?: () => void;
 };
 
-export function ProfilePhotoSection({ avatarUrl, onChangeAvatarUrl }: Props) {
+export function ProfilePhotoSection({
+  avatarUrl,
+  changingPhoto = false,
+  onPressChangePhoto,
+}: Props) {
   const avatarSource = avatarUrl
     ? { uri: avatarUrl }
     : require("@/assets/images/profile/profile.png");
 
-  function handleChangePhoto() {
-    onChangeAvatarUrl?.(avatarUrl);
-  }
+  const isChangePhotoDisabled = changingPhoto || !onPressChangePhoto;
 
   return (
     <View className="mt-6 mb-10">
@@ -27,17 +30,22 @@ export function ProfilePhotoSection({ avatarUrl, onChangeAvatarUrl }: Props) {
       />
 
       <View className="flex-row items-center">
-        <View>
-          <Image
-            source={avatarSource}
-            className="h-20 w-20 rounded-full"
-            resizeMode="cover"
-          />
+        <Pressable
+          disabled={isChangePhotoDisabled}
+          onPress={onPressChangePhoto}
+        >
+          <View>
+            <Image
+              source={avatarSource}
+              className="h-20 w-20 rounded-full"
+              resizeMode="cover"
+            />
 
-          <View className="absolute -bottom-1 -right-1 h-11 w-11 items-center justify-center rounded-full bg-primary">
-            <Ionicons name="camera" size={21} color={Colors.white} />
+            <View className="absolute -bottom-1 -right-1 h-11 w-11 items-center justify-center rounded-full bg-primary">
+              <Ionicons name="camera" size={21} color={Colors.white} />
+            </View>
           </View>
-        </View>
+        </Pressable>
 
         <View className="ml-5 flex-1">
           <AppText variant="serifSubtitle" numberOfLines={1}>
@@ -49,9 +57,13 @@ export function ProfilePhotoSection({ avatarUrl, onChangeAvatarUrl }: Props) {
           </AppText>
 
           <AppButton
-            title="Fotoğrafı Değiştir"
+            title={
+              changingPhoto ? "Fotoğraf Hazırlanıyor..." : "Fotoğrafı Değiştir"
+            }
             variant="secondary"
-            onPress={handleChangePhoto}
+            onPress={onPressChangePhoto}
+            disabled={isChangePhotoDisabled}
+            loading={changingPhoto}
           />
         </View>
       </View>
