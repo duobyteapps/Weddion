@@ -9,6 +9,17 @@ import type {
   InvitationGuestPhoto,
   InvitationGuestPhotoStatus,
 } from "@/types/invitation";
+import { compressImageForUpload } from "@/utils/imageCompression";
+
+export const MAX_PHOTOS_PER_INVITATION = 200;
+export const MAX_PHOTOS_PER_UPLOAD = 20;
+
+export type GuestPhotoLimitUsage = {
+  used: number;
+  limit: number;
+  remaining: number;
+  maxPerUpload: number;
+};
 
 type UploadGuestPhotoParams = {
   invitationId: string;
@@ -24,6 +35,67 @@ type UpdateGuestPhotoStatusParams = {
 };
 
 const normalizeGuestUploadCode = (code: string) => code.trim().toUpperCase();
+
+export async function getGuestPhotoLimitUsage(
+  invitationId: string,
+): Promise<GuestPhotoLimitUsage> {
+  const { count, error } = await supabase
+    .from("invitation_guest_photos")
+    .select("id", {
+      count: "exact",
+      head: true,
+    })
+    .eq("invitation_id", invitationId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  const used = count ?? 0;
+  const remaining = Math.max(MAX_PHOTOS_PER_INVITATION - used, 0);
+
+  return {
+    used,
+    limit: MAX_PHOTOS_PER_INVITATION,
+    remaining,
+    maxPerUpload: MAX_PHOTOS_PER_UPLOAD,
+  };
+}
+
+async function checkGuestPhotoLimit(invitationId: string, incomingCount = 1) {
+  const usage = await getGuestPhotoLimitUsage(invitationId);
+
+  if (incomingCount <= 0) {
+    throw new Error("Yüklenecek fotoğraf bulunamadı.");
+  }
+
+  if (incomingCount > MAX_PHOTOS_PER_UPLOAD) {
+    throw new Error(
+      `Tek seferde en fazla ${MAX_PHOTOS_PER_UPLOAD} fotoğraf yükleyebilirsiniz.`,
+    );
+  }
+
+  if (usage.remaining <= 0) {
+    throw new Error(
+      `Bu davet için en fazla ${MAX_PHOTOS_PER_INVITATION} fotoğraf yüklenebilir.`,
+    );
+  }
+
+  if (incomingCount > usage.remaining) {
+    throw new Error(
+      `Bu davette yalnızca ${usage.remaining} fotoğraf yükleme hakkı kaldı.`,
+    );
+  }
+
+  return usage;
+}
+
+export async function validateGuestPhotoBatchLimit(
+  invitationId: string,
+  selectedPhotoCount: number,
+) {
+  return checkGuestPhotoLimit(invitationId, selectedPhotoCount);
+}
 
 const getFileExtensionFromUri = (uri: string) => {
   const cleanUri = uri.split("?")[0] ?? uri;
@@ -57,8 +129,10 @@ const buildGuestPhotoPath = (
   invitationId: string,
   guestUploadCode: string,
   imageUri: string,
+  forceJpeg = false,
 ) => {
-  const extension = getFileExtensionFromUri(imageUri);
+  const extension = forceJpeg ? "jpg" : getFileExtensionFromUri(imageUri);
+
   const fileName = `${Date.now()}-${Math.random()
     .toString(36)
     .slice(2, 10)}.${extension}`;
@@ -67,7 +141,9 @@ const buildGuestPhotoPath = (
     storagePath: `guest-photos/${invitationId}/${normalizeGuestUploadCode(
       guestUploadCode,
     )}/${fileName}`,
-    contentType: getContentTypeFromExtension(extension),
+    contentType: forceJpeg
+      ? "image/jpeg"
+      : getContentTypeFromExtension(extension),
   };
 };
 
@@ -118,14 +194,19 @@ export const uploadGuestPhoto = async ({
 }: UploadGuestPhotoParams) => {
   const normalizedCode = normalizeGuestUploadCode(guestUploadCode);
 
+  await checkGuestPhotoLimit(invitationId, 1);
+
+  const compressedImage = await compressImageForUpload(imageUri);
+
   const { storagePath, contentType } = buildGuestPhotoPath(
     invitationId,
     normalizedCode,
-    imageUri,
+    compressedImage.uri,
+    compressedImage.wasCompressed,
   );
 
   await uploadImageToR2({
-    imageUri,
+    imageUri: compressedImage.uri,
     key: storagePath,
     contentType,
   });

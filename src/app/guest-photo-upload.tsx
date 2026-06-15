@@ -1,6 +1,6 @@
 import * as ImagePicker from "expo-image-picker";
 import { router, useLocalSearchParams } from "expo-router";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ScrollView, View } from "react-native";
 
 import { GuestPhotoEventHeader } from "@/components/guest-photo/guest-photo-upload/GuestPhotoEventHeader";
@@ -14,7 +14,14 @@ import { AppBackButton } from "@/components/ui/AppBackButton";
 import { AppButton } from "@/components/ui/AppButton";
 import { AppText } from "@/components/ui/AppText";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
-import { uploadGuestPhoto } from "@/services/guestPhotoService";
+import {
+  getGuestPhotoLimitUsage,
+  MAX_PHOTOS_PER_INVITATION,
+  MAX_PHOTOS_PER_UPLOAD,
+  uploadGuestPhoto,
+  validateGuestPhotoBatchLimit,
+  type GuestPhotoLimitUsage,
+} from "@/services/guestPhotoService";
 
 type GuestPhotoUploadParams = {
   invitationId?: string;
@@ -48,6 +55,8 @@ export default function GuestPhotoUploadScreen() {
 
   const [selectedPhotos, setSelectedPhotos] = useState<SelectedPhoto[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [photoLimitUsage, setPhotoLimitUsage] =
+    useState<GuestPhotoLimitUsage | null>(null);
 
   const invitationId = useMemo(
     () => cleanParam(params.invitationId),
@@ -95,7 +104,64 @@ export default function GuestPhotoUploadScreen() {
     return eventDate;
   }, [eventDate, eventTime]);
 
+  const usedPhotoCount = photoLimitUsage?.used ?? 0;
+  const photoLimit = photoLimitUsage?.limit ?? MAX_PHOTOS_PER_INVITATION;
+  const remainingPhotoCount = photoLimitUsage?.remaining ?? photoLimit;
+  const selectedPhotoCount = selectedPhotos.length;
+
+  const currentSelectableCount = Math.max(
+    Math.min(
+      MAX_PHOTOS_PER_UPLOAD - selectedPhotoCount,
+      remainingPhotoCount - selectedPhotoCount,
+    ),
+    0,
+  );
+
+  const isPhotoLimitFull = remainingPhotoCount <= 0;
+  const isSelectionLimitFull = currentSelectableCount <= 0;
+
+  const loadPhotoLimitUsage = useCallback(async () => {
+    if (!invitationId) {
+      return;
+    }
+
+    try {
+      const usage = await getGuestPhotoLimitUsage(invitationId);
+      setPhotoLimitUsage(usage);
+    } catch (error) {
+      console.log("Fotoğraf limit bilgisi alınamadı:", error);
+    }
+  }, [invitationId]);
+
+  useEffect(() => {
+    loadPhotoLimitUsage();
+  }, [loadPhotoLimitUsage]);
+
+  function showLimitAlert() {
+    if (isPhotoLimitFull) {
+      showAlert({
+        title: "Fotoğraf limiti doldu",
+        message: `Bu davet için en fazla ${photoLimit} fotoğraf yüklenebilir.`,
+        type: "warning",
+        confirmText: "Tamam",
+      });
+      return;
+    }
+
+    showAlert({
+      title: "Seçim limiti doldu",
+      message: `Tek seferde en fazla ${MAX_PHOTOS_PER_UPLOAD} fotoğraf seçebilirsiniz.`,
+      type: "warning",
+      confirmText: "Tamam",
+    });
+  }
+
   async function handleGalleryPress() {
+    if (isPhotoLimitFull || isSelectionLimitFull) {
+      showLimitAlert();
+      return;
+    }
+
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
     if (!permission.granted) {
@@ -112,20 +178,33 @@ export default function GuestPhotoUploadScreen() {
       mediaTypes: ["images"],
       allowsMultipleSelection: true,
       allowsEditing: false,
-      quality: 0.9,
+      selectionLimit: currentSelectableCount,
+      quality: 1,
     });
 
     if (result.canceled || !result.assets?.length) {
       return;
     }
 
+    const selectedAssets = result.assets.slice(0, currentSelectableCount);
+
+    if (selectedAssets.length === 0) {
+      showLimitAlert();
+      return;
+    }
+
     setSelectedPhotos((currentPhotos) => [
       ...currentPhotos,
-      ...result.assets.map((asset) => createSelectedPhoto(asset.uri)),
+      ...selectedAssets.map((asset) => createSelectedPhoto(asset.uri)),
     ]);
   }
 
   async function handleCameraPress() {
+    if (isPhotoLimitFull || isSelectionLimitFull) {
+      showLimitAlert();
+      return;
+    }
+
     const permission = await ImagePicker.requestCameraPermissionsAsync();
 
     if (!permission.granted) {
@@ -141,7 +220,7 @@ export default function GuestPhotoUploadScreen() {
     const result = await ImagePicker.launchCameraAsync({
       mediaTypes: ["images"],
       allowsEditing: false,
-      quality: 0.9,
+      quality: 1,
     });
 
     if (result.canceled || !result.assets?.[0]?.uri) {
@@ -188,6 +267,8 @@ export default function GuestPhotoUploadScreen() {
     try {
       setUploading(true);
 
+      await validateGuestPhotoBatchLimit(invitationId, selectedPhotos.length);
+
       for (const photo of selectedPhotos) {
         await uploadGuestPhoto({
           invitationId,
@@ -197,6 +278,7 @@ export default function GuestPhotoUploadScreen() {
       }
 
       setSelectedPhotos([]);
+      await loadPhotoLimitUsage();
 
       showAlert({
         title: "Fotoğraflar yüklendi",
@@ -244,6 +326,24 @@ export default function GuestPhotoUploadScreen() {
         <GuestPhotoUploadIntro />
 
         <View className="gap-5">
+          <View className="rounded-2xl border border-border bg-surface px-4 py-3">
+            <View className="flex-row items-center justify-between">
+              <AppText className="text-sm font-semibold text-text">
+                Fotoğraf limiti
+              </AppText>
+
+              <AppText className="text-sm font-bold text-primary">
+                {usedPhotoCount}/{photoLimit}
+              </AppText>
+            </View>
+
+            <AppText className="mt-1 text-xs text-textMuted">
+              Tek seferde en fazla {MAX_PHOTOS_PER_UPLOAD} fotoğraf
+              yükleyebilirsiniz. Kalan hak:{" "}
+              {Math.max(remainingPhotoCount - selectedPhotoCount, 0)}
+            </AppText>
+          </View>
+
           <GuestPhotoSourceActions
             onCameraPress={handleCameraPress}
             onGalleryPress={handleGalleryPress}
@@ -258,9 +358,17 @@ export default function GuestPhotoUploadScreen() {
           <GuestPhotoPrivacyNotice />
 
           <AppButton
-            title={uploading ? "Yükleniyor..." : "Fotoğrafları Yükle"}
+            title={
+              uploading
+                ? "Yükleniyor..."
+                : isPhotoLimitFull
+                  ? "Fotoğraf Limiti Doldu"
+                  : "Fotoğrafları Yükle"
+            }
             onPress={handleUploadPhotos}
-            disabled={uploading || selectedPhotos.length === 0}
+            disabled={
+              uploading || selectedPhotos.length === 0 || isPhotoLimitFull
+            }
           />
 
           {uploading ? (
