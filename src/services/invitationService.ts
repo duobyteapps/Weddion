@@ -1,38 +1,18 @@
 import { supabase } from "@/lib/supabase";
 import {
+  deleteR2Object,
+  getR2SignedUrl,
+  uploadImageToR2,
+} from "@/services/r2ImageService";
+import {
   CreateUserInvitationPayload,
   UpdateUserInvitationPayload,
   UserInvitation,
 } from "@/types/invitation";
 
-const INVITATION_IMAGES_BUCKET = "invitation-images";
-const GUEST_PHOTOS_BUCKET = "guest-photos";
-
 function cleanText(value: string) {
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : null;
-}
-
-function getBase64FromDataUri(dataUri: string) {
-  const parts = dataUri.split(",");
-
-  if (parts.length < 2) {
-    throw new Error("Davetiye görsel formatı geçersiz.");
-  }
-
-  return parts[1];
-}
-
-function base64ToArrayBuffer(base64: string) {
-  const binaryString = globalThis.atob(base64);
-  const length = binaryString.length;
-  const bytes = new Uint8Array(length);
-
-  for (let index = 0; index < length; index += 1) {
-    bytes[index] = binaryString.charCodeAt(index);
-  }
-
-  return bytes.buffer;
 }
 
 async function uploadInvitationImage(params: {
@@ -40,21 +20,13 @@ async function uploadInvitationImage(params: {
   invitationId: string;
   capturedImageUri: string;
 }) {
-  const base64 = getBase64FromDataUri(params.capturedImageUri);
-  const arrayBuffer = base64ToArrayBuffer(base64);
+  const imagePath = `invitations/${params.userId}/${params.invitationId}/invitation.png`;
 
-  const imagePath = `${params.userId}/${params.invitationId}/invitation.png`;
-
-  const { error: uploadError } = await supabase.storage
-    .from(INVITATION_IMAGES_BUCKET)
-    .upload(imagePath, arrayBuffer, {
-      contentType: "image/png",
-      upsert: true,
-    });
-
-  if (uploadError) {
-    throw new Error(uploadError.message);
-  }
+  await uploadImageToR2({
+    imageUri: params.capturedImageUri,
+    key: imagePath,
+    contentType: "image/png",
+  });
 
   return {
     imagePath,
@@ -62,15 +34,7 @@ async function uploadInvitationImage(params: {
 }
 
 async function createSignedInvitationImageUrl(imagePath: string) {
-  const { data, error } = await supabase.storage
-    .from(INVITATION_IMAGES_BUCKET)
-    .createSignedUrl(imagePath, 60 * 60);
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  return data.signedUrl;
+  return getR2SignedUrl(imagePath);
 }
 
 async function deleteGuestPhotosForInvitation(invitationId: string) {
@@ -88,13 +52,11 @@ async function deleteGuestPhotosForInvitation(invitationId: string) {
     .filter(Boolean);
 
   if (storagePaths.length > 0) {
-    const { error: storageDeleteError } = await supabase.storage
-      .from(GUEST_PHOTOS_BUCKET)
-      .remove(storagePaths);
-
-    if (storageDeleteError) {
-      throw new Error(storageDeleteError.message);
-    }
+    await Promise.all(
+      storagePaths.map(async (storagePath) => {
+        await deleteR2Object(storagePath);
+      }),
+    );
   }
 
   const { error: rowsDeleteError } = await supabase
@@ -179,6 +141,12 @@ export async function createUserInvitation(
     .single();
 
   if (updateError) {
+    try {
+      await deleteR2Object(uploadedImage.imagePath);
+    } catch (deleteError) {
+      console.log("R2 invitation image rollback delete failed:", deleteError);
+    }
+
     throw new Error(updateError.message);
   }
 
@@ -250,6 +218,14 @@ export async function updateUserInvitation(
     .single();
 
   if (updateError) {
+    if (updatePayload.invitation_image_path) {
+      try {
+        await deleteR2Object(updatePayload.invitation_image_path);
+      } catch (deleteError) {
+        console.log("R2 invitation image rollback delete failed:", deleteError);
+      }
+    }
+
     throw new Error(updateError.message);
   }
 
@@ -313,13 +289,7 @@ export async function deleteUserInvitation(
   }
 
   if (invitation?.invitation_image_path) {
-    const { error: invitationImageDeleteError } = await supabase.storage
-      .from(INVITATION_IMAGES_BUCKET)
-      .remove([invitation.invitation_image_path]);
-
-    if (invitationImageDeleteError) {
-      throw new Error(invitationImageDeleteError.message);
-    }
+    await deleteR2Object(invitation.invitation_image_path);
   }
 }
 

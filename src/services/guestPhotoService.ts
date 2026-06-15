@@ -1,14 +1,14 @@
-import { decode } from "base64-arraybuffer";
-import * as FileSystem from "expo-file-system/legacy";
-
 import { supabase } from "@/lib/supabase";
+import {
+  deleteR2Object,
+  getR2SignedUrl,
+  uploadImageToR2,
+} from "@/services/r2ImageService";
 import type {
-    GuestInvitationAccess,
-    InvitationGuestPhoto,
-    InvitationGuestPhotoStatus,
+  GuestInvitationAccess,
+  InvitationGuestPhoto,
+  InvitationGuestPhotoStatus,
 } from "@/types/invitation";
-
-const GUEST_PHOTOS_BUCKET = "guest-photos";
 
 type UploadGuestPhotoParams = {
   invitationId: string;
@@ -64,7 +64,7 @@ const buildGuestPhotoPath = (
     .slice(2, 10)}.${extension}`;
 
   return {
-    storagePath: `${invitationId}/${normalizeGuestUploadCode(
+    storagePath: `guest-photos/${invitationId}/${normalizeGuestUploadCode(
       guestUploadCode,
     )}/${fileName}`,
     contentType: getContentTypeFromExtension(extension),
@@ -124,20 +124,11 @@ export const uploadGuestPhoto = async ({
     imageUri,
   );
 
-  const base64File = await FileSystem.readAsStringAsync(imageUri, {
-    encoding: FileSystem.EncodingType.Base64,
+  await uploadImageToR2({
+    imageUri,
+    key: storagePath,
+    contentType,
   });
-
-  const { error: uploadError } = await supabase.storage
-    .from(GUEST_PHOTOS_BUCKET)
-    .upload(storagePath, decode(base64File), {
-      contentType,
-      upsert: false,
-    });
-
-  if (uploadError) {
-    throw new Error(uploadError.message);
-  }
 
   const { error: insertError } = await supabase
     .from("invitation_guest_photos")
@@ -154,7 +145,11 @@ export const uploadGuestPhoto = async ({
   if (insertError) {
     console.log("Guest photo table insert failed:", insertError);
 
-    await supabase.storage.from(GUEST_PHOTOS_BUCKET).remove([storagePath]);
+    try {
+      await deleteR2Object(storagePath);
+    } catch (deleteError) {
+      console.log("R2 guest photo rollback delete failed:", deleteError);
+    }
 
     throw new Error(insertError.message);
   }
@@ -177,29 +172,30 @@ export const getGuestPhotosByInvitation = async (invitationId: string) => {
 
   const photosWithSignedUrls = await Promise.all(
     photos.map(async (photo) => {
-      const { data: signedUrlData, error: signedUrlError } =
-        await supabase.storage
-          .from(GUEST_PHOTOS_BUCKET)
-          .createSignedUrl(photo.storage_path, 60 * 60);
+      try {
+        const signedUrl = await getR2SignedUrl(photo.storage_path);
 
-      if (signedUrlError) {
-        console.log("Guest photo signed url oluşturulamadı:", signedUrlError);
+        return {
+          ...photo,
+          public_url: signedUrl,
+        };
+      } catch (signedUrlError) {
+        console.log(
+          "Guest photo R2 signed url oluşturulamadı:",
+          signedUrlError,
+        );
 
         return {
           ...photo,
           public_url: null,
         };
       }
-
-      return {
-        ...photo,
-        public_url: signedUrlData.signedUrl,
-      };
     }),
   );
 
   return photosWithSignedUrls;
 };
+
 export const updateGuestPhotoStatus = async ({
   photoId,
   status,
@@ -219,13 +215,7 @@ export const updateGuestPhotoStatus = async ({
 };
 
 export const deleteGuestPhoto = async (photo: InvitationGuestPhoto) => {
-  const { error: storageError } = await supabase.storage
-    .from(GUEST_PHOTOS_BUCKET)
-    .remove([photo.storage_path]);
-
-  if (storageError) {
-    throw new Error(storageError.message);
-  }
+  await deleteR2Object(photo.storage_path);
 
   const { error: deleteError } = await supabase
     .from("invitation_guest_photos")
