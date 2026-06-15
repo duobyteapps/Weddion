@@ -1,14 +1,15 @@
 import { supabase } from "@/lib/supabase";
 
 export type NotificationSettings = {
+  id: string;
   user_id: string;
   all_notifications: boolean;
   app_notifications: boolean;
   email_notifications: boolean;
   sms_notifications: boolean;
   system_notifications: boolean;
-  created_at?: string;
-  updated_at?: string;
+  created_at: string;
+  updated_at: string;
 };
 
 export type UpdateNotificationSettingsPayload = {
@@ -61,12 +62,15 @@ export async function getCurrentUserNotificationSettings() {
     return data as NotificationSettings;
   }
 
+  const now = new Date().toISOString();
+
   const { data: createdSettings, error: createError } = await supabase
     .from("notification_settings")
     .insert({
       user_id: userId,
       ...DEFAULT_NOTIFICATION_SETTINGS,
-      updated_at: new Date().toISOString(),
+      created_at: now,
+      updated_at: now,
     })
     .select("*")
     .single();
@@ -83,15 +87,22 @@ export async function updateCurrentUserNotificationSettings(
 ) {
   const userId = await getCurrentUserId();
 
-  const { error } = await supabase.from("notification_settings").upsert({
-    user_id: userId,
-    all_notifications: payload.all_notifications,
-    app_notifications: payload.app_notifications,
-    email_notifications: payload.email_notifications,
-    sms_notifications: payload.sms_notifications,
-    system_notifications: payload.system_notifications,
-    updated_at: new Date().toISOString(),
-  });
+  const now = new Date().toISOString();
+
+  const { error } = await supabase.from("notification_settings").upsert(
+    {
+      user_id: userId,
+      all_notifications: payload.all_notifications,
+      app_notifications: payload.app_notifications,
+      email_notifications: payload.email_notifications,
+      sms_notifications: payload.sms_notifications,
+      system_notifications: payload.system_notifications,
+      updated_at: now,
+    },
+    {
+      onConflict: "user_id",
+    },
+  );
 
   if (error) {
     throw new Error(error.message);

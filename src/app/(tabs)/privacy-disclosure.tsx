@@ -12,7 +12,10 @@ export default function PrivacyDisclosureScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerClassName="pb-32"
       >
-        <ScreenHeader title="KVKK Aydınlatma Metni" />
+        <ScreenHeader
+          title="KVKK Aydınlatma Metni"
+          backTo="/(tabs)/privacy-kvkk"
+        />
 
         <PrivacyDisclosureHero />
 

@@ -17,6 +17,7 @@ export default function support() {
         <ScreenHeader
           title="Yardım ve Destek"
           description="Sorularınıza cevap bulabilir veya bizimle iletişime geçebilirsiniz."
+          backTo="/(tabs)/profile"
         />
         <SupportHero />
         <SupportFAQ />

@@ -17,6 +17,7 @@ export default function PrivacyKvkkScreen() {
         <ScreenHeader
           title="Gizlilik ve KVKK"
           description="Verileriniz bizim için değerlidir."
+          backTo="/(tabs)/profile"
         />
         <PrivacyKvkkHero />
         <PrivacyKvkkContent />

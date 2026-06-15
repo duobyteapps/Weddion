@@ -28,7 +28,7 @@ export function PersonalInfoCard({
   onChangeBirthDate,
 }: Props) {
   return (
-    <AppCard>
+    <AppCard noMargin>
       <AppText variant="serifTitle" className="mb-3">
         Kişisel Bilgiler
       </AppText>
