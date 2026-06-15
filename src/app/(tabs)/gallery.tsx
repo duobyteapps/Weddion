@@ -1,4 +1,4 @@
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { ComponentProps, useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, ScrollView, View } from "react-native";
 
@@ -62,6 +62,7 @@ function mapGuestPhotoToGalleryPhoto(
 
 export default function GalleryScreen() {
   const { showAlert } = useAppAlert();
+  const { invitationId } = useLocalSearchParams<{ invitationId?: string }>();
 
   const [invitations, setInvitations] = useState<UserInvitation[]>([]);
   const [selectedInvitationId, setSelectedInvitationId] = useState<string>();
@@ -80,7 +81,7 @@ export default function GalleryScreen() {
     return () => {
       isMountedRef.current = false;
     };
-  }, []);
+  }, [invitationId]);
 
   useEffect(() => {
     if (!selectedInvitationId) {
@@ -107,7 +108,14 @@ export default function GalleryScreen() {
       setInvitations(data);
 
       if (data.length > 0) {
-        setSelectedInvitationId(data[0].id);
+        const routeInvitationId =
+          typeof invitationId === "string" ? invitationId : undefined;
+
+        const invitationFromRoute = routeInvitationId
+          ? data.find((invitation) => invitation.id === routeInvitationId)
+          : undefined;
+
+        setSelectedInvitationId(invitationFromRoute?.id ?? data[0].id);
       }
     } catch (error) {
       console.log("Galeri davetiyeleri alınamadı:", error);

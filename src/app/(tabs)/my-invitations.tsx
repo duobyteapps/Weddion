@@ -117,6 +117,15 @@ export default function MyInvitationsScreen() {
     });
   }
 
+  function handleOpenGallery(invitation: UserInvitation) {
+    router.push({
+      pathname: "/gallery",
+      params: {
+        invitationId: invitation.id,
+      },
+    });
+  }
+
   async function deleteInvitation(invitation: UserInvitation) {
     try {
       await deleteUserInvitation(invitation.id);
@@ -205,6 +214,7 @@ export default function MyInvitationsScreen() {
           onEditPress={handleEditInvitation}
           onSharePress={handleShareInvitation}
           onDeletePress={handleDeleteInvitation}
+          onOpenGalleryPress={handleOpenGallery}
           onMenuPress={handleMenuPress}
           onCreatePress={handleCreateInvitation}
         />

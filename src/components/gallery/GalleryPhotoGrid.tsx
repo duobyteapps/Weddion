@@ -15,7 +15,6 @@ type Props = {
 };
 
 export function GalleryPhotoGrid({
-  title = "Tüm Fotoğraflar",
   photos,
   photoLimit,
   photoCount,
@@ -38,14 +37,14 @@ export function GalleryPhotoGrid({
   }, []);
 
   return (
-    <View className="mt-7">
+    <View>
       <View className="flex-row items-center justify-between">
-        <AppText variant="title" className="text-textDark">
-          {title}
+        <AppText variant="title" className="mb-4">
+          Tüm Fotoğraflar
         </AppText>
 
         {typeof photoLimit === "number" ? (
-          <AppText className="text-sm font-bold text-primary">
+          <AppText variant="caption">
             {currentPhotoCount}/{photoLimit}
           </AppText>
         ) : null}
@@ -53,7 +52,7 @@ export function GalleryPhotoGrid({
 
       <GalleryFilterTabs />
 
-      <View className="mt-6 gap-4">
+      <View className="gap-4">
         {rows.map((row, rowIndex) => (
           <View key={`row-${rowIndex}`} className="flex-row gap-4">
             {row.map((photo) => (

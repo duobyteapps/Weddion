@@ -10,6 +10,7 @@ type Props = {
   onEditPress: (invitation: UserInvitation) => void;
   onSharePress: (invitation: UserInvitation) => void;
   onDeletePress: (invitation: UserInvitation) => void;
+  onOpenGalleryPress?: (invitation: UserInvitation) => void;
   onMenuPress?: (invitation: UserInvitation) => void;
 };
 
@@ -76,15 +77,24 @@ export function MyInvitationCard({
   onEditPress,
   onSharePress,
   onDeletePress,
+  onOpenGalleryPress,
 }: Props) {
   const imageUri = normalizeImageUri(invitation.invitation_image_url);
   const title = formatInvitationTitle(invitation);
   const venue = formatVenue(invitation);
 
+  const handleOpenGallery = () => {
+    onOpenGalleryPress?.(invitation);
+  };
+
   return (
     <AppCard noMargin noPadding className="overflow-hidden px-4 py-4">
       <View className="flex-row gap-4">
-        <View className="h-[126px] w-[126px] overflow-hidden rounded-2xl bg-primaryLight/30">
+        <Pressable
+          onPress={handleOpenGallery}
+          disabled={!onOpenGalleryPress}
+          className="h-[126px] w-[126px] overflow-hidden rounded-2xl bg-primaryLight/30"
+        >
           {imageUri ? (
             <Image
               source={{ uri: imageUri }}
@@ -110,18 +120,24 @@ export function MyInvitationCard({
               </AppText>
             </View>
           )}
-        </View>
+        </Pressable>
 
         <View className="flex-1">
           <View className="flex-row items-start justify-between gap-2">
-            <AppText
-              variant="subtitle"
-              numberOfLines={1}
-              ellipsizeMode="tail"
-              className="flex-1 !text-[12px]"
+            <Pressable
+              onPress={handleOpenGallery}
+              disabled={!onOpenGalleryPress}
+              className="flex-1"
             >
-              {truncateText(title, 25)}
-            </AppText>
+              <AppText
+                variant="subtitle"
+                numberOfLines={1}
+                ellipsizeMode="tail"
+                className="!text-[12px]"
+              >
+                {truncateText(title, 25)}
+              </AppText>
+            </Pressable>
 
             <Pressable
               onPress={() => onDeletePress(invitation)}
