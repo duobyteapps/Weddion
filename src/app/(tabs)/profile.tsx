@@ -11,8 +11,8 @@ import {
   deleteCurrentUserAccount,
   getCurrentUserProfile,
   Profile,
-  SESSION_EXPIRED_MESSAGE,
 } from "@/services/profileService";
+import { SESSION_EXPIRED_MESSAGE } from "@/services/sessionService";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
 import { ActivityIndicator, ScrollView, View } from "react-native";

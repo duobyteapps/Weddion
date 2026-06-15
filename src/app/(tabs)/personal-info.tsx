@@ -25,7 +25,9 @@ export default function PersonalInfoScreen() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [birthDate, setBirthDate] = useState("");
+
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [avatarPath, setAvatarPath] = useState<string | null>(null);
 
   function handleServiceError(params: {
     error: unknown;
@@ -63,7 +65,9 @@ export default function PersonalInfoScreen() {
       setLastName(profile.last_name ?? "");
       setPhone(profile.phone ?? "");
       setBirthDate(profile.birth_date ?? "");
+
       setAvatarUrl(profile.avatar_url);
+      setAvatarPath(profile.avatar_path);
     } catch (error) {
       console.log("Profil alınamadı:", error);
 
@@ -86,7 +90,7 @@ export default function PersonalInfoScreen() {
         last_name: lastName,
         phone,
         birth_date: birthDate,
-        avatar_url: avatarUrl,
+        avatar_path: avatarPath,
       });
 
       showAlert({
@@ -131,8 +135,15 @@ export default function PersonalInfoScreen() {
 
         <ProfilePhotoSection
           avatarUrl={avatarUrl}
-          changingPhoto={changingPhoto}
-          onPressChangePhoto={handleChangePhoto}
+          avatarPath={avatarPath}
+          firstName={firstName}
+          lastName={lastName}
+          phone={phone}
+          birthDate={birthDate}
+          onChangeProfilePhoto={(photo) => {
+            setAvatarUrl(photo.avatarUrl);
+            setAvatarPath(photo.avatarPath);
+          }}
         />
 
         <PersonalInfoCard

@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { getR2SignedUrl } from "@/services/r2ImageService";
 import {
   getAuthenticatedSession,
   getAuthenticatedUser,
@@ -11,7 +12,28 @@ export type Profile = {
   last_name: string | null;
   phone: string | null;
   birth_date: string | null;
+
+  /**
+   * DB'de saklanan gerçek R2 dosya yolu.
+   * Örnek: profile-photos/user-id/avatar-123.jpg
+   */
+  avatar_path: string | null;
+
+  /**
+   * DB'de saklanmaz.
+   * avatar_path üzerinden anlık oluşturulan signed URL.
+   * Sadece ekranda Image source için kullanılır.
+   */
   avatar_url: string | null;
+};
+
+type ProfileRow = {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+  phone: string | null;
+  birth_date: string | null;
+  avatar_path: string | null;
 };
 
 export type UpdateProfilePayload = {
@@ -19,8 +41,28 @@ export type UpdateProfilePayload = {
   last_name: string;
   phone: string;
   birth_date: string;
-  avatar_url?: string | null;
+  avatar_path?: string | null;
 };
+
+async function mapProfileRowToProfile(
+  profileRow: ProfileRow,
+): Promise<Profile> {
+  let avatarUrl: string | null = null;
+
+  if (profileRow.avatar_path) {
+    try {
+      avatarUrl = await getR2SignedUrl(profileRow.avatar_path, true);
+    } catch (error) {
+      console.log("Profil fotoğrafı signed URL oluşturulamadı:", error);
+      avatarUrl = null;
+    }
+  }
+
+  return {
+    ...profileRow,
+    avatar_url: avatarUrl,
+  };
+}
 
 export async function getCurrentUserProfile(): Promise<{
   user: User;
@@ -30,7 +72,7 @@ export async function getCurrentUserProfile(): Promise<{
 
   const { data: profile, error } = await supabase
     .from("profiles")
-    .select("*")
+    .select("id, first_name, last_name, phone, birth_date, avatar_path")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -41,7 +83,7 @@ export async function getCurrentUserProfile(): Promise<{
   if (profile) {
     return {
       user,
-      profile: profile as Profile,
+      profile: await mapProfileRowToProfile(profile as ProfileRow),
     };
   }
 
@@ -53,10 +95,10 @@ export async function getCurrentUserProfile(): Promise<{
       last_name: user.user_metadata?.last_name ?? null,
       phone: null,
       birth_date: null,
-      avatar_url: null,
+      avatar_path: null,
       updated_at: new Date().toISOString(),
     })
-    .select("*")
+    .select("id, first_name, last_name, phone, birth_date, avatar_path")
     .single();
 
   if (createError) {
@@ -65,11 +107,13 @@ export async function getCurrentUserProfile(): Promise<{
 
   return {
     user,
-    profile: createdProfile as Profile,
+    profile: await mapProfileRowToProfile(createdProfile as ProfileRow),
   };
 }
 
-export async function updateCurrentUserProfile(payload: UpdateProfilePayload) {
+export async function updateCurrentUserProfile(
+  payload: UpdateProfilePayload,
+): Promise<void> {
   const user = await getAuthenticatedUser();
 
   const { error } = await supabase.from("profiles").upsert({
@@ -78,7 +122,7 @@ export async function updateCurrentUserProfile(payload: UpdateProfilePayload) {
     last_name: payload.last_name.trim() || null,
     phone: payload.phone.trim() || null,
     birth_date: payload.birth_date || null,
-    avatar_url: payload.avatar_url ?? null,
+    avatar_path: payload.avatar_path ?? null,
     updated_at: new Date().toISOString(),
   });
 
@@ -87,7 +131,7 @@ export async function updateCurrentUserProfile(payload: UpdateProfilePayload) {
   }
 }
 
-export async function deleteCurrentUserAccount() {
+export async function deleteCurrentUserAccount(): Promise<void> {
   const session = await getAuthenticatedSession();
 
   const { data, error } = await supabase.functions.invoke("delete-account", {
