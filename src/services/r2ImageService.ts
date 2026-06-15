@@ -33,6 +33,45 @@ type R2FunctionParams = {
   requireAuth?: boolean;
 };
 
+async function getFunctionErrorMessage(error: unknown) {
+  if (
+    error &&
+    typeof error === "object" &&
+    "context" in error &&
+    error.context instanceof Response
+  ) {
+    try {
+      const errorBody = await error.context.json();
+
+      if (errorBody?.message) {
+        return String(errorBody.message);
+      }
+
+      if (errorBody?.error) {
+        return String(errorBody.error);
+      }
+
+      return JSON.stringify(errorBody);
+    } catch {
+      try {
+        const errorText = await error.context.text();
+
+        if (errorText) {
+          return errorText;
+        }
+      } catch {
+        // ignore
+      }
+    }
+  }
+
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return "R2 Edge Function çağrısı başarısız oldu.";
+}
+
 async function callR2ObjectFunction({
   requireAuth = false,
   ...params
@@ -52,7 +91,8 @@ async function callR2ObjectFunction({
   );
 
   if (error) {
-    throw new Error(error.message);
+    const message = await getFunctionErrorMessage(error);
+    throw new Error(message);
   }
 
   if (!data?.success) {

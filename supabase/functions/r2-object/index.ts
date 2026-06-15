@@ -1,9 +1,9 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import {
-    DeleteObjectCommand,
-    GetObjectCommand,
-    PutObjectCommand,
-    S3Client,
+  DeleteObjectCommand,
+  GetObjectCommand,
+  PutObjectCommand,
+  S3Client,
 } from "npm:@aws-sdk/client-s3@3.668.0";
 import { getSignedUrl } from "npm:@aws-sdk/s3-request-presigner@3.668.0";
 
@@ -21,6 +21,8 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
+
+const allowedPrefixes = ["invitations/", "guest-photos/", "profile-photos/"];
 
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -53,14 +55,13 @@ function validateObjectKey(key: string) {
     throw new Error("R2 object key geçersiz.");
   }
 
-  const allowedPrefixes = ["invitations/", "guest-photos/"];
   const isAllowedPrefix = allowedPrefixes.some((prefix) =>
     cleanKey.startsWith(prefix),
   );
 
   if (!isAllowedPrefix) {
     throw new Error(
-      "R2 object key sadece invitations/ veya guest-photos/ ile başlamalı.",
+      `R2 object key sadece ${allowedPrefixes.join(", ")} ile başlamalı.`,
     );
   }
 

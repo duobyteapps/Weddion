@@ -1,9 +1,9 @@
 import * as ImagePicker from "expo-image-picker";
 
 import {
-    deleteR2Object,
-    getR2SignedUrl,
-    uploadImageToR2,
+  deleteR2Object,
+  getR2SignedUrl,
+  uploadImageToR2,
 } from "@/services/r2ImageService";
 import { getAuthenticatedUser } from "@/services/sessionService";
 
@@ -50,7 +50,7 @@ export async function pickAndUploadProfileImage(): Promise<UploadProfileImageRes
   }
 
   const result = await ImagePicker.launchImageLibraryAsync({
-    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    mediaTypes: ["images"],
     allowsEditing: true,
     aspect: [1, 1],
     quality: 0.85,
