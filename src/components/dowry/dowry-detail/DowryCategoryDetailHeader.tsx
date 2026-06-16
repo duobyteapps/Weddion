@@ -26,17 +26,17 @@ export function DowryCategoryDetailHeader({
 
   return (
     <View className="items-center">
-      <View className="mb-4 w-full flex-row items-center justify-center">
+      <View className="w-full flex-row items-center justify-center">
         <Image
           source={lavenderBranchLeft}
           className="mr-3 h-24 w-24"
           resizeMode="contain"
         />
 
-        <View className="h-28 w-28 items-center justify-center rounded-full bg-primarySoft">
+        <View className="h-20 w-20 items-center justify-center rounded-full bg-primarySoft">
           <Image
             source={headerImage}
-            className="h-20 w-20"
+            className="h-16 w-16"
             resizeMode="contain"
           />
         </View>
@@ -48,22 +48,12 @@ export function DowryCategoryDetailHeader({
         />
       </View>
 
-      <AppText
-        variant="serifTitle"
-        className="mb-4 text-center text-[28px] leading-[34px] text-primaryDark"
-      >
-        {title}
-      </AppText>
-
-      <AppText
-        variant="subtitle"
-        className="mb-4 text-center text-[17px] text-primaryDark"
-      >
+      <AppText variant="subtitle" className="my-2">
         {completed} / {total} ürün tamamlandı
       </AppText>
 
       <View className="w-full flex-row items-center">
-        <View className="mr-4 h-3 flex-1 overflow-hidden rounded-full bg-primaryLight">
+        <View className="mr-4 h-2 flex-1 overflow-hidden rounded-full bg-primaryLight">
           <View
             className="h-full rounded-full bg-primary"
             style={{ width: `${percentage}%` }}
