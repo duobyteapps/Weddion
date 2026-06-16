@@ -16,6 +16,5 @@ export const dowryCategoryImages: Record<
   bathroom: require("../../assets/images/illustration/dowry/bathroom.png"),
   "home-decoration": require("../../assets/images/illustration/dowry/home-decoration.png"),
   technology: require("../../assets/images/illustration/dowry/technology.png"),
-  "small-appliances": require("../../assets/images/illustration/dowry/small-appliances.png"),
   other: require("../../assets/images/illustration/dowry/other.png"),
 };

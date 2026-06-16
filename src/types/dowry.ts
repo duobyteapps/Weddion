@@ -2,11 +2,22 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 export type MaterialIconName = keyof typeof MaterialCommunityIcons.glyphMap;
 
+export type DowryCategoryImageKey =
+  | "living-room"
+  | "bedroom"
+  | "kitchen"
+  | "bathroom"
+  | "home-decoration"
+  | "technology"
+  | "other";
+
 export type DowryFilterType = "all" | "completed" | "missing";
 
 export type DowryChecklistItem = {
   id: string;
   title: string;
+  brandName?: string | null;
+  quantity?: number;
   completed: boolean;
 };
 

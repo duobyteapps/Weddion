@@ -1,12 +1,15 @@
 import { router, useLocalSearchParams, type Href } from "expo-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ScrollView } from "react-native";
 
 import { ScreenHeader } from "@/components/common/ScreenHeader";
 import { DowryAddProductFormCard } from "@/components/dowry/add-product/DowryAddProductFormCard";
 import { DowryAddProductHeader } from "@/components/dowry/add-product/DowryAddProductHeader";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
-import { createUserDowryItemByCategorySlug } from "@/services/dowryItemService";
+import {
+  createUserDowryItemByCategorySlug,
+  updateUserDowryItem,
+} from "@/services/dowryItemService";
 
 const categoryLabels: Record<string, string> = {
   kitchen: "Mutfak",
@@ -18,13 +21,30 @@ const categoryLabels: Record<string, string> = {
   other: "Diğer",
 };
 
+function getParamValue(value?: string | string[]) {
+  if (Array.isArray(value)) {
+    return value[0] ?? "";
+  }
+
+  return value ?? "";
+}
+
 export default function DowryAddProductScreen() {
   const params = useLocalSearchParams<{
-    categoryId?: string;
-    categoryName?: string;
+    categoryId?: string | string[];
+    categoryName?: string | string[];
+    itemId?: string | string[];
+    productName?: string | string[];
+    brandName?: string | string[];
+    quantity?: string | string[];
+    completed?: string | string[];
+    mode?: string | string[];
   }>();
 
-  const categorySlug = params.categoryId ? String(params.categoryId) : "";
+  const categorySlug = getParamValue(params.categoryId);
+  const itemId = getParamValue(params.itemId);
+  const mode = getParamValue(params.mode);
+  const isEditMode = mode === "edit" && !!itemId;
 
   const categoryDetailHref = useMemo<Href>(() => {
     if (categorySlug) {
@@ -40,7 +60,11 @@ export default function DowryAddProductScreen() {
   }, [categorySlug]);
 
   const initialCategoryName = useMemo(() => {
-    if (params.categoryName) return String(params.categoryName);
+    const categoryNameParam = getParamValue(params.categoryName);
+
+    if (categoryNameParam) {
+      return categoryNameParam;
+    }
 
     if (categorySlug && categoryLabels[categorySlug]) {
       return categoryLabels[categorySlug];
@@ -56,6 +80,30 @@ export default function DowryAddProductScreen() {
   const [completed, setCompleted] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    if (!isEditMode) {
+      return;
+    }
+
+    const productNameParam = getParamValue(params.productName);
+    const brandNameParam = getParamValue(params.brandName);
+    const quantityParam = Number(getParamValue(params.quantity));
+    const completedParam = getParamValue(params.completed);
+
+    setProductName(productNameParam);
+    setBrandName(brandNameParam);
+    setQuantity(
+      Number.isNaN(quantityParam) || quantityParam < 1 ? 1 : quantityParam,
+    );
+    setCompleted(completedParam === "true");
+  }, [
+    isEditMode,
+    params.productName,
+    params.brandName,
+    params.quantity,
+    params.completed,
+  ]);
+
   const handleSave = async () => {
     if (!productName.trim()) {
       return;
@@ -69,17 +117,30 @@ export default function DowryAddProductScreen() {
     try {
       setLoading(true);
 
-      await createUserDowryItemByCategorySlug({
-        categorySlug,
-        title: productName.trim(),
-        brandName: brandName.trim(),
-        quantity,
-        completed,
-      });
+      if (isEditMode) {
+        await updateUserDowryItem({
+          itemId,
+          title: productName.trim(),
+          brandName: brandName.trim(),
+          quantity,
+          completed,
+        });
+      } else {
+        await createUserDowryItemByCategorySlug({
+          categorySlug,
+          title: productName.trim(),
+          brandName: brandName.trim(),
+          quantity,
+          completed,
+        });
+      }
 
       router.replace(categoryDetailHref);
     } catch (error) {
-      console.log("Çeyiz ürünü eklenemedi:", error);
+      console.log(
+        isEditMode ? "Çeyiz ürünü güncellenemedi:" : "Çeyiz ürünü eklenemedi:",
+        error,
+      );
     } finally {
       setLoading(false);
     }
@@ -91,7 +152,10 @@ export default function DowryAddProductScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerClassName="pb-32"
       >
-        <ScreenHeader title="Yeni Ürün Ekle" fallbackTo={categoryDetailHref} />
+        <ScreenHeader
+          title={isEditMode ? "Ürünü Güncelle" : "Yeni Ürün Ekle"}
+          fallbackTo={categoryDetailHref}
+        />
 
         <DowryAddProductHeader />
 

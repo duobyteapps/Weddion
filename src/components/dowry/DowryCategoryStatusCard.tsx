@@ -1,10 +1,9 @@
-import {
-  DowryCategoryItem,
-  DowryCategoryRow,
-} from "@/components/dowry/DowryCategoryRow";
+import { View } from "react-native";
+
+import { DowryCategoryRow } from "@/components/dowry/DowryCategoryRow";
 import { AppCard } from "@/components/ui/AppCard";
 import { AppText } from "@/components/ui/AppText";
-import { View } from "react-native";
+import { DowryCategoryItem } from "@/types/dowry";
 
 type DowryCategoryStatusCardProps = {
   categories: DowryCategoryItem[];

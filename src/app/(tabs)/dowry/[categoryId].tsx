@@ -26,6 +26,8 @@ function mapDowryItemToChecklistItem(item: UserDowryItem): DowryChecklistItem {
   return {
     id: item.id,
     title: item.title,
+    brandName: item.brandName,
+    quantity: item.quantity,
     completed: item.completed,
   };
 }
@@ -105,6 +107,22 @@ export default function DowryCategoryDetailScreen() {
     }
   }
 
+  function handleUpdateItem(selectedItem: DowryChecklistItem) {
+    router.push({
+      pathname: "/dowry/dowry-add-product",
+      params: {
+        categoryId: categorySlug,
+        categoryName: category?.title ?? "",
+        itemId: selectedItem.id,
+        productName: selectedItem.title,
+        brandName: selectedItem.brandName ?? "",
+        quantity: String(selectedItem.quantity ?? 1),
+        completed: String(selectedItem.completed),
+        mode: "edit",
+      },
+    });
+  }
+
   async function handleDeleteItem(selectedItem: DowryChecklistItem) {
     try {
       await deleteUserDowryItem(selectedItem.id);
@@ -153,7 +171,7 @@ export default function DowryCategoryDetailScreen() {
           onChangeFilter={setActiveFilter}
         />
 
-        <View className="max-h-[400px] mb-6">
+        <View className="mb-6 max-h-[400px]">
           {isLoading ? (
             <View className="items-center justify-center py-8">
               <ActivityIndicator color={Colors.primary} />
@@ -163,6 +181,7 @@ export default function DowryCategoryDetailScreen() {
               items={filteredItems}
               onToggleItem={handleToggleItem}
               onDeleteItem={handleDeleteItem}
+              onUpdateItem={handleUpdateItem}
             />
           )}
         </View>

@@ -171,3 +171,35 @@ export async function deleteAdminDowryItemTemplate(templateId: string) {
     throw new Error(error.message);
   }
 }
+
+export async function updateUserDowryItem({
+  itemId,
+  title,
+  brandName,
+  quantity,
+  completed,
+}: {
+  itemId: string;
+  title: string;
+  brandName?: string;
+  quantity: number;
+  completed: boolean;
+}) {
+  const user = await getAuthenticatedUser();
+
+  const { error } = await supabase
+    .from("user_dowry_items")
+    .update({
+      title: title.trim(),
+      brand_name: brandName?.trim() || null,
+      quantity,
+      completed,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", itemId)
+    .eq("user_id", user.id);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}

@@ -8,12 +8,14 @@ type Props = {
   items: DowryChecklistItem[];
   onToggleItem?: (item: DowryChecklistItem) => void;
   onDeleteItem?: (item: DowryChecklistItem) => void;
+  onUpdateItem?: (item: DowryChecklistItem) => void;
 };
 
 export function DowryChecklistCard({
   items,
   onToggleItem,
   onDeleteItem,
+  onUpdateItem,
 }: Props) {
   return (
     <AppCard noMargin className="h-full overflow-hidden">
@@ -31,6 +33,7 @@ export function DowryChecklistCard({
             isLast={index === items.length - 1}
             onToggle={onToggleItem}
             onDelete={onDeleteItem}
+            onUpdate={onUpdateItem}
           />
         ))}
       </ScrollView>
