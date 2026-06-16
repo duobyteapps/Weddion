@@ -41,6 +41,7 @@ export function AppInput({
           px-4
           font-manrope
           text-text
+          mb-4
           ${error ? "border-red-500" : "border-border"}
           ${inputClassName}
         `}

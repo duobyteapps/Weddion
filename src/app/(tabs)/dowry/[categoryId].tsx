@@ -1,4 +1,4 @@
-import { useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useMemo, useState } from "react";
 import { ScrollView, View } from "react-native";
 
@@ -72,14 +72,12 @@ export default function DowryCategoryDetailScreen() {
         contentContainerClassName="pb-32"
       >
         <ScreenHeader title={category.title} backTo="/(tabs)/dowry-summary" />
-
         <DowryCategoryDetailHeader
           title={category.title}
           imageKey={category.imageKey}
           completed={completedCount}
           total={items.length}
         />
-
         <DowryCategoryFilterTabs
           activeFilter={activeFilter}
           totalCount={items.length}
@@ -87,7 +85,6 @@ export default function DowryCategoryDetailScreen() {
           missingCount={missingCount}
           onChangeFilter={setActiveFilter}
         />
-
         <View className="max-h-[400px] mb-6">
           <DowryChecklistCard
             items={filteredItems}
@@ -95,11 +92,17 @@ export default function DowryCategoryDetailScreen() {
             onDeleteItem={handleDeleteItem}
           />
         </View>
-
         <AppButton
           title="Ürün Ekle"
-          variant="primary"
-          textClassName="ml-4 text-[18px] text-white"
+          onPress={() =>
+            router.push({
+              pathname: "./dowry-add-product",
+              params: {
+                categoryId: String(categoryId),
+                categoryName: category?.title,
+              },
+            })
+          }
         />
       </ScrollView>
     </ScreenContainer>

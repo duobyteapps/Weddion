@@ -10,6 +10,7 @@ type ScreenHeaderProps = {
   description?: string;
   backTo?: Href;
   fallbackTo?: Href;
+  onBackPress?: () => void;
 };
 
 export function ScreenHeader({
@@ -17,10 +18,16 @@ export function ScreenHeader({
   description,
   backTo,
   fallbackTo = "/home",
+  onBackPress,
 }: ScreenHeaderProps) {
   const appRouter = useAppNavigation();
 
   const handleBackPress = () => {
+    if (onBackPress) {
+      onBackPress();
+      return;
+    }
+
     if (backTo) {
       appRouter.replace(backTo);
       return;
@@ -30,7 +37,7 @@ export function ScreenHeader({
   };
 
   return (
-    <View className="relative justify-center mb-8 mt-4">
+    <View className="relative mb-8 mt-4 justify-center">
       <AppBackButton
         onPress={handleBackPress}
         className="absolute left-0 z-10"

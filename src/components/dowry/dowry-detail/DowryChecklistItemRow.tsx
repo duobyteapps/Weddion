@@ -2,6 +2,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Pressable, View } from "react-native";
 
 import { AppCard } from "@/components/ui/AppCard";
+import { AppCheckbox } from "@/components/ui/AppCheckbox";
 import { AppDivider } from "@/components/ui/AppDivider";
 import { AppText } from "@/components/ui/AppText";
 import { Colors } from "@/constants/Colors";
@@ -23,20 +24,10 @@ export function DowryChecklistItemRow({
   return (
     <View>
       <AppCard noMargin className="flex-row items-center">
-        <Pressable
-          className={`mr-4 h-6 w-6 items-center justify-center rounded-full border-2 ${
-            item.completed ? "border-primary bg-primary" : "border-primaryLight"
-          }`}
+        <AppCheckbox
+          checked={item.completed}
           onPress={() => onToggle?.(item)}
-        >
-          {item.completed ? (
-            <MaterialCommunityIcons
-              name="check"
-              size={14}
-              color={Colors.white}
-            />
-          ) : null}
-        </Pressable>
+        />
 
         <AppText
           variant="serifSubtitle"
