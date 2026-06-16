@@ -1,3 +1,4 @@
+import { router } from "expo-router";
 import { ScrollView } from "react-native";
 
 import { ScreenHeader } from "@/components/common/ScreenHeader";
@@ -22,7 +23,7 @@ const categories = [
   },
   {
     id: "living-room",
-    title: "Salon",
+    title: "Oturma Odası",
     icon: "sofa-outline",
     completed: 14,
     total: 22,
@@ -35,8 +36,8 @@ const categories = [
     total: 15,
   },
   {
-    id: "electronic",
-    title: "Elektronik",
+    id: "technology",
+    title: "Teknolojik Aletler",
     icon: "monitor",
     completed: 10,
     total: 18,
@@ -56,30 +57,40 @@ export default function DowrySummaryScreen() {
   const missing = total - completed;
   const progress = Math.round((completed / total) * 100);
 
+  function handlePressCategory(category: { id: string }) {
+    router.push({
+      pathname: "/dowry/[categoryId]",
+      params: {
+        categoryId: category.id,
+      },
+    });
+  }
+
   return (
     <ScreenContainer className="flex-1 bg-background">
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerClassName="pb-32"
       >
-        <>
-          <ScreenHeader title="Çeyiz Özeti" fallbackTo="/home" />
+        <ScreenHeader title="Çeyiz Özeti" fallbackTo="/home" />
 
-          <DowryGeneralStatusCard
-            progress={progress}
-            total={total}
-            completed={completed}
-            missing={missing}
-          />
+        <DowryGeneralStatusCard
+          progress={progress}
+          total={total}
+          completed={completed}
+          missing={missing}
+        />
 
-          <DowryCategoryStatusCard categories={[...categories]} />
+        <DowryCategoryStatusCard
+          categories={[...categories]}
+          onPressCategory={handlePressCategory}
+        />
 
-          {/* <DowryShoppingSummaryCard
-            total={total}
-            completed={completed}
-            missing={missing}
-          /> */}
-        </>
+        {/* <DowryShoppingSummaryCard
+          total={total}
+          completed={completed}
+          missing={missing}
+        /> */}
       </ScrollView>
     </ScreenContainer>
   );
