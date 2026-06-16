@@ -17,7 +17,7 @@ export function AppCard({
     <View
       className={`
         rounded-2xl border-0 border-border bg-surface px-4
-        ${noPadding ? "" : "py-6"}
+        ${noPadding ? "" : "py-4"}
         ${noMargin ? "" : "mb-6"}
         ${className}
       `}

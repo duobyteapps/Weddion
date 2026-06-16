@@ -1,8 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import { Pressable, View } from "react-native";
 
 import { AppText } from "@/components/ui/AppText";
-import { router } from "expo-router";
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -21,6 +21,7 @@ type AppTabBarProps = {
     {
       options: {
         title?: string;
+        href?: string | null;
       };
     }
   >;
@@ -41,9 +42,9 @@ const TAB_ICONS: Record<string, { active: IconName; inactive: IconName }> = {
     active: "mail",
     inactive: "mail-outline",
   },
-  guests: {
-    active: "people",
-    inactive: "people-outline",
+  "dowry-summary": {
+    active: "gift",
+    inactive: "gift-outline",
   },
   profile: {
     active: "person",
@@ -52,21 +53,33 @@ const TAB_ICONS: Record<string, { active: IconName; inactive: IconName }> = {
 };
 
 export function AppTabBar({ state, descriptors, navigation }: AppTabBarProps) {
-  const firstTabs = state.routes.slice(0, 2);
-  const lastTabs = state.routes.slice(2);
+  const visibleRoutes = state.routes.filter((route) => {
+    const options = descriptors[route.key]?.options;
+
+    return options?.href !== null && TAB_ICONS[route.name];
+  });
+
+  const firstTabs = visibleRoutes.slice(0, 2);
+  const lastTabs = visibleRoutes.slice(2);
 
   const handleCreatePress = () => {
     router.push("/invitation-select");
   };
 
+  const isRouteActive = (routeName: string) => {
+    const activeRoute = state.routes[state.index];
+
+    return activeRoute?.name === routeName;
+  };
+
   return (
     <View className="absolute bottom-0 left-0 right-0 flex-row items-center justify-between bg-surface px-3 pb-5 pt-3 shadow-sm">
-      {firstTabs.map((route, index) => (
+      {firstTabs.map((route) => (
         <TabItem
           key={route.key}
           routeName={route.name}
           label={descriptors[route.key]?.options.title ?? route.name}
-          active={state.index === index}
+          active={isRouteActive(route.name)}
           onPress={() => navigation.navigate(route.name)}
         />
       ))}
@@ -78,19 +91,15 @@ export function AppTabBar({ state, descriptors, navigation }: AppTabBarProps) {
         <Ionicons name="add" size={30} color="#FFFFFF" />
       </Pressable>
 
-      {lastTabs.map((route, index) => {
-        const realIndex = index + 2;
-
-        return (
-          <TabItem
-            key={route.key}
-            routeName={route.name}
-            label={descriptors[route.key]?.options.title ?? route.name}
-            active={state.index === realIndex}
-            onPress={() => navigation.navigate(route.name)}
-          />
-        );
-      })}
+      {lastTabs.map((route) => (
+        <TabItem
+          key={route.key}
+          routeName={route.name}
+          label={descriptors[route.key]?.options.title ?? route.name}
+          active={isRouteActive(route.name)}
+          onPress={() => navigation.navigate(route.name)}
+        />
+      ))}
     </View>
   );
 }

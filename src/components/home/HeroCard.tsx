@@ -25,7 +25,7 @@ export function HeroCard() {
           Davetiyeni oluşturmaya başla
         </AppText>
 
-        <AppText variant="caption" className="mt-3 leading-5 text-textMuted">
+        <AppText variant="body" className="mt-3">
           Özel anlarını sevdiklerinle paylaşmanın en zarif yolu.
         </AppText>
       </View>

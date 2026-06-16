@@ -24,15 +24,14 @@ export function AppText({
   ...props
 }: AppTextProps) {
   const variants: Record<AppTextVariant, string> = {
-    title: "font-manropeBold text-[24px] leading-[30px] text-text",
-    subtitle: "font-manropeSemiBold text-[16px] leading-[22px] text-text",
-    body: "font-manrope text-[9px] leading-[18px] text-textMuted",
-    caption: "font-manropeMedium text-[11px] leading-[16px] text-textLight",
-    captionStrong:
-      "font-manropeExtraBold text-[12px] leading-[16px] text-primaryDark",
-    link: "font-manropeSemiBold text-[12px] leading-[18px] text-primary",
-    serifTitle: "font-cormorantBold text-[24px] leading-[18px] text-text",
-    serifSubtitle: "font-cormorantBold text-[18px] leading-[24px] text-text",
+    title: "font-manropeBold text-[24px]",
+    subtitle: "font-manropeSemiBold text-[16px]",
+    body: "font-manrope text-[10px] text-textMuted",
+    caption: "font-manropeMedium text-[9px] text-textMuted",
+    captionStrong: "font-manropeExtraBold text-[12px] text-primaryDark",
+    link: "font-manropeSemiBold text-[12px]",
+    serifTitle: "font-cormorantBold text-[24px]",
+    serifSubtitle: "font-cormorantBold text-[18px]",
   };
 
   return (
