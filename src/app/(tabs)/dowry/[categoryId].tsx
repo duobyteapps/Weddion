@@ -1,5 +1,5 @@
-import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
+import { useCallback, useMemo, useState } from "react";
 import { ActivityIndicator, ScrollView, View } from "react-native";
 
 import { ScreenHeader } from "@/components/common/ScreenHeader";
@@ -54,11 +54,7 @@ export default function DowryCategoryDetailScreen() {
     return items;
   }, [activeFilter, items]);
 
-  useEffect(() => {
-    fetchItems();
-  }, [categorySlug]);
-
-  async function fetchItems() {
+  const fetchItems = useCallback(async () => {
     try {
       setIsLoading(true);
 
@@ -72,7 +68,13 @@ export default function DowryCategoryDetailScreen() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [categorySlug]);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchItems();
+    }, [fetchItems]),
+  );
 
   async function handleToggleItem(selectedItem: DowryChecklistItem) {
     const nextCompleted = !selectedItem.completed;
@@ -169,10 +171,10 @@ export default function DowryCategoryDetailScreen() {
           title="Ürün Ekle"
           onPress={() =>
             router.push({
-              pathname: "./dowry-add-product",
+              pathname: "/dowry/dowry-add-product",
               params: {
-                categoryId: String(categoryId),
-                categoryName: category?.title,
+                categoryId: categorySlug,
+                categoryName: category.title,
               },
             })
           }

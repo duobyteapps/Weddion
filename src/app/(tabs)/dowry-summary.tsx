@@ -1,5 +1,5 @@
-import { router } from "expo-router";
-import { useEffect, useState } from "react";
+import { router, useFocusEffect } from "expo-router";
+import { useCallback, useState } from "react";
 import { ActivityIndicator, ScrollView, View } from "react-native";
 
 import { ScreenHeader } from "@/components/common/ScreenHeader";
@@ -22,11 +22,7 @@ export default function DowrySummaryScreen() {
   const missing = total - completed;
   const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
 
-  useEffect(() => {
-    fetchCategories();
-  }, []);
-
-  async function fetchCategories() {
+  const fetchCategories = useCallback(async () => {
     try {
       setIsLoading(true);
 
@@ -39,7 +35,13 @@ export default function DowrySummaryScreen() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchCategories();
+    }, [fetchCategories]),
+  );
 
   function handlePressCategory(category: { id: string }) {
     router.push({
@@ -56,10 +58,7 @@ export default function DowrySummaryScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerClassName="pb-32"
       >
-        <ScreenHeader
-          title="Çeyiz Defterim"
-          description="Çeyiz hazırlıklarını kategorilere ayırarak kolayca takip et."
-        />
+        <ScreenHeader title="Çeyiz Özeti" fallbackTo="/home" />
 
         <DowryGeneralStatusCard
           progress={progress}

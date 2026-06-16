@@ -24,28 +24,30 @@ export default function DowryAddProductScreen() {
     categoryName?: string;
   }>();
 
-  const fallbackTo = useMemo<Href>(() => {
-    if (params.categoryId) {
+  const categorySlug = params.categoryId ? String(params.categoryId) : "";
+
+  const categoryDetailHref = useMemo<Href>(() => {
+    if (categorySlug) {
       return {
         pathname: "/dowry/[categoryId]",
         params: {
-          categoryId: String(params.categoryId),
+          categoryId: categorySlug,
         },
       };
     }
 
-    return "/home";
-  }, [params.categoryId]);
+    return "/(tabs)/dowry-summary";
+  }, [categorySlug]);
 
   const initialCategoryName = useMemo(() => {
     if (params.categoryName) return String(params.categoryName);
 
-    if (params.categoryId && categoryLabels[String(params.categoryId)]) {
-      return categoryLabels[String(params.categoryId)];
+    if (categorySlug && categoryLabels[categorySlug]) {
+      return categoryLabels[categorySlug];
     }
 
     return "Mutfak";
-  }, [params.categoryId, params.categoryName]);
+  }, [categorySlug, params.categoryName]);
 
   const [productName, setProductName] = useState("");
   const [brandName, setBrandName] = useState("");
@@ -59,7 +61,8 @@ export default function DowryAddProductScreen() {
       return;
     }
 
-    if (!params.categoryId) {
+    if (!categorySlug) {
+      console.log("Kategori bilgisi bulunamadı.");
       return;
     }
 
@@ -67,14 +70,14 @@ export default function DowryAddProductScreen() {
       setLoading(true);
 
       await createUserDowryItemByCategorySlug({
-        categorySlug: String(params.categoryId),
+        categorySlug,
         title: productName.trim(),
         brandName: brandName.trim(),
         quantity,
         completed,
       });
 
-      router.back();
+      router.replace(categoryDetailHref);
     } catch (error) {
       console.log("Çeyiz ürünü eklenemedi:", error);
     } finally {
@@ -88,7 +91,7 @@ export default function DowryAddProductScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerClassName="pb-32"
       >
-        <ScreenHeader title="Yeni Ürün Ekle" fallbackTo={fallbackTo} />
+        <ScreenHeader title="Yeni Ürün Ekle" fallbackTo={categoryDetailHref} />
 
         <DowryAddProductHeader />
 
