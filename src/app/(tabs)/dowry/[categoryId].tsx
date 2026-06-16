@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { useMemo, useState } from "react";
-import { ScrollView, View } from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import { ActivityIndicator, ScrollView, View } from "react-native";
 
 import { ScreenHeader } from "@/components/common/ScreenHeader";
 import { DowryCategoryDetailHeader } from "@/components/dowry/dowry-detail/DowryCategoryDetailHeader";
@@ -9,17 +9,35 @@ import { DowryChecklistCard } from "@/components/dowry/dowry-detail/DowryCheckli
 import { AppButton } from "@/components/ui/AppButton";
 import { AppText } from "@/components/ui/AppText";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
+import { Colors } from "@/constants/Colors";
 import { getDowryCategoryDetail } from "@/constants/dowryCategoryDetails";
-import { DowryChecklistItem, DowryFilterType } from "@/types/dowry";
+import {
+  deleteUserDowryItem,
+  getUserDowryItems,
+  toggleUserDowryItemCompleted,
+} from "@/services/dowryItemService";
+import {
+  DowryChecklistItem,
+  DowryFilterType,
+  UserDowryItem,
+} from "@/types/dowry";
+
+function mapDowryItemToChecklistItem(item: UserDowryItem): DowryChecklistItem {
+  return {
+    id: item.id,
+    title: item.title,
+    completed: item.completed,
+  };
+}
 
 export default function DowryCategoryDetailScreen() {
   const { categoryId } = useLocalSearchParams<{ categoryId: string }>();
-  const category = getDowryCategoryDetail(categoryId ?? "living-room");
+  const categorySlug = categoryId ?? "living-room";
+  const category = getDowryCategoryDetail(categorySlug);
 
   const [activeFilter, setActiveFilter] = useState<DowryFilterType>("all");
-  const [items, setItems] = useState<DowryChecklistItem[]>(
-    category?.items ?? [],
-  );
+  const [items, setItems] = useState<DowryChecklistItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const completedCount = items.filter((item) => item.completed).length;
   const missingCount = items.length - completedCount;
@@ -36,20 +54,65 @@ export default function DowryCategoryDetailScreen() {
     return items;
   }, [activeFilter, items]);
 
-  function handleToggleItem(selectedItem: DowryChecklistItem) {
+  useEffect(() => {
+    fetchItems();
+  }, [categorySlug]);
+
+  async function fetchItems() {
+    try {
+      setIsLoading(true);
+
+      const dowryItems = await getUserDowryItems(categorySlug);
+      const formattedItems = dowryItems.map(mapDowryItemToChecklistItem);
+
+      setItems(formattedItems);
+    } catch (error) {
+      console.log("Çeyiz ürünleri getirilemedi:", error);
+      setItems([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function handleToggleItem(selectedItem: DowryChecklistItem) {
+    const nextCompleted = !selectedItem.completed;
+
     setItems((currentItems) =>
       currentItems.map((item) =>
         item.id === selectedItem.id
-          ? { ...item, completed: !item.completed }
+          ? { ...item, completed: nextCompleted }
           : item,
       ),
     );
+
+    try {
+      await toggleUserDowryItemCompleted({
+        itemId: selectedItem.id,
+        completed: nextCompleted,
+      });
+    } catch (error) {
+      console.log("Çeyiz ürünü güncellenemedi:", error);
+
+      setItems((currentItems) =>
+        currentItems.map((item) =>
+          item.id === selectedItem.id
+            ? { ...item, completed: selectedItem.completed }
+            : item,
+        ),
+      );
+    }
   }
 
-  function handleDeleteItem(selectedItem: DowryChecklistItem) {
-    setItems((currentItems) =>
-      currentItems.filter((item) => item.id !== selectedItem.id),
-    );
+  async function handleDeleteItem(selectedItem: DowryChecklistItem) {
+    try {
+      await deleteUserDowryItem(selectedItem.id);
+
+      setItems((currentItems) =>
+        currentItems.filter((item) => item.id !== selectedItem.id),
+      );
+    } catch (error) {
+      console.log("Çeyiz ürünü silinemedi:", error);
+    }
   }
 
   if (!category) {
@@ -72,12 +135,14 @@ export default function DowryCategoryDetailScreen() {
         contentContainerClassName="pb-32"
       >
         <ScreenHeader title={category.title} backTo="/(tabs)/dowry-summary" />
+
         <DowryCategoryDetailHeader
           title={category.title}
           imageKey={category.imageKey}
           completed={completedCount}
           total={items.length}
         />
+
         <DowryCategoryFilterTabs
           activeFilter={activeFilter}
           totalCount={items.length}
@@ -85,13 +150,21 @@ export default function DowryCategoryDetailScreen() {
           missingCount={missingCount}
           onChangeFilter={setActiveFilter}
         />
+
         <View className="max-h-[400px] mb-6">
-          <DowryChecklistCard
-            items={filteredItems}
-            onToggleItem={handleToggleItem}
-            onDeleteItem={handleDeleteItem}
-          />
+          {isLoading ? (
+            <View className="items-center justify-center py-8">
+              <ActivityIndicator color={Colors.primary} />
+            </View>
+          ) : (
+            <DowryChecklistCard
+              items={filteredItems}
+              onToggleItem={handleToggleItem}
+              onDeleteItem={handleDeleteItem}
+            />
+          )}
         </View>
+
         <AppButton
           title="Ürün Ekle"
           onPress={() =>

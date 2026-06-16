@@ -6,13 +6,14 @@ import { ScreenHeader } from "@/components/common/ScreenHeader";
 import { DowryAddProductFormCard } from "@/components/dowry/add-product/DowryAddProductFormCard";
 import { DowryAddProductHeader } from "@/components/dowry/add-product/DowryAddProductHeader";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
+import { createUserDowryItemByCategorySlug } from "@/services/dowryItemService";
 
 const categoryLabels: Record<string, string> = {
   kitchen: "Mutfak",
   bedroom: "Yatak Odası",
   bathroom: "Banyo",
-  livingRoom: "Oturma Odası",
-  decoration: "Ev Dekorasyon",
+  "living-room": "Oturma Odası",
+  "home-decoration": "Ev Dekorasyon",
   technology: "Teknolojik Aletler",
   other: "Diğer",
 };
@@ -58,22 +59,24 @@ export default function DowryAddProductScreen() {
       return;
     }
 
+    if (!params.categoryId) {
+      return;
+    }
+
     try {
       setLoading(true);
 
-      const newProduct = {
-        id: Date.now().toString(),
+      await createUserDowryItemByCategorySlug({
+        categorySlug: String(params.categoryId),
         title: productName.trim(),
         brandName: brandName.trim(),
-        categoryId: params.categoryId ? String(params.categoryId) : undefined,
-        categoryName,
         quantity,
         completed,
-      };
-
-      console.log("Yeni çeyiz ürünü:", newProduct);
+      });
 
       router.back();
+    } catch (error) {
+      console.log("Çeyiz ürünü eklenemedi:", error);
     } finally {
       setLoading(false);
     }
