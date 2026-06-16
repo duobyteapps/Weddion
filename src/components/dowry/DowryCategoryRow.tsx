@@ -3,16 +3,7 @@ import { Pressable, View } from "react-native";
 
 import { AppText } from "@/components/ui/AppText";
 import { Colors } from "@/constants/Colors";
-
-type MaterialIconName = keyof typeof MaterialCommunityIcons.glyphMap;
-
-export type DowryCategoryItem = {
-  id: string;
-  title: string;
-  icon: MaterialIconName;
-  completed: number;
-  total: number;
-};
+import { DowryCategoryItem } from "@/types/dowry";
 
 type DowryCategoryRowProps = {
   category: DowryCategoryItem;

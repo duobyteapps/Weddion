@@ -1,61 +1,45 @@
 import { router } from "expo-router";
-import { ScrollView } from "react-native";
+import { useEffect, useState } from "react";
+import { ActivityIndicator, ScrollView, View } from "react-native";
 
 import { ScreenHeader } from "@/components/common/ScreenHeader";
 import { DowryCategoryStatusCard } from "@/components/dowry/DowryCategoryStatusCard";
 import { DowryGeneralStatusCard } from "@/components/dowry/DowryGeneralStatusCard";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
-
-const categories = [
-  {
-    id: "kitchen",
-    title: "Mutfak",
-    icon: "pot-steam-outline",
-    completed: 18,
-    total: 25,
-  },
-  {
-    id: "bedroom",
-    title: "Yatak Odası",
-    icon: "bed-king-outline",
-    completed: 12,
-    total: 20,
-  },
-  {
-    id: "living-room",
-    title: "Oturma Odası",
-    icon: "sofa-outline",
-    completed: 14,
-    total: 22,
-  },
-  {
-    id: "bathroom",
-    title: "Banyo",
-    icon: "bathtub-outline",
-    completed: 8,
-    total: 15,
-  },
-  {
-    id: "technology",
-    title: "Teknolojik Aletler",
-    icon: "monitor",
-    completed: 10,
-    total: 18,
-  },
-  {
-    id: "small-appliances",
-    title: "Küçük Ev Aletleri",
-    icon: "blender-outline",
-    completed: 6,
-    total: 12,
-  },
-] as const;
+import { Colors } from "@/constants/Colors";
+import { getDowryCategories } from "@/services/dowryCategoryService";
+import { DowryCategoryItem } from "@/types/dowry";
 
 export default function DowrySummaryScreen() {
-  const total = 142;
-  const completed = 88;
+  const [categories, setCategories] = useState<DowryCategoryItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const total = categories.reduce((sum, category) => sum + category.total, 0);
+  const completed = categories.reduce(
+    (sum, category) => sum + category.completed,
+    0,
+  );
   const missing = total - completed;
-  const progress = Math.round((completed / total) * 100);
+  const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  async function fetchCategories() {
+    try {
+      setIsLoading(true);
+
+      const data = await getDowryCategories();
+
+      setCategories(data);
+    } catch (error) {
+      console.log("Çeyiz kategorileri getirilemedi:", error);
+      setCategories([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }
 
   function handlePressCategory(category: { id: string }) {
     router.push({
@@ -72,7 +56,10 @@ export default function DowrySummaryScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerClassName="pb-32"
       >
-        <ScreenHeader title="Çeyiz Özeti" fallbackTo="/home" />
+        <ScreenHeader
+          title="Çeyiz Defterim"
+          description="Çeyiz hazırlıklarını kategorilere ayırarak kolayca takip et."
+        />
 
         <DowryGeneralStatusCard
           progress={progress}
@@ -81,10 +68,16 @@ export default function DowrySummaryScreen() {
           missing={missing}
         />
 
-        <DowryCategoryStatusCard
-          categories={[...categories]}
-          onPressCategory={handlePressCategory}
-        />
+        {isLoading ? (
+          <View className="mt-6 items-center justify-center">
+            <ActivityIndicator color={Colors.primary} />
+          </View>
+        ) : (
+          <DowryCategoryStatusCard
+            categories={categories}
+            onPressCategory={handlePressCategory}
+          />
+        )}
 
         {/* <DowryShoppingSummaryCard
           total={total}
