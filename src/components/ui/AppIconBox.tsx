@@ -21,20 +21,20 @@ export function AppIconBox({
   return (
     <View
       className={[
-        "h-11 w-11 items-center justify-center rounded-2xl bg-primary/10",
+        "h-10 w-10 items-center justify-center rounded-2xl bg-primary/10",
         className,
       ].join(" ")}
     >
       {iconSet === "feather" ? (
         <Feather
           name={icon as keyof typeof Feather.glyphMap}
-          size={size}
+          size={18}
           color={color}
         />
       ) : (
         <Ionicons
           name={icon as keyof typeof Ionicons.glyphMap}
-          size={size}
+          size={18}
           color={color}
         />
       )}

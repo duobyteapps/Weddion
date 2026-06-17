@@ -58,7 +58,7 @@ export default function DowrySummaryScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerClassName="pb-32"
       >
-        <ScreenHeader title="Çeyiz Özeti" fallbackTo="/home" />
+        <ScreenHeader title="Çeyiz Defterim" fallbackTo="/home" />
 
         <DowryGeneralStatusCard
           progress={progress}

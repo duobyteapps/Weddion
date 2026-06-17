@@ -29,7 +29,6 @@ type GalleryPhoto = GalleryPhotos[number];
 function formatEventTitle(invitation: UserInvitation) {
   const brideName = invitation.bride_name ?? "";
   const groomName = invitation.groom_name ?? "";
-
   const title = `${brideName} & ${groomName}`.trim();
 
   if (title === "&") {
@@ -142,6 +141,8 @@ export default function GalleryScreen() {
           : undefined;
 
         setSelectedInvitationId(invitationFromRoute?.id ?? data[0].id);
+      } else {
+        setSelectedInvitationId(undefined);
       }
     } catch (error) {
       console.log("Galeri davetiyeleri alınamadı:", error);
@@ -238,11 +239,9 @@ export default function GalleryScreen() {
         invitationId: selectedInvitation.id,
         shareSlug: selectedInvitation.share_slug ?? "",
         invitationImageUrl: selectedInvitation.invitation_image_url ?? "",
-
         guestUploadCode: selectedInvitation.guest_upload_code ?? "",
         guestUploadSlug: selectedInvitation.guest_upload_slug ?? "",
         guestUploadQrValue: selectedInvitation.guest_upload_qr_value ?? "",
-
         brideName: selectedInvitation.bride_name,
         groomName: selectedInvitation.groom_name,
         brideParents: selectedInvitation.bride_parents ?? "",

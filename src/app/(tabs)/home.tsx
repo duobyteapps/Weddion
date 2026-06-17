@@ -83,8 +83,8 @@ export default function HomeScreen() {
         >
           <HeroCard />
 
-          <AppText variant="subtitle" className="mb-3 text-text">
-            Kısayollar
+          <AppText variant="subtitle" className="mb-3">
+            Hızlı İşlemler
           </AppText>
 
           <View className="w-full flex-row flex-wrap justify-between">
@@ -111,7 +111,7 @@ export default function HomeScreen() {
             <QuickActionCard
               icon="calendar"
               title="Etkinliğe Katıl"
-              subtitle="2 yaklaşan etkinlik"
+              subtitle="QR veya kod ile giriş yap"
             />
 
             <QuickActionCard

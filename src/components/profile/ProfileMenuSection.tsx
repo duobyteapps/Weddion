@@ -91,12 +91,11 @@ export function ProfileMenuSection({ title, items }: Props) {
                 <AppIconBox
                   icon={item.icon}
                   color={color}
-                  size={21}
                   className="mr-4 rounded-xl bg-primarySoft"
                 />
 
                 <AppText
-                  variant="caption"
+                  variant="body"
                   className={`flex-1 ${
                     item.danger ? "text-[#D24B5B]" : "text-text"
                   }`}

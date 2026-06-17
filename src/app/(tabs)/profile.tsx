@@ -7,12 +7,14 @@ import { useAppAlert } from "@/components/ui/AppAlert";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { accountMenuItems, otherMenuItems } from "@/constants/profileMenuItems";
 import { logoutUser } from "@/services/authService";
+import { getCurrentUserInvitations } from "@/services/invitationService";
 import {
   deleteCurrentUserAccount,
   getCurrentUserProfile,
   Profile,
 } from "@/services/profileService";
 import { SESSION_EXPIRED_MESSAGE } from "@/services/sessionService";
+import { UserInvitation } from "@/types/invitation";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
 import { ActivityIndicator, ScrollView, View } from "react-native";
@@ -22,6 +24,8 @@ export default function ProfileScreen() {
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [email, setEmail] = useState("");
+  const [latestInvitation, setLatestInvitation] =
+    useState<UserInvitation | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fullName =
@@ -36,12 +40,16 @@ export default function ProfileScreen() {
         try {
           setLoading(true);
 
-          const { user, profile } = await getCurrentUserProfile();
+          const [{ user, profile }, invitations] = await Promise.all([
+            getCurrentUserProfile(),
+            getCurrentUserInvitations(),
+          ]);
 
           if (!isActive) return;
 
           setProfile(profile);
           setEmail(user.email ?? "");
+          setLatestInvitation(invitations[0] ?? null);
         } catch (error) {
           if (!isActive) return;
 
@@ -54,6 +62,7 @@ export default function ProfileScreen() {
 
           setProfile(null);
           setEmail("");
+          setLatestInvitation(null);
 
           showAlert({
             title: isSessionExpired ? "Oturum Süresi Doldu" : "Profil Hatası",
@@ -82,6 +91,7 @@ export default function ProfileScreen() {
   const handleLogout = async () => {
     try {
       await logoutUser();
+
       router.replace("/auth/login");
     } catch (error) {
       const message =
@@ -108,6 +118,7 @@ export default function ProfileScreen() {
       onConfirm: async () => {
         try {
           await deleteCurrentUserAccount();
+
           router.replace("/auth/login");
         } catch (error) {
           const message =
@@ -121,6 +132,19 @@ export default function ProfileScreen() {
             type: "error",
           });
         }
+      },
+    });
+  };
+
+  const handleOpenMyInvitations = () => {
+    router.push("/(tabs)/my-invitations");
+  };
+
+  const handleOpenInvitationGallery = (invitation: UserInvitation) => {
+    router.push({
+      pathname: "/(tabs)/gallery",
+      params: {
+        invitationId: invitation.id,
       },
     });
   };
@@ -165,8 +189,15 @@ export default function ProfileScreen() {
         )}
 
         <ProfileMenuSection title="Hesabım" items={accountMenuItems} />
-        <ProfileEventCard />
+
+        <ProfileEventCard
+          invitation={latestInvitation}
+          onPress={handleOpenMyInvitations}
+          onPressInvitationGallery={handleOpenInvitationGallery}
+        />
+
         <ProfileMenuSection title="Diğer" items={menuItems} />
+
         <PremiumCard />
       </ScrollView>
     </ScreenContainer>
