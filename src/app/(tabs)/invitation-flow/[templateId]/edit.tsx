@@ -43,16 +43,6 @@ function getParamValue(value?: string | string[]) {
   return value;
 }
 
-function getCacheBustedImageUrl(imageUrl?: string | null, version?: string) {
-  if (!imageUrl) {
-    return null;
-  }
-
-  const separator = imageUrl.includes("?") ? "&" : "?";
-
-  return `${imageUrl}${separator}v=${version ?? Date.now()}`;
-}
-
 function createInitialFormData(params: EditParams): InvitationFormData {
   return {
     brideName:
@@ -204,13 +194,8 @@ export default function InvitationFlowEditScreen() {
     );
   }
 
-  const selectedEditableImageUrl =
+  const editablePreviewImageUrl =
     editableImageUrl || template.editableImageUrl || template.imageUrl;
-
-  const editablePreviewImageUrl = getCacheBustedImageUrl(
-    selectedEditableImageUrl,
-    template.id,
-  );
 
   return (
     <ScreenContainer className="flex-1 bg-background">

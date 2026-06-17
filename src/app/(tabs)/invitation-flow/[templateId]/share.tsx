@@ -43,15 +43,6 @@ type ShareParams = {
   venueLocation?: string;
 };
 
-function getCacheBustedImageUrl(imageUrl?: string | null, version?: string) {
-  if (!imageUrl) {
-    return null;
-  }
-
-  const separator = imageUrl.includes("?") ? "&" : "?";
-  return `${imageUrl}${separator}v=${version ?? Date.now()}`;
-}
-
 function createInvitationSlug(brideName: string, groomName: string) {
   return `${brideName}-${groomName}`
     .toLocaleLowerCase("tr-TR")
@@ -114,13 +105,6 @@ export default function InvitationFlowShareScreen() {
     return cleanOptionalParam(params.guestUploadQrValue) ?? null;
   }, [params.guestUploadQrValue]);
 
-  const fallbackPreviewImageUrl = useMemo(() => {
-    return getCacheBustedImageUrl(
-      template?.editableImageUrl ?? template?.imageUrl,
-      template?.id,
-    );
-  }, [template]);
-
   const capturedInvitationImageUri = useMemo(() => {
     return getCapturedInvitationImageUri();
   }, []);
@@ -128,6 +112,19 @@ export default function InvitationFlowShareScreen() {
   const backendInvitationImageUrl = useMemo(() => {
     return cleanOptionalParam(params.invitationImageUrl);
   }, [params.invitationImageUrl]);
+
+  const editableImageUrl = useMemo(() => {
+    return cleanOptionalParam(params.editableImageUrl);
+  }, [params.editableImageUrl]);
+
+  const fallbackPreviewImageUrl = useMemo(() => {
+    return (
+      editableImageUrl ??
+      template?.editableImageUrl ??
+      template?.imageUrl ??
+      null
+    );
+  }, [editableImageUrl, template]);
 
   const finalInvitationImageUri = useMemo(() => {
     return (
@@ -170,7 +167,8 @@ export default function InvitationFlowShareScreen() {
       setLoading(true);
       const data = await getInvitationTemplateById(params.templateId);
       setTemplate(data);
-    } catch {
+    } catch (error) {
+      console.log("Davetiye şablonu alınamadı:", error);
       setTemplate(null);
     } finally {
       setLoading(false);
@@ -184,7 +182,7 @@ export default function InvitationFlowShareScreen() {
       shareSlug: params.shareSlug ?? "",
       invitationImageUrl: params.invitationImageUrl ?? "",
       editableImageUrl:
-        params.editableImageUrl ??
+        editableImageUrl ??
         template?.editableImageUrl ??
         template?.imageUrl ??
         "",
@@ -304,7 +302,7 @@ export default function InvitationFlowShareScreen() {
           title="Paylaş"
           description="Davetiyenizi Instagram için hazırlayın."
           backTo={{
-            pathname: "/my-invitations",
+            pathname: "/invitation-flow/[templateId]/preview",
             params: getRouteParams(),
           }}
         />

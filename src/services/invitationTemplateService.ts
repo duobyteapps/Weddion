@@ -30,15 +30,33 @@ type InvitationTemplateRow = {
   editable_image_path: string | null;
 };
 
+function isDirectImageUri(value: string) {
+  return (
+    value.startsWith("http://") ||
+    value.startsWith("https://") ||
+    value.startsWith("file://") ||
+    value.startsWith("content://") ||
+    value.startsWith("data:image")
+  );
+}
+
 async function createR2ImageUrl(path: string | null) {
   if (!path) {
     return null;
   }
 
+  if (isDirectImageUri(path)) {
+    return path;
+  }
+
   try {
     return await getR2SignedUrl(path);
   } catch (error) {
-    console.log("Template R2 signed URL oluşturulamadı:", error);
+    console.log("Template R2 signed URL oluşturulamadı:", {
+      path,
+      error,
+    });
+
     return null;
   }
 }
@@ -46,12 +64,18 @@ async function createR2ImageUrl(path: string | null) {
 async function mapInvitationTemplateRow(
   item: InvitationTemplateRow,
 ): Promise<InvitationTemplateDto> {
-  const imageUrl = await createR2ImageUrl(item.image_path);
-  const contentImageUrl = await createR2ImageUrl(item.content_image_path);
-  const editableImageUrl = await createR2ImageUrl(item.editable_image_path);
-
-  if (!item.image_path || !imageUrl) {
+  if (!item.image_path) {
     throw new Error(`${item.title} şablonu için image_path bulunamadı.`);
+  }
+
+  const [imageUrl, contentImageUrl, editableImageUrl] = await Promise.all([
+    createR2ImageUrl(item.image_path),
+    createR2ImageUrl(item.content_image_path),
+    createR2ImageUrl(item.editable_image_path),
+  ]);
+
+  if (!imageUrl) {
+    throw new Error(`${item.title} şablonu için imageUrl oluşturulamadı.`);
   }
 
   return {
@@ -97,7 +121,25 @@ export async function getInvitationTemplates(): Promise<
 
   const templates = (data ?? []) as InvitationTemplateRow[];
 
-  return Promise.all(templates.map(mapInvitationTemplateRow));
+  const mappedTemplates = await Promise.all(
+    templates.map(async (template) => {
+      try {
+        return await mapInvitationTemplateRow(template);
+      } catch (error) {
+        console.log("Davetiye şablonu dönüştürülemedi:", {
+          templateId: template.id,
+          title: template.title,
+          error,
+        });
+
+        return null;
+      }
+    }),
+  );
+
+  return mappedTemplates.filter(
+    (template): template is InvitationTemplateDto => template !== null,
+  );
 }
 
 export async function getInvitationTemplateById(

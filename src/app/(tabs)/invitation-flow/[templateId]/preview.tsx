@@ -46,15 +46,6 @@ type PreviewParams = {
   venueLocation?: string;
 };
 
-function getCacheBustedImageUrl(imageUrl?: string | null, version?: string) {
-  if (!imageUrl) {
-    return null;
-  }
-
-  const separator = imageUrl.includes("?") ? "&" : "?";
-  return `${imageUrl}${separator}v=${version ?? Date.now()}`;
-}
-
 function waitForCaptureReady() {
   return new Promise<void>((resolve) => {
     requestAnimationFrame(() => {
@@ -102,11 +93,13 @@ export default function InvitationFlowPreviewScreen() {
   );
 
   const previewImageUrl = useMemo(() => {
-    return getCacheBustedImageUrl(
-      template?.editableImageUrl ?? template?.imageUrl,
-      template?.id,
+    return (
+      params.editableImageUrl ??
+      template?.editableImageUrl ??
+      template?.imageUrl ??
+      null
     );
-  }, [template]);
+  }, [params.editableImageUrl, template]);
 
   useEffect(() => {
     fetchTemplate();
@@ -123,7 +116,8 @@ export default function InvitationFlowPreviewScreen() {
       setLoading(true);
       const data = await getInvitationTemplateById(params.templateId);
       setTemplate(data);
-    } catch {
+    } catch (error) {
+      console.log("Davetiye şablonu alınamadı:", error);
       setTemplate(null);
     } finally {
       setLoading(false);
@@ -131,16 +125,18 @@ export default function InvitationFlowPreviewScreen() {
   }
 
   function getBaseRouteParams() {
+    const selectedEditableImageUrl =
+      params.editableImageUrl ??
+      template?.editableImageUrl ??
+      template?.imageUrl ??
+      "";
+
     return {
       templateId: params.templateId,
       invitationId: params.invitationId ?? "",
       shareSlug: params.shareSlug ?? "",
       invitationImageUrl: params.invitationImageUrl ?? "",
-      editableImageUrl:
-        params.editableImageUrl ??
-        template?.editableImageUrl ??
-        template?.imageUrl ??
-        "",
+      editableImageUrl: selectedEditableImageUrl,
 
       guestUploadCode: params.guestUploadCode ?? "",
       guestUploadSlug: params.guestUploadSlug ?? "",
@@ -230,7 +226,8 @@ export default function InvitationFlowPreviewScreen() {
 
       try {
         capturedImageUri = await captureInvitationImage();
-      } catch {
+      } catch (error) {
+        console.log("Davetiye görseli yakalanamadı:", error);
         capturedImageUri = undefined;
       }
 

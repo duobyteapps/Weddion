@@ -33,6 +33,16 @@ type R2FunctionParams = {
   requireAuth?: boolean;
 };
 
+function isDirectUrl(value: string) {
+  return (
+    value.startsWith("http://") ||
+    value.startsWith("https://") ||
+    value.startsWith("file://") ||
+    value.startsWith("content://") ||
+    value.startsWith("data:image")
+  );
+}
+
 async function getFunctionErrorMessage(error: unknown) {
   const context =
     error &&
@@ -125,6 +135,10 @@ export async function getR2UploadUrl({
 }
 
 export async function getR2SignedUrl(key: string, requireAuth = false) {
+  if (isDirectUrl(key)) {
+    return key;
+  }
+
   const data = await callR2ObjectFunction({
     action: "get-url",
     key,
@@ -139,6 +153,10 @@ export async function getR2SignedUrl(key: string, requireAuth = false) {
 }
 
 export async function deleteR2Object(key: string, requireAuth = false) {
+  if (isDirectUrl(key)) {
+    return true;
+  }
+
   await callR2ObjectFunction({
     action: "delete",
     key,
@@ -180,7 +198,19 @@ export async function uploadImageToR2({
   });
 
   if (!uploadResponse.ok) {
-    throw new Error("Görsel R2 üzerine yüklenemedi.");
+    let message = "Görsel R2 üzerine yüklenemedi.";
+
+    try {
+      const errorText = await uploadResponse.text();
+
+      if (errorText) {
+        message = `${message} ${errorText}`;
+      }
+    } catch {
+      // ignore
+    }
+
+    throw new Error(message);
   }
 
   return {
