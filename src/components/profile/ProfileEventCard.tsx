@@ -10,7 +10,7 @@ export function ProfileEventCard() {
     <AppCard>
       <View className="mb-5 flex-row items-center justify-between">
         <AppText variant="serifTitle" className="text-textDark">
-          Etkinliklerim
+          Davetlerim
         </AppText>
 
         <View className="flex-row items-center">

@@ -1,5 +1,7 @@
-import { router } from "expo-router";
-import { useEffect, useState } from "react";
+import { router, useFocusEffect } from "expo-router";
+
+import { useCallback, useRef, useState } from "react";
+
 import {
   ActivityIndicator,
   RefreshControl,
@@ -13,10 +15,12 @@ import { MyInvitationsList } from "@/components/invitations/my/MyInvitationsList
 import { useAppAlert } from "@/components/ui/AppAlert";
 import { AppText } from "@/components/ui/AppText";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
+
 import {
   deleteUserInvitation,
   getCurrentUserInvitations,
 } from "@/services/invitationService";
+
 import { SESSION_EXPIRED_MESSAGE } from "@/services/sessionService";
 import { UserInvitation } from "@/types/invitation";
 
@@ -26,11 +30,9 @@ function getInvitationRouteParams(invitation: UserInvitation) {
     invitationId: invitation.id,
     shareSlug: invitation.share_slug,
     invitationImageUrl: invitation.invitation_image_url ?? "",
-
     guestUploadCode: invitation.guest_upload_code ?? "",
     guestUploadSlug: invitation.guest_upload_slug ?? "",
     guestUploadQrValue: invitation.guest_upload_qr_value ?? "",
-
     brideName: invitation.bride_name,
     groomName: invitation.groom_name,
     brideParents: invitation.bride_parents ?? "",
@@ -52,64 +54,76 @@ export default function MyInvitationsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    fetchInvitations();
-  }, []);
+  const hasLoadedInvitationsRef = useRef(false);
 
-  function handleServiceError(params: {
-    error: unknown;
-    fallbackTitle: string;
-    fallbackMessage: string;
-  }) {
-    const message =
-      params.error instanceof Error
-        ? params.error.message
-        : params.fallbackMessage;
+  const handleServiceError = useCallback(
+    (params: {
+      error: unknown;
+      fallbackTitle: string;
+      fallbackMessage: string;
+    }) => {
+      const message =
+        params.error instanceof Error
+          ? params.error.message
+          : params.fallbackMessage;
 
-    const isSessionExpired = message === SESSION_EXPIRED_MESSAGE;
+      const isSessionExpired = message === SESSION_EXPIRED_MESSAGE;
 
-    showAlert({
-      title: isSessionExpired ? "Oturum Süresi Doldu" : params.fallbackTitle,
-      message,
-      type: isSessionExpired ? "warning" : "error",
-      confirmText: isSessionExpired ? "Giriş Yap" : "Tamam",
-      onConfirm: () => {
-        if (isSessionExpired) {
-          router.replace("/auth/login");
-        }
-      },
-    });
-  }
-
-  async function fetchInvitations() {
-    try {
-      setLoading(true);
-
-      const data = await getCurrentUserInvitations();
-
-      setInvitations(data);
-    } catch (error) {
-      console.log("Davetiyeler alınamadı:", error);
-
-      setInvitations([]);
-
-      handleServiceError({
-        error,
-        fallbackTitle: "Davetiyeler alınamadı",
-        fallbackMessage:
-          "Davetiyeler yüklenirken bir sorun oluştu. Lütfen tekrar deneyin.",
+      showAlert({
+        title: isSessionExpired ? "Oturum Süresi Doldu" : params.fallbackTitle,
+        message,
+        type: isSessionExpired ? "warning" : "error",
+        confirmText: isSessionExpired ? "Giriş Yap" : "Tamam",
+        onConfirm: () => {
+          if (isSessionExpired) {
+            router.replace("/auth/login");
+          }
+        },
       });
-    } finally {
-      setLoading(false);
-    }
-  }
+    },
+    [showAlert],
+  );
+
+  const fetchInvitations = useCallback(
+    async (options?: { showInitialLoading?: boolean }) => {
+      try {
+        if (options?.showInitialLoading) {
+          setLoading(true);
+        }
+
+        const data = await getCurrentUserInvitations();
+        setInvitations(data);
+      } catch (error) {
+        console.log("Davetiyeler alınamadı:", error);
+        setInvitations([]);
+
+        handleServiceError({
+          error,
+          fallbackTitle: "Davetiyeler alınamadı",
+          fallbackMessage:
+            "Davetiyeler yüklenirken bir sorun oluştu. Lütfen tekrar deneyin.",
+        });
+      } finally {
+        hasLoadedInvitationsRef.current = true;
+        setLoading(false);
+      }
+    },
+    [handleServiceError],
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchInvitations({
+        showInitialLoading: !hasLoadedInvitationsRef.current,
+      });
+    }, [fetchInvitations]),
+  );
 
   async function handleRefresh() {
     try {
       setRefreshing(true);
 
       const data = await getCurrentUserInvitations();
-
       setInvitations(data);
     } catch (error) {
       console.log("Davetiyeler yenilenemedi:", error);
@@ -205,7 +219,6 @@ export default function MyInvitationsScreen() {
       <ScreenContainer className="bg-background">
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator color="#A875D1" />
-
           <AppText className="mt-3">Davetiyeleriniz hazırlanıyor...</AppText>
         </View>
       </ScreenContainer>
@@ -232,8 +245,7 @@ export default function MyInvitationsScreen() {
 
         <IllustratedHeroCard
           title={"Özel gününüzü\npaylaşın"}
-          description=" Davetiyelerinizi yönetebilir, paylaşabilir ve misafirleriniz davet
-          edebilirsiniz."
+          description="Davetiyelerinizi yönetebilir, paylaşabilir ve misafirlerinizi davet edebilirsiniz."
           image={require("@/assets/images/illustration/invitations-hero.png")}
         />
 

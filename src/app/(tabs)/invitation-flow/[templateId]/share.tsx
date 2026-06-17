@@ -302,8 +302,7 @@ export default function InvitationFlowShareScreen() {
           title="Paylaş"
           description="Davetiyenizi Instagram için hazırlayın."
           backTo={{
-            pathname: "/invitation-flow/[templateId]/preview",
-            params: getRouteParams(),
+            pathname: "/my-invitations",
           }}
         />
 
