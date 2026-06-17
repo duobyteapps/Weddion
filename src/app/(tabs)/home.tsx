@@ -110,7 +110,7 @@ export default function HomeScreen() {
 
             <QuickActionCard
               icon="calendar"
-              title="Etkinlikler"
+              title="Etkinliğe Katıl"
               subtitle="2 yaklaşan etkinlik"
             />
 

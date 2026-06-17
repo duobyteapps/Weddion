@@ -7,8 +7,8 @@ import {
   View,
 } from "react-native";
 
+import { IllustratedHeroCard } from "@/components/common/IllustratedHeroCard";
 import { ScreenHeader } from "@/components/common/ScreenHeader";
-import { MyInvitationsHero } from "@/components/invitations/my/MyInvitationsHero";
 import { MyInvitationsList } from "@/components/invitations/my/MyInvitationsList";
 import { useAppAlert } from "@/components/ui/AppAlert";
 import { AppText } from "@/components/ui/AppText";
@@ -230,7 +230,12 @@ export default function MyInvitationsScreen() {
           description="Oluşturduğunuz tüm davetleri buradan görüntüleyebilirsiniz."
         />
 
-        <MyInvitationsHero />
+        <IllustratedHeroCard
+          title={"Özel gününüzü\npaylaşın"}
+          description=" Davetiyelerinizi yönetebilir, paylaşabilir ve misafirleriniz davet
+          edebilirsiniz."
+          image={require("@/assets/images/illustration/invitations-hero.png")}
+        />
 
         <MyInvitationsList
           invitations={invitations}

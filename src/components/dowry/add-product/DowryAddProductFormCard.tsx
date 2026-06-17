@@ -61,16 +61,15 @@ export function DowryAddProductFormCard({
           <DowryQuantityStepper value={quantity} onChange={onChangeQuantity} />
         </View>
 
-        <Pressable
-          className="mb-2 flex-row items-center"
-          onPress={handleToggleCompleted}
-        >
-          <AppCheckbox checked={completed} />
+        <View className="mb-2 flex-row items-center">
+          <AppCheckbox checked={completed} onPress={handleToggleCompleted} />
 
-          <AppText variant="body" className="ml-3 text-textDark">
-            Ürün satın alındı
-          </AppText>
-        </Pressable>
+          <Pressable className="ml-3 flex-1" onPress={handleToggleCompleted}>
+            <AppText variant="body" className="text-textDark">
+              Ürün satın alındı
+            </AppText>
+          </Pressable>
+        </View>
       </AppCard>
 
       <AppButton title="Kaydet" loading={loading} onPress={onSave} />

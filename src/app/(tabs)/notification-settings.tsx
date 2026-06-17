@@ -3,9 +3,9 @@ import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, ScrollView, View } from "react-native";
 
 import { AppSwitchCard } from "@/components/common/AppSwitchCard";
+import { IllustratedHeroCard } from "@/components/common/IllustratedHeroCard";
 import { ScreenHeader } from "@/components/common/ScreenHeader";
 import { NotificationChannelsCard } from "@/components/profile/notification-settings/NotificationChannelsCard";
-import { NotificationHeroCard } from "@/components/profile/notification-settings/NotificationHeroCard";
 import { useAppAlert } from "@/components/ui/AppAlert";
 import { AppButton } from "@/components/ui/AppButton";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
@@ -265,7 +265,11 @@ export default function NotificationSettingsScreen() {
           backTo="/(tabs)/profile"
         />
 
-        <NotificationHeroCard />
+        <IllustratedHeroCard
+          title={"Önemli anları\nkaçırmayın"}
+          description="Sizin için önemli gelişmeleri zamanında bildirimlerle öğrenin."
+          image={require("@/assets/images/illustration/notification-hero.png")}
+        />
 
         <View className="mt-8">
           <AppSwitchCard

@@ -17,11 +17,26 @@ export function GuestPhotoSelectedSection({
   onRemovePhoto,
   onRemoveAllPhotos,
 }: Props) {
+  const photoRows = selectedPhotos.reduce<SelectedPhoto[][]>(
+    (rows, photo, index) => {
+      const rowIndex = Math.floor(index / 3);
+
+      if (!rows[rowIndex]) {
+        rows[rowIndex] = [];
+      }
+
+      rows[rowIndex].push(photo);
+
+      return rows;
+    },
+    [],
+  );
+
   return (
     <>
       <AppDivider />
 
-      <View className="mb-4 flex-row items-center justify-between">
+      <View className="flex-row items-center justify-between">
         <View className="flex-row items-center gap-3">
           <AppText variant="serifSubtitle">Seçilen Fotoğraflar</AppText>
 
@@ -40,18 +55,23 @@ export function GuestPhotoSelectedSection({
       </View>
 
       {selectedPhotos.length > 0 ? (
-        <View className="flex-row gap-3">
-          {selectedPhotos.map((photo) => (
-            <GuestPhotoSelectedCard
-              key={photo.id}
-              photo={photo}
-              onRemove={onRemovePhoto}
-            />
+        <View className="gap-3">
+          {photoRows.map((row, rowIndex) => (
+            <View key={rowIndex} className="flex-row gap-3">
+              {row.map((photo) => (
+                <GuestPhotoSelectedCard
+                  key={photo.id}
+                  photo={photo}
+                  onRemove={onRemovePhoto}
+                />
+              ))}
+            </View>
           ))}
         </View>
       ) : (
         <AppCard className="items-center justify-center !border border-primary !bg-primarySoft">
           <Ionicons name="images-outline" size={34} color="#B88BE6" />
+
           <AppText variant="caption">Henüz fotoğraf seçilmedi...</AppText>
         </AppCard>
       )}

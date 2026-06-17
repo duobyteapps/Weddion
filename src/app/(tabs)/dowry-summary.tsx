@@ -77,12 +77,6 @@ export default function DowrySummaryScreen() {
             onPressCategory={handlePressCategory}
           />
         )}
-
-        {/* <DowryShoppingSummaryCard
-          total={total}
-          completed={completed}
-          missing={missing}
-        /> */}
       </ScrollView>
     </ScreenContainer>
   );

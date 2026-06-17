@@ -1,7 +1,6 @@
-import { ScrollView } from "react-native";
+import { ScrollView, View } from "react-native";
 
 import { DowryChecklistItemRow } from "@/components/dowry/dowry-detail/DowryChecklistItemRow";
-import { AppCard } from "@/components/ui/AppCard";
 import { DowryChecklistItem } from "@/types/dowry";
 
 type Props = {
@@ -18,7 +17,7 @@ export function DowryChecklistCard({
   onUpdateItem,
 }: Props) {
   return (
-    <AppCard noMargin className="h-full overflow-hidden">
+    <View className="h-full overflow-hidden">
       <ScrollView
         nestedScrollEnabled
         showsVerticalScrollIndicator={false}
@@ -30,13 +29,12 @@ export function DowryChecklistCard({
           <DowryChecklistItemRow
             key={item.id}
             item={item}
-            isLast={index === items.length - 1}
             onToggle={onToggleItem}
             onDelete={onDeleteItem}
             onUpdate={onUpdateItem}
           />
         ))}
       </ScrollView>
-    </AppCard>
+    </View>
   );
 }

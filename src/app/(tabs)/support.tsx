@@ -1,9 +1,9 @@
 // src/app/(tabs)/support.tsx
 
+import { IllustratedHeroCard } from "@/components/common/IllustratedHeroCard";
 import { ScreenHeader } from "@/components/common/ScreenHeader";
 import { SupportContactFooter } from "@/components/support/SupportContactFooter";
 import { SupportFAQ } from "@/components/support/SupportFAQ";
-import { SupportHero } from "@/components/support/SupportHero";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { ScrollView } from "react-native";
 
@@ -19,8 +19,15 @@ export default function support() {
           description="Sorularınıza cevap bulabilir veya bizimle iletişime geçebilirsiniz."
           backTo="/(tabs)/profile"
         />
-        <SupportHero />
+
+        <IllustratedHeroCard
+          title={"Yardıma ihtiyacınız\nolduğunda buradayız"}
+          description="Ekiplerimiz en kısa sürede size yardımcı olacaktır."
+          image={require("@/assets/images/illustration/support-hero.png")}
+        />
+
         <SupportFAQ />
+
         <SupportContactFooter />
       </ScrollView>
     </ScreenContainer>

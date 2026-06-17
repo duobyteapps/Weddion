@@ -4,7 +4,7 @@ import { Image, View } from "react-native";
 
 export function PrivacyDisclosureHero() {
   return (
-    <AppCard className="flex-row items-center gap-5 rounded-[28px] border border-primary/10 bg-primary/5 p-6">
+    <AppCard className="flex-row items-center gap-5">
       <Image
         source={require("@/assets/images/illustration/privacy-hero.png")}
         className="h-28 w-28"
