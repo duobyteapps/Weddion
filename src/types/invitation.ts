@@ -44,6 +44,13 @@ export type UserInvitation = {
   user_id: string;
   template_id: string;
 
+  event_type_id: string;
+  invitation_event_types?: {
+    id: string;
+    slug: string;
+    title: string;
+  } | null;
+
   bride_name: string;
   groom_name: string;
   bride_parents: string | null;

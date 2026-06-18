@@ -13,6 +13,7 @@ import {
 
 function cleanText(value: string) {
   const trimmed = value.trim();
+
   return trimmed.length > 0 ? trimmed : null;
 }
 
@@ -57,6 +58,7 @@ async function addSignedImageUrlToInvitation(
     };
   } catch (error) {
     console.log("Davetiye signed URL oluşturulamadı:", error);
+
     return invitation;
   }
 }
@@ -104,6 +106,7 @@ export async function createUserInvitation(
     .insert({
       user_id: user.id,
       template_id: payload.templateId,
+      event_type_id: formData.eventTypeId,
 
       bride_name: formData.brideName.trim(),
       groom_name: formData.groomName.trim(),
@@ -111,13 +114,11 @@ export async function createUserInvitation(
       groom_parents: cleanText(formData.groomParents),
       bride_surname: cleanText(formData.brideSurname),
       groom_surname: cleanText(formData.groomSurname),
-
       event_date: formData.date.trim(),
       event_time: cleanText(formData.time),
       description: cleanText(formData.description),
       venue_name: cleanText(formData.venueName),
       venue_location: cleanText(formData.venueLocation),
-
       status: payload.status ?? "ready",
       invitation_image_path: null,
       updated_at: new Date().toISOString(),
@@ -169,8 +170,9 @@ export async function updateUserInvitation(
   const user = await getAuthenticatedUser();
   const { formData } = payload;
 
-  const updatePayload: Record<string, string | null> = {
+  const updatePayload: Record<string, unknown> = {
     template_id: payload.templateId,
+    event_type_id: formData.eventTypeId,
 
     bride_name: formData.brideName.trim(),
     groom_name: formData.groomName.trim(),
@@ -178,13 +180,11 @@ export async function updateUserInvitation(
     groom_parents: cleanText(formData.groomParents),
     bride_surname: cleanText(formData.brideSurname),
     groom_surname: cleanText(formData.groomSurname),
-
     event_date: formData.date.trim(),
     event_time: cleanText(formData.time),
     description: cleanText(formData.description),
     venue_name: cleanText(formData.venueName),
     venue_location: cleanText(formData.venueLocation),
-
     status: payload.status ?? "ready",
     updated_at: new Date().toISOString(),
   };
@@ -210,7 +210,10 @@ export async function updateUserInvitation(
   if (updateError) {
     if (updatePayload.invitation_image_path) {
       try {
-        await deleteR2Object(updatePayload.invitation_image_path, true);
+        await deleteR2Object(
+          updatePayload.invitation_image_path as string,
+          true,
+        );
       } catch (deleteError) {
         console.log("R2 invitation image rollback delete failed:", deleteError);
       }
@@ -260,7 +263,16 @@ export async function getCurrentUserInvitations(): Promise<UserInvitation[]> {
 
   const { data, error } = await supabase
     .from("user_invitations")
-    .select("*")
+    .select(
+      `
+      *,
+      invitation_event_types (
+        id,
+        slug,
+        title
+      )
+    `,
+    )
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 

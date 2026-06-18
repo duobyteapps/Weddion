@@ -35,12 +35,14 @@ function normalizeImageUri(imageUrl?: string | null) {
 function formatInvitationTitle(invitation: UserInvitation) {
   const brideName = invitation.bride_name?.trim();
   const groomName = invitation.groom_name?.trim();
+  const eventTypeTitle =
+    invitation.invitation_event_types?.title?.trim() || "Düğün";
 
   if (brideName && groomName) {
-    return `${brideName} & ${groomName} Düğün Davetiyesi`;
+    return `${brideName} & ${groomName} ${eventTypeTitle}`;
   }
 
-  return "Düğün Davetiyesi";
+  return `${eventTypeTitle}`;
 }
 
 function formatVenue(invitation: UserInvitation) {
