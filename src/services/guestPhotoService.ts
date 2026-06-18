@@ -124,18 +124,6 @@ export const uploadGuestPhoto = async ({
 }: UploadGuestPhotoParams) => {
   const normalizedCode = normalizeGuestUploadCode(guestUploadCode);
 
-  let uploadedByUserId: string | null = null;
-
-  try {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    uploadedByUserId = user?.id ?? null;
-  } catch {
-    uploadedByUserId = null;
-  }
-
   const compressedImage = await compressImageForUpload(imageUri);
 
   const { storagePath, contentType } = buildGuestPhotoPath(
@@ -151,23 +139,19 @@ export const uploadGuestPhoto = async ({
     contentType,
   });
 
-  const { data: createdPhoto, error: insertError } = await supabase
-    .from("invitation_guest_photos")
-    .insert({
-      invitation_id: invitationId,
-      storage_path: storagePath,
-      public_url: null,
-      guest_name: guestName?.trim() || null,
-      guest_note: guestNote?.trim() || null,
-      upload_code: normalizedCode,
-      uploaded_by_user_id: uploadedByUserId,
-      status: "pending",
-    })
-    .select("id")
-    .single();
+  const { error: uploadRecordError } = await supabase.rpc(
+    "upload_guest_photo_record",
+    {
+      target_invitation_id: invitationId,
+      target_upload_code: normalizedCode,
+      target_storage_path: storagePath,
+      target_guest_name: guestName?.trim() || null,
+      target_guest_note: guestNote?.trim() || null,
+    },
+  );
 
-  if (insertError) {
-    console.log("Guest photo table insert failed:", insertError);
+  if (uploadRecordError) {
+    console.log("Guest photo record RPC failed:", uploadRecordError);
 
     try {
       await deleteR2Object(storagePath);
@@ -175,28 +159,8 @@ export const uploadGuestPhoto = async ({
       console.log("R2 guest photo rollback delete failed:", deleteError);
     }
 
-    throw new Error(insertError.message);
+    throw new Error(uploadRecordError.message);
   }
-
-  const { error: notificationError } = await supabase.rpc(
-    "create_guest_photo_notification",
-    {
-      target_invitation_id: invitationId,
-      target_guest_photo_id: createdPhoto.id,
-      target_guest_name: guestName?.trim() || null,
-      uploader_user_id: uploadedByUserId,
-    },
-  );
-
-  if (notificationError) {
-    console.log(
-      "Misafir fotoğraf bildirimi oluşturulamadı:",
-      notificationError.message,
-    );
-  } else {
-    console.log("Misafir fotoğraf bildirimi oluşturuldu:", createdPhoto.id);
-  }
-
   return true;
 };
 

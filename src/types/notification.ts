@@ -8,6 +8,7 @@ export type UserNotification = {
   message: string;
   related_invitation_id: string | null;
   related_guest_photo_id: string | null;
+  photo_count: number;
   is_read: boolean;
   created_at: string;
 };
