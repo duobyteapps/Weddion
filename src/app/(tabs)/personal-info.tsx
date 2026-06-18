@@ -24,7 +24,6 @@ export default function PersonalInfoScreen() {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [birthDate, setBirthDate] = useState("");
 
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [avatarPath, setAvatarPath] = useState<string | null>(null);
@@ -64,7 +63,6 @@ export default function PersonalInfoScreen() {
       setFirstName(profile.first_name ?? "");
       setLastName(profile.last_name ?? "");
       setPhone(profile.phone ?? "");
-      setBirthDate(profile.birth_date ?? "");
 
       setAvatarUrl(profile.avatar_url);
       setAvatarPath(profile.avatar_path);
@@ -89,7 +87,6 @@ export default function PersonalInfoScreen() {
         first_name: firstName,
         last_name: lastName,
         phone,
-        birth_date: birthDate,
         avatar_path: avatarPath,
       });
 
@@ -139,7 +136,6 @@ export default function PersonalInfoScreen() {
           firstName={firstName}
           lastName={lastName}
           phone={phone}
-          birthDate={birthDate}
           onChangeProfilePhoto={(photo) => {
             setAvatarUrl(photo.avatarUrl);
             setAvatarPath(photo.avatarPath);
@@ -151,11 +147,9 @@ export default function PersonalInfoScreen() {
           lastName={lastName}
           email={email}
           phone={phone}
-          birthDate={birthDate}
           onChangeFirstName={setFirstName}
           onChangeLastName={setLastName}
           onChangePhone={setPhone}
-          onChangeBirthDate={setBirthDate}
         />
 
         <View className="mt-6">

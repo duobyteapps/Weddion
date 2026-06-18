@@ -25,7 +25,6 @@ type Props = {
   firstName: string;
   lastName: string;
   phone: string;
-  birthDate: string;
   onChangeProfilePhoto?: (params: ChangeProfilePhotoParams) => void;
 };
 
@@ -35,7 +34,6 @@ export function ProfilePhotoSection({
   firstName,
   lastName,
   phone,
-  birthDate,
   onChangeProfilePhoto,
 }: Props) {
   const { showAlert } = useAppAlert();
@@ -88,7 +86,6 @@ export function ProfilePhotoSection({
         first_name: firstName,
         last_name: lastName,
         phone,
-        birth_date: birthDate,
         avatar_path: uploadedImage.avatarPath,
       });
 

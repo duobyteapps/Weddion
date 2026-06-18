@@ -43,7 +43,7 @@ export function InvitationPreviewCard({ imageUrl, formData }: Props) {
 
         <AppText
           variant="serifTitle"
-          className="my-1 text-center text-[28px] text-textDark"
+          className="text-center text-[28px] text-textDark"
         >
           &
         </AppText>
@@ -55,35 +55,35 @@ export function InvitationPreviewCard({ imageUrl, formData }: Props) {
           {formData.groomName}
         </AppText>
 
-        <View className="mt-8 w-full flex-row items-start justify-between gap-4">
-          <View className="flex-1 items-center">
+        <View className="mt-8 w-full flex-row items-start justify-center gap-20">
+          <View className="items-center">
             <AppText variant="caption" className="text-center text-textMuted">
-              {formData.brideParents}
+              Anne & Baba
             </AppText>
 
             <AppText
-              variant="body"
-              className="mt-1 text-center font-semibold text-textDark"
+              variant="caption"
+              className="mt-1 text-center text-textDark"
             >
-              {formData.brideSurname}
+              {formData.brideParents}
             </AppText>
           </View>
 
-          <View className="flex-1 items-center">
+          <View className="items-center">
             <AppText variant="caption" className="text-center text-textMuted">
-              {formData.groomParents}
+              Anne & Baba
             </AppText>
 
             <AppText
-              variant="body"
-              className="mt-1 text-center font-semibold text-textDark"
+              variant="caption"
+              className="mt-1 text-center text-textDark"
             >
-              {formData.groomSurname}
+              {formData.groomParents}
             </AppText>
           </View>
         </View>
 
-        <View className="mt-8 w-full flex-row items-center justify-center gap-5">
+        <View className="mt-8 w-full flex-row items-center justify-center gap-2">
           <AppText variant="body" className="text-center text-textDark">
             {formatInvitationDate(formData.date)}
           </AppText>
@@ -95,10 +95,7 @@ export function InvitationPreviewCard({ imageUrl, formData }: Props) {
           </AppText>
         </View>
 
-        <AppText
-          variant="body"
-          className="mt-6 text-center leading-6 text-textMuted"
-        >
+        <AppText variant="body" className="mt-6 text-center text-textMuted">
           {formData.description}
         </AppText>
 

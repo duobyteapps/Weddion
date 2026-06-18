@@ -11,7 +11,6 @@ export type Profile = {
   first_name: string | null;
   last_name: string | null;
   phone: string | null;
-  birth_date: string | null;
 
   /**
    * DB'de saklanan gerçek R2 dosya yolu.
@@ -32,7 +31,6 @@ type ProfileRow = {
   first_name: string | null;
   last_name: string | null;
   phone: string | null;
-  birth_date: string | null;
   avatar_path: string | null;
 };
 
@@ -40,7 +38,6 @@ export type UpdateProfilePayload = {
   first_name: string;
   last_name: string;
   phone: string;
-  birth_date: string;
   avatar_path?: string | null;
 };
 
@@ -72,7 +69,7 @@ export async function getCurrentUserProfile(): Promise<{
 
   const { data: profile, error } = await supabase
     .from("profiles")
-    .select("id, first_name, last_name, phone, birth_date, avatar_path")
+    .select("id, first_name, last_name, phone, avatar_path")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -94,11 +91,10 @@ export async function getCurrentUserProfile(): Promise<{
       first_name: user.user_metadata?.first_name ?? null,
       last_name: user.user_metadata?.last_name ?? null,
       phone: null,
-      birth_date: null,
       avatar_path: null,
       updated_at: new Date().toISOString(),
     })
-    .select("id, first_name, last_name, phone, birth_date, avatar_path")
+    .select("id, first_name, last_name, phone, avatar_path")
     .single();
 
   if (createError) {
@@ -121,7 +117,6 @@ export async function updateCurrentUserProfile(
     first_name: payload.first_name.trim() || null,
     last_name: payload.last_name.trim() || null,
     phone: payload.phone.trim() || null,
-    birth_date: payload.birth_date || null,
     avatar_path: payload.avatar_path ?? null,
     updated_at: new Date().toISOString(),
   });
