@@ -70,30 +70,3 @@ export async function markAllNotificationsAsRead() {
     throw new Error(error.message);
   }
 }
-
-export function subscribeCurrentUserNotifications(params: {
-  userId: string;
-  channelKey: string;
-  onInsert: (notification: UserNotification) => void;
-}) {
-  const channelName = `notifications-${params.channelKey}-${params.userId}`;
-
-  const channel = supabase.channel(channelName);
-
-  channel.on(
-    "postgres_changes",
-    {
-      event: "INSERT",
-      schema: "public",
-      table: "app_notifications",
-      filter: `user_id=eq.${params.userId}`,
-    },
-    (payload) => {
-      params.onInsert(payload.new as UserNotification);
-    },
-  );
-
-  channel.subscribe();
-
-  return channel;
-}

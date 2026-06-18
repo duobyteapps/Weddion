@@ -1,31 +1,21 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router, useFocusEffect } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { Image, Pressable, View } from "react-native";
 
 import { AppText } from "@/components/ui/AppText";
-import {
-  getUnreadNotificationCount,
-  subscribeCurrentUserNotifications,
-} from "@/services/notificationService";
-import { getAuthenticatedUser } from "@/services/sessionService";
-import type { RealtimeChannel } from "@supabase/supabase-js";
+import { getUnreadNotificationCount } from "@/services/notificationService";
 
 export function AppHeader() {
-  const [userId, setUserId] = useState<string | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
 
   async function loadUnreadCount() {
     try {
-      const user = await getAuthenticatedUser();
-
-      setUserId(user.id);
-
       const count = await getUnreadNotificationCount();
 
       setUnreadCount(count);
-    } catch {
-      setUserId(null);
+    } catch (error) {
+      console.log("Okunmamış bildirim sayısı alınamadı:", error);
       setUnreadCount(0);
     }
   }
@@ -35,28 +25,6 @@ export function AppHeader() {
       loadUnreadCount();
     }, []),
   );
-
-  useEffect(() => {
-    let channel: RealtimeChannel | null = null;
-
-    if (!userId) {
-      return;
-    }
-
-    channel = subscribeCurrentUserNotifications({
-      userId,
-      channelKey: "header",
-      onInsert: () => {
-        setUnreadCount((currentCount) => currentCount + 1);
-      },
-    });
-
-    return () => {
-      if (channel) {
-        channel.unsubscribe();
-      }
-    };
-  }, [userId]);
 
   function handlePressNotifications() {
     router.push("/(tabs)/notifications");

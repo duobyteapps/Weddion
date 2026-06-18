@@ -1,5 +1,5 @@
 import { router, useFocusEffect } from "expo-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { ActivityIndicator, ScrollView, View } from "react-native";
 
 import { ScreenHeader } from "@/components/common/ScreenHeader";
@@ -13,18 +13,13 @@ import {
     getCurrentUserNotifications,
     markAllNotificationsAsRead,
     markNotificationAsRead,
-    subscribeCurrentUserNotifications,
 } from "@/services/notificationService";
-import {
-    getAuthenticatedUser,
-    SESSION_EXPIRED_MESSAGE,
-} from "@/services/sessionService";
+import { SESSION_EXPIRED_MESSAGE } from "@/services/sessionService";
 import type { UserNotification } from "@/types/notification";
 
 export default function NotificationsScreen() {
   const { showAlert } = useAppAlert();
 
-  const [userId, setUserId] = useState<string | null>(null);
   const [notifications, setNotifications] = useState<UserNotification[]>([]);
   const [loading, setLoading] = useState(true);
   const [markingAll, setMarkingAll] = useState(false);
@@ -61,10 +56,6 @@ export default function NotificationsScreen() {
   async function loadNotifications() {
     try {
       setLoading(true);
-
-      const user = await getAuthenticatedUser();
-
-      setUserId(user.id);
 
       const data = await getCurrentUserNotifications();
 
@@ -155,27 +146,6 @@ export default function NotificationsScreen() {
       loadNotifications();
     }, []),
   );
-
-  useEffect(() => {
-    if (!userId) {
-      return;
-    }
-
-    const channel = subscribeCurrentUserNotifications({
-      userId,
-      channelKey: "screen",
-      onInsert: (notification) => {
-        setNotifications((currentNotifications) => [
-          notification,
-          ...currentNotifications,
-        ]);
-      },
-    });
-
-    return () => {
-      channel.unsubscribe();
-    };
-  }, [userId]);
 
   if (loading) {
     return (

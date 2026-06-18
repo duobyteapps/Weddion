@@ -124,6 +124,18 @@ export const uploadGuestPhoto = async ({
 }: UploadGuestPhotoParams) => {
   const normalizedCode = normalizeGuestUploadCode(guestUploadCode);
 
+  let uploadedByUserId: string | null = null;
+
+  try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    uploadedByUserId = user?.id ?? null;
+  } catch {
+    uploadedByUserId = null;
+  }
+
   const compressedImage = await compressImageForUpload(imageUri);
 
   const { storagePath, contentType } = buildGuestPhotoPath(
@@ -139,7 +151,7 @@ export const uploadGuestPhoto = async ({
     contentType,
   });
 
-  const { error: insertError } = await supabase
+  const { data: createdPhoto, error: insertError } = await supabase
     .from("invitation_guest_photos")
     .insert({
       invitation_id: invitationId,
@@ -148,8 +160,11 @@ export const uploadGuestPhoto = async ({
       guest_name: guestName?.trim() || null,
       guest_note: guestNote?.trim() || null,
       upload_code: normalizedCode,
+      uploaded_by_user_id: uploadedByUserId,
       status: "pending",
-    });
+    })
+    .select("id")
+    .single();
 
   if (insertError) {
     console.log("Guest photo table insert failed:", insertError);
@@ -161,6 +176,25 @@ export const uploadGuestPhoto = async ({
     }
 
     throw new Error(insertError.message);
+  }
+
+  const { error: notificationError } = await supabase.rpc(
+    "create_guest_photo_notification",
+    {
+      target_invitation_id: invitationId,
+      target_guest_photo_id: createdPhoto.id,
+      target_guest_name: guestName?.trim() || null,
+      uploader_user_id: uploadedByUserId,
+    },
+  );
+
+  if (notificationError) {
+    console.log(
+      "Misafir fotoğraf bildirimi oluşturulamadı:",
+      notificationError.message,
+    );
+  } else {
+    console.log("Misafir fotoğraf bildirimi oluşturuldu:", createdPhoto.id);
   }
 
   return true;
