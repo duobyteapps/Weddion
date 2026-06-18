@@ -13,7 +13,17 @@ export type InvitationTemplate = {
   created_at?: string;
 };
 
+export type InvitationEventType = {
+  id: string;
+  slug: string;
+  title: string;
+  description: string | null;
+  iconName: string | null;
+  sortOrder: number;
+};
+
 export type InvitationFormData = {
+  eventTypeId: string;
   brideName: string;
   groomName: string;
   brideParents: string;

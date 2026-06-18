@@ -6,11 +6,12 @@ import { AppText } from "@/components/ui/AppText";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { defaultInvitationContent } from "@/constants/invitationDefaultContent";
 import { useAppNavigation } from "@/hooks/useAppNavigation";
+import { getInvitationEventTypes } from "@/services/invitationEventTypeService";
 import {
   getInvitationTemplateById,
   InvitationTemplateDto,
 } from "@/services/invitationTemplateService";
-import { InvitationFormData } from "@/types/invitation";
+import { InvitationEventType, InvitationFormData } from "@/types/invitation";
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, ScrollView } from "react-native";
@@ -22,6 +23,7 @@ type EditParams = {
   invitationImageUrl?: string | string[];
   editableImageUrl?: string | string[];
 
+  eventTypeId?: string | string[];
   brideName?: string | string[];
   groomName?: string | string[];
   brideParents?: string | string[];
@@ -45,6 +47,7 @@ function getParamValue(value?: string | string[]) {
 
 function createInitialFormData(params: EditParams): InvitationFormData {
   return {
+    eventTypeId: getParamValue(params.eventTypeId) ?? "",
     brideName:
       getParamValue(params.brideName) ?? defaultInvitationContent.brideName,
     groomName:
@@ -98,7 +101,9 @@ export default function InvitationFlowEditScreen() {
   }, [params.editableImageUrl]);
 
   const [template, setTemplate] = useState<InvitationTemplateDto | null>(null);
+  const [eventTypes, setEventTypes] = useState<InvitationEventType[]>([]);
   const [loading, setLoading] = useState(true);
+  const [eventTypesLoading, setEventTypesLoading] = useState(true);
 
   const [formData, setFormData] = useState<InvitationFormData>(() =>
     createInitialFormData(params),
@@ -107,6 +112,21 @@ export default function InvitationFlowEditScreen() {
   useEffect(() => {
     fetchTemplate();
   }, [templateId]);
+
+  useEffect(() => {
+    fetchEventTypes();
+  }, []);
+
+  useEffect(() => {
+    if (formData.eventTypeId || eventTypes.length === 0) {
+      return;
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      eventTypeId: eventTypes[0].id,
+    }));
+  }, [eventTypes, formData.eventTypeId]);
 
   async function fetchTemplate() {
     if (!templateId) {
@@ -124,6 +144,19 @@ export default function InvitationFlowEditScreen() {
       setTemplate(null);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function fetchEventTypes() {
+    try {
+      setEventTypesLoading(true);
+      const data = await getInvitationEventTypes();
+      setEventTypes(data);
+    } catch (error) {
+      console.log("Davetiye türleri alınamadı:", error);
+      setEventTypes([]);
+    } finally {
+      setEventTypesLoading(false);
     }
   }
 
@@ -154,6 +187,7 @@ export default function InvitationFlowEditScreen() {
         invitationImageUrl: invitationImageUrl ?? "",
         editableImageUrl: selectedEditableImageUrl ?? "",
 
+        eventTypeId: formData.eventTypeId,
         brideName: formData.brideName,
         groomName: formData.groomName,
         brideParents: formData.brideParents,
@@ -218,6 +252,8 @@ export default function InvitationFlowEditScreen() {
 
         <InvitationEditFormSection
           formData={formData}
+          eventTypes={eventTypes}
+          eventTypesLoading={eventTypesLoading}
           onChangeField={handleChangeField}
           onSave={handleSave}
         />

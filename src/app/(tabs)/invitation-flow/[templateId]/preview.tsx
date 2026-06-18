@@ -29,6 +29,8 @@ type PreviewParams = {
   invitationImageUrl?: string;
   editableImageUrl?: string;
 
+  eventTypeId?: string;
+
   guestUploadCode?: string;
   guestUploadSlug?: string;
   guestUploadQrValue?: string;
@@ -72,6 +74,8 @@ export default function InvitationFlowPreviewScreen() {
 
   const formData: InvitationFormData = useMemo(
     () => ({
+      eventTypeId: params.eventTypeId ?? "",
+
       brideName: params.brideName ?? defaultInvitationContent.brideName,
       groomName: params.groomName ?? defaultInvitationContent.groomName,
       brideParents:
@@ -137,6 +141,8 @@ export default function InvitationFlowPreviewScreen() {
       shareSlug: params.shareSlug ?? "",
       invitationImageUrl: params.invitationImageUrl ?? "",
       editableImageUrl: selectedEditableImageUrl,
+
+      eventTypeId: formData.eventTypeId,
 
       guestUploadCode: params.guestUploadCode ?? "",
       guestUploadSlug: params.guestUploadSlug ?? "",
@@ -216,6 +222,14 @@ export default function InvitationFlowPreviewScreen() {
 
   async function handleShareStep() {
     if (saving) {
+      return;
+    }
+
+    if (!formData.eventTypeId) {
+      Alert.alert(
+        "Davetiye türü seçilmedi",
+        "Lütfen düzenleme ekranına dönüp Düğün veya Kına seçimi yapın.",
+      );
       return;
     }
 

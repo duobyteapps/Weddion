@@ -1,15 +1,18 @@
-import { ReactNode } from "react";
+import { ReactNode, useMemo } from "react";
 import { View } from "react-native";
 
 import { AppButton } from "@/components/ui/AppButton";
 import { AppCard } from "@/components/ui/AppCard";
 import { AppDateInput } from "@/components/ui/AppDateInput";
+import { AppDropdown, AppDropdownOption } from "@/components/ui/AppDropdown";
 import { AppInput } from "@/components/ui/AppInput";
 import { AppText } from "@/components/ui/AppText";
-import { InvitationFormData } from "@/types/invitation";
+import { InvitationEventType, InvitationFormData } from "@/types/invitation";
 
 type Props = {
   formData: InvitationFormData;
+  eventTypes: InvitationEventType[];
+  eventTypesLoading?: boolean;
   onChangeField: <K extends keyof InvitationFormData>(
     field: K,
     value: InvitationFormData[K],
@@ -41,14 +44,39 @@ function InvitationFormField({
 
 export function InvitationEditFormSection({
   formData,
+  eventTypes,
+  eventTypesLoading = false,
   onChangeField,
   onSave,
 }: Props) {
+  const eventTypeOptions: AppDropdownOption[] = useMemo(
+    () =>
+      eventTypes.map((eventType) => ({
+        label: eventType.title,
+        value: eventType.id,
+      })),
+    [eventTypes],
+  );
+
   return (
     <>
       <AppCard className="rounded-[28px] px-5 py-6">
         <View className="gap-5">
           <View className="gap-4">
+            <InvitationFormField label="Davetiye türü">
+              <View className="z-20">
+                <AppDropdown
+                  value={formData.eventTypeId}
+                  placeholder={
+                    eventTypesLoading ? "Yükleniyor..." : "Davetiye türü seç"
+                  }
+                  options={eventTypeOptions}
+                  onChange={(value) => onChangeField("eventTypeId", value)}
+                  dropdownWidth={190}
+                />
+              </View>
+            </InvitationFormField>
+
             <InvitationFormField label="Gelin adı">
               <AppInput
                 value={formData.brideName}
