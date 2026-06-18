@@ -12,6 +12,7 @@ function mapUserDowryItem(row: UserDowryItemTableRow): UserDowryItem {
     title: row.title,
     brandName: row.brand_name,
     quantity: row.quantity,
+    price: row.price,
     completed: row.completed,
     sortOrder: row.sort_order,
     isActive: row.is_active,
@@ -46,12 +47,14 @@ export async function createUserDowryItemByCategorySlug({
   title,
   brandName,
   quantity,
+  price,
   completed,
 }: {
   categorySlug: string;
   title: string;
   brandName?: string;
   quantity: number;
+  price?: number | null;
   completed: boolean;
 }) {
   const user = await getAuthenticatedUser();
@@ -86,6 +89,7 @@ export async function createUserDowryItemByCategorySlug({
     title: title.trim(),
     brand_name: brandName?.trim() || null,
     quantity,
+    price: price ?? null,
     completed,
     sort_order: nextSortOrder,
   });
@@ -177,12 +181,14 @@ export async function updateUserDowryItem({
   title,
   brandName,
   quantity,
+  price,
   completed,
 }: {
   itemId: string;
   title: string;
   brandName?: string;
   quantity: number;
+  price?: number | null;
   completed: boolean;
 }) {
   const user = await getAuthenticatedUser();
@@ -193,6 +199,7 @@ export async function updateUserDowryItem({
       title: title.trim(),
       brand_name: brandName?.trim() || null,
       quantity,
+      price: price ?? null,
       completed,
       updated_at: new Date().toISOString(),
     })

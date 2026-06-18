@@ -14,12 +14,26 @@ type Props = {
   onUpdate?: (item: DowryChecklistItem) => void;
 };
 
+function formatPrice(price?: number | null) {
+  if (typeof price !== "number") {
+    return null;
+  }
+
+  return new Intl.NumberFormat("tr-TR", {
+    style: "currency",
+    currency: "TRY",
+    maximumFractionDigits: 2,
+  }).format(price);
+}
+
 export function DowryChecklistItemRow({
   item,
   onToggle,
   onDelete,
   onUpdate,
 }: Props) {
+  const formattedPrice = formatPrice(item.price);
+
   return (
     <AppCard noMargin className="flex-row items-center mb-2">
       <AppCheckbox checked={item.completed} onPress={() => onToggle?.(item)} />
@@ -50,6 +64,7 @@ export function DowryChecklistItemRow({
             numberOfLines={1}
           >
             {item.quantity ?? 1} adet
+            {formattedPrice ? ` · ${formattedPrice}` : ""}
           </AppText>
         </View>
       </View>

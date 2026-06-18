@@ -28,6 +28,7 @@ function mapDowryItemToChecklistItem(item: UserDowryItem): DowryChecklistItem {
     title: item.title,
     brandName: item.brandName,
     quantity: item.quantity,
+    price: item.price,
     completed: item.completed,
   };
 }
@@ -117,6 +118,10 @@ export default function DowryCategoryDetailScreen() {
         productName: selectedItem.title,
         brandName: selectedItem.brandName ?? "",
         quantity: String(selectedItem.quantity ?? 1),
+        price:
+          typeof selectedItem.price === "number"
+            ? String(selectedItem.price)
+            : "",
         completed: String(selectedItem.completed),
         mode: "edit",
       },

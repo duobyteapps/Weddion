@@ -18,6 +18,7 @@ export type DowryChecklistItem = {
   title: string;
   brandName?: string | null;
   quantity?: number;
+  price?: number | null;
   completed: boolean;
 };
 
@@ -63,6 +64,7 @@ export type UserDowryItem = {
   title: string;
   brandName: string | null;
   quantity: number;
+  price: number | null;
   completed: boolean;
   sortOrder: number;
   isActive: boolean;
@@ -78,6 +80,7 @@ export type UserDowryItemTableRow = {
   title: string;
   brand_name: string | null;
   quantity: number;
+  price: number | null;
   completed: boolean;
   sort_order: number;
   is_active: boolean;

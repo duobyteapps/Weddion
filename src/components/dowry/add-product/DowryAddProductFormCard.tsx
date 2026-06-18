@@ -11,11 +11,13 @@ type Props = {
   productName: string;
   brandName: string;
   quantity: number;
+  price: string;
   completed: boolean;
   loading?: boolean;
   onChangeProductName: (value: string) => void;
   onChangeBrandName: (value: string) => void;
   onChangeQuantity: (value: number) => void;
+  onChangePrice: (value: string) => void;
   onChangeCompleted: (value: boolean) => void;
   onSave: () => void;
 };
@@ -24,11 +26,13 @@ export function DowryAddProductFormCard({
   productName,
   brandName,
   quantity,
+  price,
   completed,
   loading = false,
   onChangeProductName,
   onChangeBrandName,
   onChangeQuantity,
+  onChangePrice,
   onChangeCompleted,
   onSave,
 }: Props) {
@@ -60,6 +64,14 @@ export function DowryAddProductFormCard({
 
           <DowryQuantityStepper value={quantity} onChange={onChangeQuantity} />
         </View>
+
+        <AppInput
+          label="Fiyat"
+          value={price}
+          onChangeText={onChangePrice}
+          placeholder="Örn: 1250"
+          keyboardType="decimal-pad"
+        />
 
         <View className="mb-2 flex-row items-center">
           <AppCheckbox checked={completed} onPress={handleToggleCompleted} />

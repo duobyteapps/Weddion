@@ -29,6 +29,23 @@ function getParamValue(value?: string | string[]) {
   return value ?? "";
 }
 
+function parsePriceValue(value: string) {
+  const trimmedValue = value.trim();
+
+  if (!trimmedValue) {
+    return null;
+  }
+
+  const normalizedValue = trimmedValue.replace(",", ".");
+  const parsedValue = Number(normalizedValue);
+
+  if (!Number.isFinite(parsedValue) || parsedValue < 0) {
+    return null;
+  }
+
+  return parsedValue;
+}
+
 export default function DowryAddProductScreen() {
   const params = useLocalSearchParams<{
     categoryId?: string | string[];
@@ -37,6 +54,7 @@ export default function DowryAddProductScreen() {
     productName?: string | string[];
     brandName?: string | string[];
     quantity?: string | string[];
+    price?: string | string[];
     completed?: string | string[];
     mode?: string | string[];
   }>();
@@ -77,6 +95,7 @@ export default function DowryAddProductScreen() {
   const [brandName, setBrandName] = useState("");
   const [categoryName] = useState(initialCategoryName);
   const [quantity, setQuantity] = useState(1);
+  const [price, setPrice] = useState("");
   const [completed, setCompleted] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -88,6 +107,7 @@ export default function DowryAddProductScreen() {
     const productNameParam = getParamValue(params.productName);
     const brandNameParam = getParamValue(params.brandName);
     const quantityParam = Number(getParamValue(params.quantity));
+    const priceParam = getParamValue(params.price);
     const completedParam = getParamValue(params.completed);
 
     setProductName(productNameParam);
@@ -95,12 +115,14 @@ export default function DowryAddProductScreen() {
     setQuantity(
       Number.isNaN(quantityParam) || quantityParam < 1 ? 1 : quantityParam,
     );
+    setPrice(priceParam);
     setCompleted(completedParam === "true");
   }, [
     isEditMode,
     params.productName,
     params.brandName,
     params.quantity,
+    params.price,
     params.completed,
   ]);
 
@@ -114,6 +136,8 @@ export default function DowryAddProductScreen() {
       return;
     }
 
+    const parsedPrice = parsePriceValue(price);
+
     try {
       setLoading(true);
 
@@ -123,6 +147,7 @@ export default function DowryAddProductScreen() {
           title: productName.trim(),
           brandName: brandName.trim(),
           quantity,
+          price: parsedPrice,
           completed,
         });
       } else {
@@ -131,6 +156,7 @@ export default function DowryAddProductScreen() {
           title: productName.trim(),
           brandName: brandName.trim(),
           quantity,
+          price: parsedPrice,
           completed,
         });
       }
@@ -163,11 +189,13 @@ export default function DowryAddProductScreen() {
           productName={productName}
           brandName={brandName}
           quantity={quantity}
+          price={price}
           completed={completed}
           loading={loading}
           onChangeProductName={setProductName}
           onChangeBrandName={setBrandName}
           onChangeQuantity={setQuantity}
+          onChangePrice={setPrice}
           onChangeCompleted={setCompleted}
           onSave={handleSave}
         />
