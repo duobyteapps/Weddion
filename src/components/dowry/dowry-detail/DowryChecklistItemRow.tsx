@@ -14,8 +14,15 @@ type Props = {
   onUpdate?: (item: DowryChecklistItem) => void;
 };
 
-function formatPrice(price?: number | null) {
-  if (typeof price !== "number") {
+function formatPrice(price?: number | string | null) {
+  if (price === null || price === undefined || price === "") {
+    return null;
+  }
+
+  const parsedPrice =
+    typeof price === "number" ? price : Number(String(price).replace(",", "."));
+
+  if (!Number.isFinite(parsedPrice)) {
     return null;
   }
 
@@ -23,7 +30,7 @@ function formatPrice(price?: number | null) {
     style: "currency",
     currency: "TRY",
     maximumFractionDigits: 2,
-  }).format(price);
+  }).format(parsedPrice);
 }
 
 export function DowryChecklistItemRow({
@@ -35,7 +42,7 @@ export function DowryChecklistItemRow({
   const formattedPrice = formatPrice(item.price);
 
   return (
-    <AppCard noMargin className="flex-row items-center mb-2">
+    <AppCard noMargin className="mb-2 flex-row items-center">
       <AppCheckbox checked={item.completed} onPress={() => onToggle?.(item)} />
 
       <View className="ml-3 w-[120px]">
@@ -57,6 +64,16 @@ export function DowryChecklistItemRow({
       </View>
 
       <View className="ml-3 items-center justify-center">
+        {formattedPrice ? (
+          <AppText
+            variant="caption"
+            className="mb-1 text-center text-textMuted"
+            numberOfLines={1}
+          >
+            {formattedPrice}
+          </AppText>
+        ) : null}
+
         <View className="rounded-full bg-primarySoft px-3 py-1">
           <AppText
             variant="caption"
@@ -64,7 +81,6 @@ export function DowryChecklistItemRow({
             numberOfLines={1}
           >
             {item.quantity ?? 1} adet
-            {formattedPrice ? ` · ${formattedPrice}` : ""}
           </AppText>
         </View>
       </View>
