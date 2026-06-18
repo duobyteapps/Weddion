@@ -23,6 +23,8 @@ function mapUserDowryItem(row: UserDowryItemTableRow): UserDowryItem {
 export async function getUserDowryItems(
   categorySlug: string,
 ): Promise<UserDowryItem[]> {
+  await getAuthenticatedUser();
+
   const { error: syncError } = await supabase.rpc("sync_user_dowry_items", {
     p_category_slug: categorySlug,
   });
