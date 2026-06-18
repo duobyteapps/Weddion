@@ -1,4 +1,5 @@
 import { AppSwitchCard } from "@/components/common/AppSwitchCard";
+
 import { AppText } from "@/components/ui/AppText";
 
 type NotificationChannelsCardProps = {

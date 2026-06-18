@@ -27,6 +27,7 @@ type GuestPhotoUploadParams = {
   eventDate?: string;
   eventTime?: string;
   venueName?: string;
+  backTo?: string;
 };
 
 function cleanParam(value?: string) {
@@ -80,6 +81,8 @@ export default function GuestPhotoUploadScreen() {
     () => cleanParam(params.eventTime),
     [params.eventTime],
   );
+
+  const backTo = useMemo(() => cleanParam(params.backTo), [params.backTo]);
 
   const eventTitle = useMemo(() => {
     if (brideName && groomName) {
@@ -265,6 +268,11 @@ export default function GuestPhotoUploadScreen() {
   }
 
   function handleBack() {
+    if (backTo) {
+      router.replace(backTo as any);
+      return;
+    }
+
     if (router.canGoBack()) {
       router.back();
       return;

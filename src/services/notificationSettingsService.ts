@@ -24,9 +24,9 @@ export type UpdateNotificationSettingsPayload = {
 const DEFAULT_NOTIFICATION_SETTINGS: UpdateNotificationSettingsPayload = {
   all_notifications: true,
   app_notifications: true,
-  email_notifications: true,
+  email_notifications: false,
   sms_notifications: false,
-  system_notifications: true,
+  system_notifications: false,
 };
 
 export async function getCurrentUserNotificationSettings(): Promise<NotificationSettings> {
@@ -70,7 +70,6 @@ export async function updateCurrentUserNotificationSettings(
   payload: UpdateNotificationSettingsPayload,
 ): Promise<void> {
   const user = await getAuthenticatedUser();
-
   const now = new Date().toISOString();
 
   const { error } = await supabase.from("notification_settings").upsert(

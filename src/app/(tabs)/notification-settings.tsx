@@ -1,7 +1,3 @@
-import { router } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, ScrollView, View } from "react-native";
-
 import { AppSwitchCard } from "@/components/common/AppSwitchCard";
 import { IllustratedHeroCard } from "@/components/common/IllustratedHeroCard";
 import { ScreenHeader } from "@/components/common/ScreenHeader";
@@ -14,16 +10,20 @@ import {
   updateCurrentUserNotificationSettings,
   type UpdateNotificationSettingsPayload,
 } from "@/services/notificationSettingsService";
+import { registerCurrentDeviceForPushNotifications } from "@/services/pushNotificationService";
 import { SESSION_EXPIRED_MESSAGE } from "@/services/sessionService";
+import { router } from "expo-router";
+import { useEffect, useMemo, useState } from "react";
+import { ActivityIndicator, ScrollView, View } from "react-native";
 
 type NotificationState = UpdateNotificationSettingsPayload;
 
 const DEFAULT_SETTINGS: NotificationState = {
-  all_notifications: true,
+  all_notifications: false,
   app_notifications: true,
-  email_notifications: true,
+  email_notifications: false,
   sms_notifications: false,
-  system_notifications: true,
+  system_notifications: false,
 };
 
 function areSettingsEqual(
@@ -40,27 +40,28 @@ function areSettingsEqual(
 }
 
 function getNextAllNotificationsValue(settings: NotificationState) {
-  const allChannelsOpen =
+  return (
     settings.app_notifications &&
     settings.email_notifications &&
     settings.sms_notifications &&
-    settings.system_notifications;
+    settings.system_notifications
+  );
+}
 
-  const allChannelsClosed =
-    !settings.app_notifications &&
-    !settings.email_notifications &&
-    !settings.sms_notifications &&
-    !settings.system_notifications;
-
-  if (allChannelsOpen) {
-    return true;
+function getPushPermissionMessage(reason?: string) {
+  if (reason === "expo_go") {
+    return "Sistem bildirimleri Expo Go içinde test edilemez. Android için development build alındığında bu özellik çalışacaktır.";
   }
 
-  if (allChannelsClosed) {
-    return false;
+  if (reason === "not_device") {
+    return "Telefon bildirimi alabilmek için uygulamayı gerçek cihazda açmanız gerekiyor.";
   }
 
-  return settings.all_notifications;
+  if (reason === "missing_project_id") {
+    return "Expo projectId bulunamadı. app.json içindeki EAS projectId alanını kontrol edin.";
+  }
+
+  return "Telefonunuza bildirim gönderebilmemiz için bildirim izni vermeniz gerekiyor.";
 }
 
 export default function NotificationSettingsScreen() {
@@ -167,13 +168,58 @@ export default function NotificationSettingsScreen() {
     }
   }
 
-  function handleAllNotifications(value: boolean) {
+  async function handleAllNotifications(value: boolean) {
+    if (!value) {
+      setSettings({
+        all_notifications: false,
+        app_notifications: false,
+        email_notifications: false,
+        sms_notifications: false,
+        system_notifications: false,
+      });
+
+      return;
+    }
+
+    let canEnableSystemNotifications = settings.system_notifications;
+
+    if (!settings.system_notifications) {
+      try {
+        const permission = await registerCurrentDeviceForPushNotifications();
+
+        if (permission.granted) {
+          canEnableSystemNotifications = true;
+        } else {
+          canEnableSystemNotifications = false;
+
+          showAlert({
+            title: "Bildirim İzni Gerekli",
+            message: getPushPermissionMessage(permission.reason),
+            type: "warning",
+            confirmText: "Tamam",
+          });
+        }
+      } catch (error) {
+        console.log("Push bildirim izni alınamadı:", error);
+
+        canEnableSystemNotifications = false;
+
+        showAlert({
+          title: "Bildirim İzni Alınamadı",
+          message:
+            "Telefon bildirimi açılırken bir sorun oluştu. Lütfen tekrar deneyin.",
+          type: "error",
+          confirmText: "Tamam",
+        });
+      }
+    }
+
     setSettings({
-      all_notifications: value,
-      app_notifications: value,
-      email_notifications: value,
-      sms_notifications: value,
-      system_notifications: value,
+      all_notifications: canEnableSystemNotifications,
+      app_notifications: true,
+      email_notifications: true,
+      sms_notifications: true,
+      system_notifications: canEnableSystemNotifications,
     });
   }
 
@@ -219,7 +265,36 @@ export default function NotificationSettingsScreen() {
     });
   }
 
-  function handleSystemNotifications(value: boolean) {
+  async function handleSystemNotifications(value: boolean) {
+    if (value) {
+      try {
+        const permission = await registerCurrentDeviceForPushNotifications();
+
+        if (!permission.granted) {
+          showAlert({
+            title: "Bildirim İzni Gerekli",
+            message: getPushPermissionMessage(permission.reason),
+            type: "warning",
+            confirmText: "Tamam",
+          });
+
+          return;
+        }
+      } catch (error) {
+        console.log("Push bildirim izni alınamadı:", error);
+
+        showAlert({
+          title: "Bildirim İzni Alınamadı",
+          message:
+            "Telefon bildirimi açılırken bir sorun oluştu. Lütfen tekrar deneyin.",
+          type: "error",
+          confirmText: "Tamam",
+        });
+
+        return;
+      }
+    }
+
     setSettings((currentSettings) => {
       const nextSettings: NotificationState = {
         ...currentSettings,

@@ -71,6 +71,7 @@ export default function GuestUploadSlugScreen() {
           eventDate: invitation.event_date ?? "",
           eventTime: invitation.event_time ?? "",
           venueName: invitation.venue_name ?? "",
+          backTo: "/guest-photo-access",
         },
       });
     } catch (error) {

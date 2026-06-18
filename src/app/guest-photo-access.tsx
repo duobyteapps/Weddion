@@ -158,6 +158,7 @@ export default function GuestPhotoAccessScreen() {
           eventDate: data.event_date ?? "",
           eventTime: data.event_time ?? "",
           venueName: data.venue_name ?? "",
+          backTo: "/guest-photo-access",
         },
       });
     } catch (error) {
