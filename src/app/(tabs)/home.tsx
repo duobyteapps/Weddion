@@ -112,12 +112,14 @@ export default function HomeScreen() {
               icon="calendar"
               title="Etkinliğe Katıl"
               subtitle="QR veya kod ile giriş yap"
+              onPress={() => router.push("/guest-photo-access")}
             />
 
             <QuickActionCard
               icon="gift-outline"
               title="Çeyiz Listesi"
               subtitle="Eşyalarını planla"
+              onPress={() => router.push("/(tabs)/gallery")}
             />
           </View>
 
