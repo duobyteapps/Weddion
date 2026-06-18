@@ -97,14 +97,6 @@ export function InvitationQrShareCard({
           />
         ) : null}
       </View>
-
-      <View className="flex-row gap-2 rounded-2xl bg-amber-50 p-3">
-        <Ionicons name="information-circle-outline" size={18} color="#B45309" />
-        <AppText className="flex-1 text-xs leading-5 text-amber-700">
-          Şu an QR değeri uygulama içi yönlendirme olarak hazırlanır. Web domain
-          bağlanınca aynı alanı web linkine çevirebiliriz.
-        </AppText>
-      </View>
     </AppCard>
   );
 }

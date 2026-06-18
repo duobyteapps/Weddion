@@ -25,11 +25,10 @@ type ShareParams = {
   shareSlug?: string;
   invitationImageUrl?: string;
   editableImageUrl?: string;
-
+  eventTypeId?: string;
   guestUploadCode?: string;
   guestUploadSlug?: string;
   guestUploadQrValue?: string;
-
   brideName?: string;
   groomName?: string;
   brideParents?: string;
@@ -73,6 +72,7 @@ export default function InvitationFlowShareScreen() {
 
   const formData: InvitationFormData = useMemo(
     () => ({
+      eventTypeId: params.eventTypeId ?? "",
       brideName: params.brideName ?? defaultInvitationContent.brideName,
       groomName: params.groomName ?? defaultInvitationContent.groomName,
       brideParents:
@@ -186,11 +186,10 @@ export default function InvitationFlowShareScreen() {
         template?.editableImageUrl ??
         template?.imageUrl ??
         "",
-
+      eventTypeId: formData.eventTypeId,
       guestUploadCode: guestUploadCode ?? "",
       guestUploadSlug: guestUploadSlug ?? "",
       guestUploadQrValue: guestUploadQrValue ?? "",
-
       brideName: formData.brideName,
       groomName: formData.groomName,
       brideParents: formData.brideParents,
