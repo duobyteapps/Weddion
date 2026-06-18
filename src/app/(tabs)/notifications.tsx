@@ -10,9 +10,9 @@ import { useAppAlert } from "@/components/ui/AppAlert";
 import { AppButton } from "@/components/ui/AppButton";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import {
-    getCurrentUserNotifications,
-    markAllNotificationsAsRead,
-    markNotificationAsRead,
+  getCurrentUserNotifications,
+  markAllNotificationsAsRead,
+  markNotificationAsRead,
 } from "@/services/notificationService";
 import { SESSION_EXPIRED_MESSAGE } from "@/services/sessionService";
 import type { UserNotification } from "@/types/notification";
@@ -159,10 +159,13 @@ export default function NotificationsScreen() {
 
   return (
     <ScreenContainer>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerClassName="pb-28"
+      >
         <ScreenHeader
           title="Bildirimler"
-          description="Davetlerinize gelen yeni fotoğraf ve sistem bildirimlerini buradan takip edin."
+          description="Yeni fotoğraf ve bildirimleri görün."
         />
 
         <NotificationSummaryCard unreadCount={unreadCount} />

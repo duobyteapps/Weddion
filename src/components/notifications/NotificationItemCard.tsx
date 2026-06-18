@@ -1,8 +1,7 @@
-import { Ionicons } from "@expo/vector-icons";
 import { Pressable, View } from "react-native";
 
+import { AppIconBox } from "@/components/ui/AppIconBox";
 import { AppText } from "@/components/ui/AppText";
-import { Colors } from "@/constants/Colors";
 import type { UserNotification } from "@/types/notification";
 
 type Props = {
@@ -57,38 +56,23 @@ export function NotificationItemCard({ notification, onPress }: Props) {
   return (
     <Pressable
       onPress={() => onPress?.(notification)}
-      className="mb-3 rounded-3xl bg-white px-4 py-4 shadow-sm"
-      style={{
-        borderWidth: 1,
-        borderColor: notification.is_read
-          ? Colors.borderSoft
-          : Colors.primaryLight,
-      }}
+      className="mb-3 rounded-xl bg-white px-4 py-4"
     >
       <View className="flex-row items-start">
-        <View className="mr-3 h-11 w-11 items-center justify-center rounded-2xl bg-primarySoft">
-          <Ionicons name={iconName} size={22} color={Colors.primary} />
-        </View>
+        <AppIconBox icon={iconName} className="mr-3 h-11 w-11" />
 
         <View className="flex-1">
           <View className="flex-row items-start justify-between">
-            <AppText
-              variant="subtitle"
-              className="flex-1 pr-3 text-[15px] text-textDark"
-            >
-              {notification.title}
-            </AppText>
+            <AppText variant="serifSubtitle">{notification.title}</AppText>
 
             {!notification.is_read && (
               <View className="mt-1 h-2.5 w-2.5 rounded-full bg-primary" />
             )}
           </View>
 
-          <AppText className="mt-1 text-[13px] leading-5 text-textMuted">
-            {notification.message}
-          </AppText>
+          <AppText variant="body">{notification.message}</AppText>
 
-          <AppText className="mt-2 text-[12px] text-textLight">
+          <AppText variant="caption">
             {formatNotificationDate(notification.created_at)}
           </AppText>
         </View>

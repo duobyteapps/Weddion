@@ -1,8 +1,9 @@
-import { Ionicons } from "@expo/vector-icons";
-import { View } from "react-native";
+import { Image, View } from "react-native";
 
+import { AppCard } from "@/components/ui/AppCard";
 import { AppText } from "@/components/ui/AppText";
-import { Colors } from "@/constants/Colors";
+
+const notificationHero = require("@/assets/images/illustration/notification-hero.png");
 
 type Props = {
   unreadCount: number;
@@ -10,24 +11,24 @@ type Props = {
 
 export function NotificationSummaryCard({ unreadCount }: Props) {
   return (
-    <View className="mb-5 rounded-3xl bg-primarySoft px-5 py-5">
-      <View className="flex-row items-center">
-        <View className="mr-4 h-12 w-12 items-center justify-center rounded-2xl bg-white">
-          <Ionicons name="sparkles-outline" size={23} color={Colors.primary} />
-        </View>
+    <AppCard noPadding className="flex-row items-center gap-5">
+      <View className="flex-1">
+        <AppText variant="serifTitle" className="!text-[20px] !leading-[23px]">
+          Yeni fotoğraflar
+        </AppText>
 
-        <View className="flex-1">
-          <AppText variant="subtitle" className="text-[16px] text-textDark">
-            Yeni fotoğraflar
-          </AppText>
-
-          <AppText className="mt-1 text-[13px] leading-5 text-textMuted">
-            {unreadCount > 0
-              ? `${unreadCount} okunmamış bildiriminiz var.`
-              : "Tüm bildirimleriniz güncel."}
-          </AppText>
-        </View>
+        <AppText variant="caption" className="mt-2">
+          {unreadCount > 0
+            ? `${unreadCount} okunmamış bildiriminiz var.`
+            : "Tüm bildirimleriniz güncel."}
+        </AppText>
       </View>
-    </View>
+
+      <Image
+        source={notificationHero}
+        className="h-36 w-36"
+        resizeMode="contain"
+      />
+    </AppCard>
   );
 }
