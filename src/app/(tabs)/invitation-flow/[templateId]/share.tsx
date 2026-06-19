@@ -1,6 +1,4 @@
 import * as Clipboard from "expo-clipboard";
-import * as FileSystem from "expo-file-system/legacy";
-import * as MediaLibrary from "expo-media-library";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Platform, ScrollView, View } from "react-native";
@@ -14,6 +12,7 @@ import { useAppAlert } from "@/components/ui/AppAlert";
 import { AppText } from "@/components/ui/AppText";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { defaultInvitationContent } from "@/constants/invitationDefaultContent";
+import { downloadImageToGallery } from "@/services/imageDownloadService";
 import {
   getInvitationTemplateById,
   InvitationTemplateDto,
@@ -72,6 +71,7 @@ export default function InvitationFlowShareScreen() {
   const [template, setTemplate] = useState<InvitationTemplateDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [downloadingInvitation, setDownloadingInvitation] = useState(false);
+  const [downloadingQr, setDownloadingQr] = useState(false);
 
   const formData: InvitationFormData = useMemo(
     () => ({
@@ -207,79 +207,6 @@ export default function InvitationFlowShareScreen() {
     };
   }
 
-  function getInvitationDownloadFileName() {
-    const bride = formData.brideName.trim() || "gelin";
-    const groom = formData.groomName.trim() || "damat";
-    const timestamp = Date.now();
-
-    return `weddion-${bride}-${groom}-${timestamp}`
-      .toLocaleLowerCase("tr-TR")
-      .replaceAll("ı", "i")
-      .replaceAll("ğ", "g")
-      .replaceAll("ü", "u")
-      .replaceAll("ş", "s")
-      .replaceAll("ö", "o")
-      .replaceAll("ç", "c")
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-|-$/g, "");
-  }
-
-  function getFileExtensionFromUri(imageUri: string) {
-    const cleanUri = imageUri.split("?")[0] ?? imageUri;
-    const extensionMatch = cleanUri.match(/\.(png|jpg|jpeg|webp)$/i);
-
-    if (!extensionMatch?.[1]) {
-      return "png";
-    }
-
-    const extension = extensionMatch[1].toLowerCase();
-
-    if (extension === "jpeg") {
-      return "jpg";
-    }
-
-    return extension;
-  }
-
-  async function downloadRemoteImageToCache(imageUri: string) {
-    const extension = getFileExtensionFromUri(imageUri);
-    const fileName = `${getInvitationDownloadFileName()}.${extension}`;
-    const destinationUri = `${FileSystem.cacheDirectory}${fileName}`;
-
-    const result = await FileSystem.downloadAsync(imageUri, destinationUri);
-
-    return result.uri;
-  }
-
-  async function copyLocalImageToCache(imageUri: string) {
-    const extension = getFileExtensionFromUri(imageUri);
-    const fileName = `${getInvitationDownloadFileName()}.${extension}`;
-    const destinationUri = `${FileSystem.cacheDirectory}${fileName}`;
-
-    await FileSystem.copyAsync({
-      from: imageUri,
-      to: destinationUri,
-    });
-
-    return destinationUri;
-  }
-
-  async function prepareImageForMediaLibrary(imageUri: string) {
-    if (imageUri.startsWith("http://") || imageUri.startsWith("https://")) {
-      return downloadRemoteImageToCache(imageUri);
-    }
-
-    if (imageUri.startsWith("file://")) {
-      return imageUri;
-    }
-
-    if (imageUri.startsWith("content://")) {
-      return copyLocalImageToCache(imageUri);
-    }
-
-    throw new Error("UNSUPPORTED_IMAGE_URI");
-  }
-
   async function handleDownloadInstagramImage() {
     if (!finalInvitationImageUri) {
       showAlert({
@@ -295,27 +222,10 @@ export default function InvitationFlowShareScreen() {
     try {
       setDownloadingInvitation(true);
 
-      const permission = await MediaLibrary.requestPermissionsAsync(true, [
-        "photo",
-      ]);
-
-      if (permission.status !== "granted") {
-        showAlert({
-          type: "warning",
-          title: "İzin gerekli",
-          message:
-            "Davetiyeyi galeriye kaydedebilmek için fotoğraf kaydetme izni vermelisiniz.",
-          confirmText: "Tamam",
-        });
-
-        return;
-      }
-
-      const localImageUri = await prepareImageForMediaLibrary(
-        finalInvitationImageUri,
-      );
-
-      await MediaLibrary.Asset.create(localImageUri);
+      await downloadImageToGallery({
+        imageUri: finalInvitationImageUri,
+        fileNamePrefix: `weddion-davetiye-${formData.brideName}-${formData.groomName}`,
+      });
 
       showAlert({
         type: "success",
@@ -327,17 +237,63 @@ export default function InvitationFlowShareScreen() {
         confirmText: "Tamam",
       });
     } catch (error) {
-      console.log("Davetiye indirme hatası:", error);
+      console.log(
+        "Davetiye indirme hatası:",
+        error,
+        "finalInvitationImageUri:",
+        finalInvitationImageUri?.slice(0, 120),
+      );
+
+      const message =
+        error instanceof Error && error.message === "GALLERY_PERMISSION_DENIED"
+          ? "Davetiyeyi galeriye kaydedebilmek için fotoğraf ekleme izni vermelisiniz. Ayarlar > Weddion > Fotoğraflar kısmından erişimi açın."
+          : "Davetiye galeriye kaydedilemedi. Fotoğraf iznini kontrol edip tekrar deneyin.";
 
       showAlert({
         type: "error",
         title: "İndirme başarısız",
-        message:
-          "Davetiye galeriye kaydedilemedi. Görsel bağlantısını ve izinleri kontrol edip tekrar deneyin.",
+        message,
         confirmText: "Tamam",
       });
     } finally {
       setDownloadingInvitation(false);
+    }
+  }
+
+  async function handleDownloadQrPress(qrImageUri: string) {
+    try {
+      setDownloadingQr(true);
+
+      await downloadImageToGallery({
+        imageUri: qrImageUri,
+        fileNamePrefix: `weddion-qr-${formData.brideName}-${formData.groomName}`,
+      });
+
+      showAlert({
+        type: "success",
+        title: "QR kod indirildi",
+        message:
+          Platform.OS === "ios"
+            ? "QR kod Fotoğraflar uygulamasına kaydedildi."
+            : "QR kod galerinize kaydedildi.",
+        confirmText: "Tamam",
+      });
+    } catch (error) {
+      console.log("QR kod indirme hatası:", error);
+
+      const message =
+        error instanceof Error && error.message === "GALLERY_PERMISSION_DENIED"
+          ? "QR kodu galeriye kaydedebilmek için fotoğraf ekleme izni vermelisiniz. Ayarlar > Weddion > Fotoğraflar kısmından erişimi açın."
+          : "QR kod galeriye kaydedilemedi. Fotoğraf iznini kontrol edip tekrar deneyin.";
+
+      showAlert({
+        type: "error",
+        title: "QR indirilemedi",
+        message,
+        confirmText: "Tamam",
+      });
+    } finally {
+      setDownloadingQr(false);
     }
   }
 
@@ -370,16 +326,6 @@ export default function InvitationFlowShareScreen() {
       type: "success",
       title: "Bağlantı kopyalandı",
       message: "Fotoğraf yükleme bağlantısı panoya kopyalandı.",
-      confirmText: "Tamam",
-    });
-  }
-
-  function handleDownloadQrPress() {
-    showAlert({
-      type: "info",
-      title: "QR kod hazır",
-      message:
-        "QR indirme işlemini sonraki adımda aktif edeceğiz. Şu anda davetiye görseli indirme aktif.",
       confirmText: "Tamam",
     });
   }
@@ -446,6 +392,7 @@ export default function InvitationFlowShareScreen() {
           onCopyCodePress={handleCopyCodePress}
           onCopyLinkPress={handleCopyLinkPress}
           onDownloadQrPress={handleDownloadQrPress}
+          qrDownloadLoading={downloadingQr}
         />
 
         <InvitationShareNoteCard />

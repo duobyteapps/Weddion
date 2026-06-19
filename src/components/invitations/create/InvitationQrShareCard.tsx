@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useRef } from "react";
 import { View } from "react-native";
 import QRCode from "react-native-qrcode-svg";
 
@@ -11,7 +12,12 @@ type Props = {
   guestUploadCode?: string | null;
   onCopyCodePress?: () => void;
   onCopyLinkPress?: () => void;
-  onDownloadQrPress?: () => void;
+  onDownloadQrPress?: (qrImageUri: string) => void | Promise<void>;
+  qrDownloadLoading?: boolean;
+};
+
+type QRCodeRef = {
+  toDataURL: (callback: (data: string) => void) => void;
 };
 
 export function InvitationQrShareCard({
@@ -20,7 +26,22 @@ export function InvitationQrShareCard({
   onCopyCodePress,
   onCopyLinkPress,
   onDownloadQrPress,
+  qrDownloadLoading = false,
 }: Props) {
+  const qrRef = useRef<QRCodeRef | null>(null);
+
+  function handleDownloadQrPress() {
+    if (!onDownloadQrPress || !qrRef.current) {
+      return;
+    }
+
+    qrRef.current.toDataURL((data) => {
+      const qrImageUri = `data:image/png;base64,${data}`;
+
+      void onDownloadQrPress(qrImageUri);
+    });
+  }
+
   return (
     <AppCard className="gap-5">
       <View className="flex-row items-start gap-3">
@@ -42,7 +63,15 @@ export function InvitationQrShareCard({
 
       <View className="items-center gap-4">
         <View className="rounded-3xl bg-white p-4">
-          <QRCode value={qrValue} size={190} />
+          <QRCode
+            value={qrValue}
+            size={190}
+            backgroundColor="#FFFFFF"
+            color="#111827"
+            getRef={(ref) => {
+              qrRef.current = ref as QRCodeRef;
+            }}
+          />
         </View>
 
         {guestUploadCode ? (
@@ -91,9 +120,11 @@ export function InvitationQrShareCard({
 
         {onDownloadQrPress ? (
           <AppButton
-            title="QR Kodunu İndir"
+            title={qrDownloadLoading ? "QR İndiriliyor..." : "QR Kodunu İndir"}
             variant="primary"
-            onPress={onDownloadQrPress}
+            onPress={handleDownloadQrPress}
+            loading={qrDownloadLoading}
+            disabled={qrDownloadLoading}
           />
         ) : null}
       </View>
