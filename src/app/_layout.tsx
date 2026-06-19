@@ -1,3 +1,4 @@
+import { NotificationBootstrap } from "@/components/notifications/NotificationBootstrap";
 import { AppAlertProvider } from "@/components/ui/AppAlert";
 import { AuthProvider } from "@/context/AuthContext";
 import {
@@ -48,6 +49,7 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <AuthProvider>
         <AppAlertProvider>
+          <NotificationBootstrap />
           <Stack screenOptions={{ headerShown: false }} />
         </AppAlertProvider>
       </AuthProvider>

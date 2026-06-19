@@ -22,7 +22,7 @@ export type UpdateNotificationSettingsPayload = {
 };
 
 const DEFAULT_NOTIFICATION_SETTINGS: UpdateNotificationSettingsPayload = {
-  all_notifications: true,
+  all_notifications: false,
   app_notifications: true,
   email_notifications: false,
   sms_notifications: false,
@@ -86,6 +86,43 @@ export async function updateCurrentUserNotificationSettings(
       onConflict: "user_id",
     },
   );
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
+export async function updateCurrentUserSystemNotificationStatus(
+  systemNotifications: boolean,
+): Promise<void> {
+  const user = await getAuthenticatedUser();
+  const now = new Date().toISOString();
+
+  const { data: currentSettings, error: readError } = await supabase
+    .from("notification_settings")
+    .select("*")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (readError) {
+    throw new Error(readError.message);
+  }
+
+  const nextSettings = {
+    user_id: user.id,
+    all_notifications: false,
+    app_notifications: currentSettings?.app_notifications ?? true,
+    email_notifications: currentSettings?.email_notifications ?? false,
+    sms_notifications: currentSettings?.sms_notifications ?? false,
+    system_notifications: systemNotifications,
+    updated_at: now,
+  };
+
+  const { error } = await supabase
+    .from("notification_settings")
+    .upsert(nextSettings, {
+      onConflict: "user_id",
+    });
 
   if (error) {
     throw new Error(error.message);
