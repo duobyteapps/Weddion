@@ -14,7 +14,7 @@ import { AppBackButton } from "@/components/ui/AppBackButton";
 import { AppButton } from "@/components/ui/AppButton";
 import { AppText } from "@/components/ui/AppText";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
-import { uploadGuestPhoto } from "@/services/guestPhotoService";
+import { uploadGuestPhotos } from "@/services/guestPhotoService";
 
 const MAX_PHOTOS_PER_UPLOAD = 20;
 
@@ -230,20 +230,22 @@ export default function GuestPhotoUploadScreen() {
     try {
       setUploading(true);
 
-      for (const photo of selectedPhotos) {
-        await uploadGuestPhoto({
-          invitationId,
-          guestUploadCode,
-          imageUri: photo.uri,
-        });
-      }
+      const photoCount = selectedPhotos.length;
+
+      await uploadGuestPhotos({
+        invitationId,
+        guestUploadCode,
+        imageUris: selectedPhotos.map((photo) => photo.uri),
+      });
 
       setSelectedPhotos([]);
 
       showAlert({
         title: "Fotoğraflar yüklendi",
         message:
-          "Seçtiğiniz fotoğraflar başarıyla gönderildi. İsterseniz yeni fotoğraf eklemeye devam edebilirsiniz.",
+          photoCount > 1
+            ? `${photoCount} fotoğraf başarıyla gönderildi. İsterseniz yeni fotoğraf eklemeye devam edebilirsiniz.`
+            : "Fotoğraf başarıyla gönderildi. İsterseniz yeni fotoğraf eklemeye devam edebilirsiniz.",
         type: "success",
         confirmText: "Tamam",
       });
