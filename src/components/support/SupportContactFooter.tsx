@@ -2,7 +2,9 @@ import { AppCard } from "@/components/ui/AppCard";
 import { AppText } from "@/components/ui/AppText";
 import { Colors } from "@/constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
-import { Pressable, View } from "react-native";
+import { Linking, Pressable, View } from "react-native";
+
+const SUPPORT_EMAIL = "duobyteapps@gmail.com";
 
 function IconArea() {
   return (
@@ -20,7 +22,7 @@ function TextArea() {
       </AppText>
 
       <AppText variant="body" className="text-[8px] !leading-[10px]">
-        Sorununuz çözülemediniz mi? Ekibimiz size yardımcı olmaktan memnuniyet
+        Sorununuz çözülemedi mi? Ekibimiz size yardımcı olmaktan memnuniyet
         duyar.
       </AppText>
     </View>
@@ -28,8 +30,26 @@ function TextArea() {
 }
 
 function ButtonArea() {
+  const handleSendMail = async () => {
+    const subject = encodeURIComponent("Weddion Destek Talebi");
+    const body = encodeURIComponent(
+      "Merhaba Weddion ekibi,\n\nYaşadığım sorun hakkında destek almak istiyorum.\n\nSorun açıklaması:\n",
+    );
+
+    const mailUrl = `mailto:${SUPPORT_EMAIL}?subject=${subject}&body=${body}`;
+
+    const canOpen = await Linking.canOpenURL(mailUrl);
+
+    if (canOpen) {
+      await Linking.openURL(mailUrl);
+    }
+  };
+
   return (
-    <Pressable className="ml-3 flex-row items-center rounded-xl bg-backgroundSoft px-2 py-2">
+    <Pressable
+      onPress={handleSendMail}
+      className="ml-3 flex-row items-center rounded-xl bg-backgroundSoft px-2 py-2"
+    >
       <AppText
         variant="captionStrong"
         className="ml-1 font-manropeSemiBold text-[8px]"

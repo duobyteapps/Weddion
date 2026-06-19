@@ -8,27 +8,27 @@ const privacyItems = [
   {
     icon: "person-circle-outline",
     title: "1. Veri Gizliliği",
-    text: "Kişisel verileriniz, KVKK kapsamında ve Gizlilik Politikamıza uygun olarak işlenir. Verileriniz yalnızca hizmet sunumu için kullanılır ve üçüncü kişilerle paylaşılmaz.",
+    text: "Kişisel verileriniz, KVKK kapsamında ve Gizlilik Politikamıza uygun olarak işlenir. Verileriniz; hesap, davetiye, misafir fotoğraf yükleme, bildirim ve destek süreçlerinin yürütülmesi için kullanılır. Hizmetin sunulması için gerekli hallerde teknik hizmet sağlayıcılarıyla sınırlı olarak paylaşılabilir.",
   },
   {
     icon: "server-outline",
     title: "2. Güvenli Saklama",
-    text: "Verileriniz, güvenli sunucular üzerinde şifreli olarak saklanır. Yetkisiz erişimlere karşı gelişmiş güvenlik önlemleri ve düzenli kontroller uygulanır.",
+    text: "Verileriniz, güvenli altyapılar üzerinde saklanır. Yetkisiz erişimlere karşı gerekli teknik ve idari güvenlik önlemleri uygulanır.",
   },
   {
     icon: "shield-checkmark-outline",
     title: "3. Şifreleme ve Koruma",
-    text: "Verilerinizin aktarımı ve saklanması sırasında endüstri standartlarında şifreleme yöntemleri kullanılır. Böylece kişisel bilgileriniz daima korunur.",
+    text: "Verilerinizin aktarımı ve saklanması sırasında güvenli bağlantılar, erişim kontrolleri ve uygun koruma yöntemleri kullanılır.",
   },
   {
     icon: "person-add-outline",
     title: "4. Erişim Kontrolü",
-    text: "Verilerinize yalnızca yetkili personel erişebilir. Erişim yetkileri titiz kurallar çerçevesinde yönetilir ve düzenli olarak gözden geçirilir.",
+    text: "Verilerinize erişim, yalnızca hizmetin yürütülmesi, bakım, güvenlik ve destek süreçleri için gerekli yetkilerle sınırlandırılır. Erişim yetkileri düzenli olarak gözden geçirilir.",
   },
   {
     icon: "scale-outline",
     title: "5. Haklarınız",
-    text: "KVKK kapsamındaki haklarınızı kullanabilirsiniz. Verilerinize ilişkin talepleriniz için bizimle iletişime geçebilirsiniz.",
+    text: "KVKK kapsamındaki haklarınızı kullanabilirsiniz. Verilerinize ilişkin erişim, düzeltme, silme ve diğer talepleriniz için bizimle iletişime geçebilirsiniz.",
   },
 ] as const;
 
