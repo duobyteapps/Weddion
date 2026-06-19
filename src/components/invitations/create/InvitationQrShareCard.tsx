@@ -75,7 +75,7 @@ export function InvitationQrShareCard({
         </View>
 
         {guestUploadCode ? (
-          <View className="w-full gap-2 rounded-3xl bg-slate-50 p-4">
+          <View className="w-full gap-2 rounded-xl bg-slate-50 p-4">
             <AppText className="text-center text-xs font-medium uppercase tracking-[2px] text-slate-400">
               Davet Kodu
             </AppText>
@@ -99,35 +99,15 @@ export function InvitationQrShareCard({
         ) : null}
       </View>
 
-      <View className="gap-2 rounded-2xl bg-violet-50 p-4">
-        <AppText className="text-sm font-semibold text-violet-900">
-          Fotoğraf yükleme bağlantısı
-        </AppText>
-
-        <AppText className="text-xs leading-5 text-violet-700">
-          {qrValue}
-        </AppText>
-      </View>
-
-      <View className="gap-3">
-        {onCopyLinkPress ? (
-          <AppButton
-            title="Bağlantıyı Kopyala"
-            variant="ghost"
-            onPress={onCopyLinkPress}
-          />
-        ) : null}
-
-        {onDownloadQrPress ? (
-          <AppButton
-            title={qrDownloadLoading ? "QR İndiriliyor..." : "QR Kodunu İndir"}
-            variant="primary"
-            onPress={handleDownloadQrPress}
-            loading={qrDownloadLoading}
-            disabled={qrDownloadLoading}
-          />
-        ) : null}
-      </View>
+      {onDownloadQrPress ? (
+        <AppButton
+          title={qrDownloadLoading ? "QR İndiriliyor..." : "QR Kodunu İndir"}
+          variant="primary"
+          onPress={handleDownloadQrPress}
+          loading={qrDownloadLoading}
+          disabled={qrDownloadLoading}
+        />
+      ) : null}
     </AppCard>
   );
 }
