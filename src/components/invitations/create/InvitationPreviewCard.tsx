@@ -34,79 +34,81 @@ export function InvitationPreviewCard({ imageUrl, formData }: Props) {
   const content = (
     <View className="h-full w-full items-center justify-center px-7 py-10">
       <View className="w-full flex-1 items-center justify-center">
-        <AppText
-          variant="serifTitle"
-          className="text-center text-[30px] leading-9 text-textDark"
-        >
-          {formData.brideName}
-        </AppText>
+        <View className="items-center">
+          <AppText variant="invitationNames" className="text-center">
+            {formData.brideName}
+          </AppText>
 
-        <AppText
-          variant="serifTitle"
-          className="text-center text-[28px] text-textDark"
-        >
-          &
-        </AppText>
+          <AppText variant="invitationAmpersand" className="-my-1 text-center">
+            &
+          </AppText>
 
-        <AppText
-          variant="serifTitle"
-          className="text-center text-[30px] leading-9 text-textDark"
-        >
-          {formData.groomName}
-        </AppText>
+          <AppText variant="invitationNames" className="text-center">
+            {formData.groomName}
+          </AppText>
+        </View>
 
-        <View className="mt-8 w-full flex-row items-start justify-center gap-20">
-          <View className="items-center">
-            <AppText variant="caption" className="text-center text-textMuted">
+        <View className="mt-7 w-full flex-row items-start justify-center gap-16">
+          <View className="min-w-[90px] flex-1 items-center">
+            <AppText variant="invitationParents" className="text-center">
               Anne & Baba
             </AppText>
 
             <AppText
-              variant="caption"
+              variant="invitationParents"
               className="mt-1 text-center text-textDark"
+              numberOfLines={2}
             >
               {formData.brideParents}
             </AppText>
           </View>
 
-          <View className="items-center">
-            <AppText variant="caption" className="text-center text-textMuted">
+          <View className="min-w-[90px] flex-1 items-center">
+            <AppText variant="invitationParents" className="text-center">
               Anne & Baba
             </AppText>
 
             <AppText
-              variant="caption"
+              variant="invitationParents"
               className="mt-1 text-center text-textDark"
+              numberOfLines={2}
             >
               {formData.groomParents}
             </AppText>
           </View>
         </View>
 
-        <View className="mt-8 w-full flex-row items-center justify-center gap-2">
-          <AppText variant="body" className="text-center text-textDark">
+        <View className="mt-7 w-full flex-row items-center justify-center gap-3">
+          <AppText variant="invitationMeta" className="text-center">
             {formatInvitationDate(formData.date)}
           </AppText>
 
-          <View className="h-4 w-px bg-border" />
+          {!!formData.date && !!formData.time && (
+            <View className="h-4 w-px bg-border" />
+          )}
 
-          <AppText variant="body" className="text-center text-textDark">
+          <AppText variant="invitationMeta" className="text-center">
             {formData.time}
           </AppText>
         </View>
 
-        <AppText variant="body" className="mt-6 text-center text-textMuted">
+        <AppText
+          variant="invitationBody"
+          className="mt-5 max-w-[230px] text-center"
+          numberOfLines={4}
+        >
           {formData.description}
         </AppText>
 
-        <AppText
-          variant="serifSubtitle"
-          className="mt-7 text-center text-[20px] text-textDark"
-        >
+        <AppText variant="invitationVenue" className="mt-6 text-center">
           {formData.venueName}
         </AppText>
 
-        <AppText variant="caption" className="mt-2 text-center text-textMuted">
+        <AppText
+          variant="invitationLocation"
+          className="mt-2 max-w-[220px] text-center"
+          numberOfLines={2}
+        >
           {formData.venueLocation}
         </AppText>
       </View>
@@ -117,7 +119,11 @@ export function InvitationPreviewCard({ imageUrl, formData }: Props) {
     <AppCard noPadding className="overflow-hidden py-1 !px-1">
       <View className="aspect-[3/4] w-full overflow-hidden rounded-2xl bg-card">
         {imageUrl ? (
-          <ImageBackground source={{ uri: imageUrl }} resizeMode="cover">
+          <ImageBackground
+            source={{ uri: imageUrl }}
+            resizeMode="cover"
+            className="h-full w-full"
+          >
             {content}
           </ImageBackground>
         ) : (

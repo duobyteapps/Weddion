@@ -11,8 +11,13 @@ module.exports = {
         manropeBold: ["Manrope_700Bold"],
         manropeExtraBold: ["Manrope_800ExtraBold"],
 
+        cormorant: ["CormorantGaramond_400Regular"],
+        cormorantMedium: ["CormorantGaramond_500Medium"],
         cormorantSemiBold: ["CormorantGaramond_600SemiBold"],
         cormorantBold: ["CormorantGaramond_700Bold"],
+
+        tangerine: ["Tangerine_400Regular"],
+        tangerineBold: ["Tangerine_700Bold"],
       },
       colors: {
         primary: "#A875D1",

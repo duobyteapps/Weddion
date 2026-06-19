@@ -9,7 +9,14 @@ type AppTextVariant =
   | "captionStrong"
   | "link"
   | "serifTitle"
-  | "serifSubtitle";
+  | "serifSubtitle"
+  | "invitationNames"
+  | "invitationAmpersand"
+  | "invitationParents"
+  | "invitationMeta"
+  | "invitationBody"
+  | "invitationVenue"
+  | "invitationLocation";
 
 type AppTextProps = TextProps & {
   children: ReactNode;
@@ -32,6 +39,21 @@ export function AppText({
     link: "font-manropeSemiBold text-[12px]",
     serifTitle: "font-cormorantBold text-[24px]",
     serifSubtitle: "font-cormorantBold text-[18px]",
+
+    invitationNames:
+      "font-tangerineBold text-[54px] leading-[58px] text-textDark",
+    invitationAmpersand:
+      "font-tangerineBold text-[44px] leading-[46px] text-textDark",
+    invitationParents:
+      "font-cormorantSemiBold text-[13px] leading-[17px] text-textMuted",
+    invitationMeta:
+      "font-cormorantSemiBold text-[15px] leading-[20px] text-textDark",
+    invitationBody:
+      "font-cormorantSemiBold text-[14px] leading-[20px] text-textMuted",
+    invitationVenue:
+      "font-cormorantBold text-[24px] leading-[29px] text-textDark",
+    invitationLocation:
+      "font-cormorantSemiBold text-[13px] leading-[18px] text-textMuted",
   };
 
   return (

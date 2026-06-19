@@ -6,7 +6,7 @@ import { AppText } from "@/components/ui/AppText";
 
 type Props = {
   imageUrl: string | null;
-  onDownloadImagePress: () => void | Promise<void>;
+  onDownloadImagePress: (imageUri: string | null) => void | Promise<void>;
   loading?: boolean;
 };
 
@@ -15,17 +15,23 @@ function normalizeImageUri(imageUrl: string | null) {
     return null;
   }
 
+  const trimmedImageUrl = imageUrl.trim();
+
   if (
-    imageUrl.startsWith("data:image") ||
-    imageUrl.startsWith("file://") ||
-    imageUrl.startsWith("http://") ||
-    imageUrl.startsWith("https://") ||
-    imageUrl.startsWith("content://")
+    trimmedImageUrl.startsWith("data:image") ||
+    trimmedImageUrl.startsWith("file://") ||
+    trimmedImageUrl.startsWith("http://") ||
+    trimmedImageUrl.startsWith("https://") ||
+    trimmedImageUrl.startsWith("content://")
   ) {
-    return imageUrl;
+    return trimmedImageUrl;
   }
 
-  return `file://${imageUrl}`;
+  if (trimmedImageUrl.startsWith("/")) {
+    return `file://${trimmedImageUrl}`;
+  }
+
+  return trimmedImageUrl;
 }
 
 export function InvitationShareReadyCard({
@@ -50,6 +56,8 @@ export function InvitationShareReadyCard({
                     "Paylaşım küçük görsel yüklenemedi:",
                     error.nativeEvent,
                   );
+                  console.log("Ham imageUrl:", imageUrl);
+                  console.log("Normalize imageUri:", normalizedImageUri);
                 }}
               />
             ) : (
@@ -75,9 +83,9 @@ export function InvitationShareReadyCard({
           <AppButton
             title={loading ? "İndiriliyor..." : "Davetiyeyi İndir"}
             variant="primary"
-            onPress={onDownloadImagePress}
+            onPress={() => onDownloadImagePress(normalizedImageUri)}
             loading={loading}
-            disabled={loading}
+            disabled={loading || !normalizedImageUri}
             className="mt-5 h-11 rounded-full px-3"
             textClassName="text-[11px]"
           />

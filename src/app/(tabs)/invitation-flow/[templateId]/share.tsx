@@ -207,8 +207,10 @@ export default function InvitationFlowShareScreen() {
     };
   }
 
-  async function handleDownloadInstagramImage() {
-    if (!finalInvitationImageUri) {
+  async function handleDownloadInstagramImage(imageUri?: string | null) {
+    const invitationImageUri = imageUri ?? finalInvitationImageUri;
+
+    if (!invitationImageUri) {
       showAlert({
         type: "warning",
         title: "Görsel bulunamadı",
@@ -222,8 +224,13 @@ export default function InvitationFlowShareScreen() {
     try {
       setDownloadingInvitation(true);
 
+      console.log(
+        "Davetiye indirilecek uri:",
+        invitationImageUri.slice(0, 160),
+      );
+
       await downloadImageToGallery({
-        imageUri: finalInvitationImageUri,
+        imageUri: invitationImageUri,
         fileNamePrefix: `weddion-davetiye-${formData.brideName}-${formData.groomName}`,
       });
 
@@ -240,14 +247,16 @@ export default function InvitationFlowShareScreen() {
       console.log(
         "Davetiye indirme hatası:",
         error,
-        "finalInvitationImageUri:",
-        finalInvitationImageUri?.slice(0, 120),
+        "invitationImageUri:",
+        invitationImageUri.slice(0, 160),
       );
 
       const message =
         error instanceof Error && error.message === "GALLERY_PERMISSION_DENIED"
           ? "Davetiyeyi galeriye kaydedebilmek için fotoğraf ekleme izni vermelisiniz. Ayarlar > Weddion > Fotoğraflar kısmından erişimi açın."
-          : "Davetiye galeriye kaydedilemedi. Fotoğraf iznini kontrol edip tekrar deneyin.";
+          : error instanceof Error && error.message === "UNSUPPORTED_IMAGE_URI"
+            ? "Davetiye görselinin dosya adresi desteklenmiyor. Lütfen davetiyeyi tekrar önizleyip yeniden indirmeyi deneyin."
+            : "Davetiye galeriye kaydedilemedi. Fotoğraf iznini kontrol edip tekrar deneyin.";
 
       showAlert({
         type: "error",

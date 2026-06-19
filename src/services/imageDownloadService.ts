@@ -32,6 +32,26 @@ function createDownloadFileName(fileNamePrefix = "weddion-gorsel") {
   return `${normalizedPrefix}-${timestamp}-${randomPart}`;
 }
 
+function normalizeImageUri(imageUri: string) {
+  const trimmedImageUri = imageUri.trim();
+
+  if (
+    trimmedImageUri.startsWith("data:image") ||
+    trimmedImageUri.startsWith("file://") ||
+    trimmedImageUri.startsWith("http://") ||
+    trimmedImageUri.startsWith("https://") ||
+    trimmedImageUri.startsWith("content://")
+  ) {
+    return trimmedImageUri;
+  }
+
+  if (trimmedImageUri.startsWith("/")) {
+    return `file://${trimmedImageUri}`;
+  }
+
+  return trimmedImageUri;
+}
+
 function getFileExtensionFromUri(imageUri: string) {
   if (imageUri.startsWith("data:image")) {
     const base64Match = imageUri.match(
@@ -112,12 +132,13 @@ async function copyLocalImageToCache(
   imageUri: string,
   fileNamePrefix?: string,
 ) {
-  const extension = getFileExtensionFromUri(imageUri);
+  const normalizedImageUri = normalizeImageUri(imageUri);
+  const extension = getFileExtensionFromUri(normalizedImageUri);
   const fileName = `${createDownloadFileName(fileNamePrefix)}.${extension}`;
   const destinationUri = `${FileSystem.cacheDirectory}${fileName}`;
 
   await FileSystem.copyAsync({
-    from: imageUri,
+    from: normalizedImageUri,
     to: destinationUri,
   });
 
@@ -128,20 +149,25 @@ async function prepareImageForMediaLibrary(
   imageUri: string,
   fileNamePrefix?: string,
 ) {
-  if (imageUri.startsWith("data:image")) {
-    return writeBase64ImageToCache(imageUri, fileNamePrefix);
+  const normalizedImageUri = normalizeImageUri(imageUri);
+
+  if (normalizedImageUri.startsWith("data:image")) {
+    return writeBase64ImageToCache(normalizedImageUri, fileNamePrefix);
   }
 
-  if (imageUri.startsWith("http://") || imageUri.startsWith("https://")) {
-    return downloadRemoteImageToCache(imageUri, fileNamePrefix);
+  if (
+    normalizedImageUri.startsWith("http://") ||
+    normalizedImageUri.startsWith("https://")
+  ) {
+    return downloadRemoteImageToCache(normalizedImageUri, fileNamePrefix);
   }
 
-  if (imageUri.startsWith("file://")) {
-    return imageUri;
+  if (normalizedImageUri.startsWith("file://")) {
+    return copyLocalImageToCache(normalizedImageUri, fileNamePrefix);
   }
 
-  if (imageUri.startsWith("content://")) {
-    return copyLocalImageToCache(imageUri, fileNamePrefix);
+  if (normalizedImageUri.startsWith("content://")) {
+    return copyLocalImageToCache(normalizedImageUri, fileNamePrefix);
   }
 
   throw new Error("UNSUPPORTED_IMAGE_URI");
