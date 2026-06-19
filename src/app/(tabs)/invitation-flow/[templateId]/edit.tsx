@@ -38,38 +38,48 @@ type EditParams = {
 };
 
 function getParamValue(value?: string | string[]) {
-  if (Array.isArray(value)) {
-    return value[0];
-  }
+  const resolvedValue = Array.isArray(value) ? value[0] : value;
+  const trimmedValue = resolvedValue?.trim();
 
-  return value;
+  return trimmedValue ? trimmedValue : undefined;
 }
 
 function createInitialFormData(params: EditParams): InvitationFormData {
   return {
     eventTypeId: getParamValue(params.eventTypeId) ?? "",
+
     brideName:
       getParamValue(params.brideName) ?? defaultInvitationContent.brideName,
+
     groomName:
       getParamValue(params.groomName) ?? defaultInvitationContent.groomName,
+
     brideParents:
       getParamValue(params.brideParents) ??
       defaultInvitationContent.brideParents,
+
     groomParents:
       getParamValue(params.groomParents) ??
       defaultInvitationContent.groomParents,
+
     brideSurname:
       getParamValue(params.brideSurname) ??
       defaultInvitationContent.brideSurname,
+
     groomSurname:
       getParamValue(params.groomSurname) ??
       defaultInvitationContent.groomSurname,
+
     date: getParamValue(params.date) ?? defaultInvitationContent.date,
+
     time: getParamValue(params.time) ?? defaultInvitationContent.time,
+
     description:
       getParamValue(params.description) ?? defaultInvitationContent.description,
+
     venueName:
       getParamValue(params.venueName) ?? defaultInvitationContent.venueName,
+
     venueLocation:
       getParamValue(params.venueLocation) ??
       defaultInvitationContent.venueLocation,
@@ -207,6 +217,7 @@ export default function InvitationFlowEditScreen() {
     return (
       <ScreenContainer className="flex-1 items-center justify-center bg-background">
         <ActivityIndicator />
+
         <AppText variant="body" className="mt-3 text-textMuted">
           Davetiye yükleniyor...
         </AppText>

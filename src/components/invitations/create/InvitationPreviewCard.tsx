@@ -30,7 +30,19 @@ function formatInvitationDate(value: string) {
   });
 }
 
+function getDisplayValue(value: string | null | undefined, fallback: string) {
+  const trimmedValue = value?.trim();
+
+  return trimmedValue ? trimmedValue : fallback;
+}
+
 export function InvitationPreviewCard({ imageUrl, formData }: Props) {
+  const brideParents = getDisplayValue(formData.brideParents, "Anne & Baba");
+  const groomParents = getDisplayValue(formData.groomParents, "Anne & Baba");
+
+  const brideSurname = getDisplayValue(formData.brideSurname, "Soyad");
+  const groomSurname = getDisplayValue(formData.groomSurname, "Soyad");
+
   const content = (
     <View className="h-full w-full items-center justify-center px-7 py-10">
       <View className="w-full flex-1 items-center justify-center">
@@ -39,7 +51,7 @@ export function InvitationPreviewCard({ imageUrl, formData }: Props) {
             {formData.brideName}
           </AppText>
 
-          <AppText variant="invitationAmpersand" className="-my-1 text-center">
+          <AppText variant="invitationAmpersand" className="text-center">
             &
           </AppText>
 
@@ -48,32 +60,36 @@ export function InvitationPreviewCard({ imageUrl, formData }: Props) {
           </AppText>
         </View>
 
-        <View className="mt-7 w-full flex-row items-start justify-center gap-16">
-          <View className="min-w-[90px] flex-1 items-center">
+        <View className="mt-7 w-full flex-row items-start justify-center gap-4 px-4">
+          <View className="w-[130px] items-center">
             <AppText variant="invitationParents" className="text-center">
-              Anne & Baba
+              {brideParents}
             </AppText>
 
             <AppText
               variant="invitationParents"
-              className="mt-1 text-center text-textDark"
-              numberOfLines={2}
+              className="mt-1 text-center"
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.75}
             >
-              {formData.brideParents}
+              {brideSurname}
             </AppText>
           </View>
 
-          <View className="min-w-[90px] flex-1 items-center">
+          <View className="w-[130px] items-center">
             <AppText variant="invitationParents" className="text-center">
-              Anne & Baba
+              {groomParents}
             </AppText>
 
             <AppText
               variant="invitationParents"
-              className="mt-1 text-center text-textDark"
-              numberOfLines={2}
+              className="mt-1 text-center"
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.75}
             >
-              {formData.groomParents}
+              {groomSurname}
             </AppText>
           </View>
         </View>

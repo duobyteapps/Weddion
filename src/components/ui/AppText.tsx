@@ -44,8 +44,7 @@ export function AppText({
       "font-tangerineBold text-[54px] leading-[58px] text-textDark",
     invitationAmpersand:
       "font-tangerineBold text-[44px] leading-[46px] text-textDark",
-    invitationParents:
-      "font-cormorantSemiBold text-[13px] leading-[17px] text-textMuted",
+    invitationParents: "font-cormorantSemiBold text-[13px] leading-[17px]",
     invitationMeta:
       "font-cormorantSemiBold text-[15px] leading-[20px] text-textDark",
     invitationBody:
