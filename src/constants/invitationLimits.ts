@@ -1,0 +1,1 @@
+export const MAX_USER_INVITATION_COUNT = 3;

@@ -1,3 +1,4 @@
+import { MAX_USER_INVITATION_COUNT } from "@/constants/invitationLimits";
 import { supabase } from "@/lib/supabase";
 import {
   deleteR2Object,
@@ -108,6 +109,22 @@ export async function createUserInvitation(
   payload: CreateUserInvitationPayload,
 ): Promise<UserInvitation> {
   const user = await getAuthenticatedUser();
+
+  const { count, error: countError } = await supabase
+    .from("user_invitations")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", user.id);
+
+  if (countError) {
+    throw new Error(countError.message);
+  }
+
+  if ((count ?? 0) >= MAX_USER_INVITATION_COUNT) {
+    throw new Error(
+      `En fazla ${MAX_USER_INVITATION_COUNT} davetiye oluşturabilirsiniz.`,
+    );
+  }
+
   const { formData } = payload;
 
   const { data: createdInvitation, error: createError } = await supabase
@@ -136,6 +153,12 @@ export async function createUserInvitation(
     .single();
 
   if (createError) {
+    if (createError.message.includes("INVITATION_LIMIT_REACHED")) {
+      throw new Error(
+        `En fazla ${MAX_USER_INVITATION_COUNT} davetiye oluşturabilirsiniz.`,
+      );
+    }
+
     throw new Error(createError.message);
   }
 

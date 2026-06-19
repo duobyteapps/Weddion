@@ -16,8 +16,10 @@ import { useAppAlert } from "@/components/ui/AppAlert";
 import { AppText } from "@/components/ui/AppText";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 
+import { MAX_USER_INVITATION_COUNT } from "@/constants/invitationLimits";
 import {
   deleteUserInvitation,
+  getCurrentUserInvitationCount,
   getCurrentUserInvitations,
 } from "@/services/invitationService";
 
@@ -165,8 +167,32 @@ export default function MyInvitationsScreen() {
     }
   }
 
-  function handleCreateInvitation() {
-    router.push("/invitation-select");
+  async function handleCreateInvitation() {
+    try {
+      const invitationCount = await getCurrentUserInvitationCount();
+
+      if (invitationCount >= MAX_USER_INVITATION_COUNT) {
+        showAlert({
+          title: "Davetiye limiti doldu",
+          message: `Her hesap en fazla ${MAX_USER_INVITATION_COUNT} davetiye oluşturabilir. Yeni davetiye oluşturmak için mevcut davetiyelerden birini silebilirsiniz.`,
+          type: "warning",
+          confirmText: "Tamam",
+        });
+        return;
+      }
+
+      router.push("/invitation-select");
+    } catch (error) {
+      console.log("Davetiye limiti kontrol edilemedi:", error);
+
+      showAlert({
+        title: "İşlem yapılamadı",
+        message:
+          "Davetiye oluşturma hakkınız kontrol edilirken bir sorun oluştu.",
+        type: "error",
+        confirmText: "Tamam",
+      });
+    }
   }
 
   function handleEditInvitation(invitation: UserInvitation) {
