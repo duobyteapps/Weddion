@@ -18,6 +18,22 @@ type UploadGuestPhotoParams = {
   imageUri: string;
 };
 
+type UploadGuestPhotosParams = {
+  invitationId: string;
+  guestUploadCode: string;
+  imageUris: string[];
+};
+
+type UploadedGuestPhotoRecord = {
+  id: string;
+  invitation_id: string;
+  storage_path: string;
+  upload_code: string;
+  status: InvitationGuestPhotoStatus;
+  created_at: string;
+  expires_at: string;
+};
+
 type UpdateGuestPhotoStatusParams = {
   photoId: string;
   status: InvitationGuestPhotoStatus;
@@ -120,45 +136,90 @@ export const uploadGuestPhoto = async ({
   guestUploadCode,
   imageUri,
 }: UploadGuestPhotoParams) => {
-  const normalizedCode = normalizeGuestUploadCode(guestUploadCode);
-
-  const compressedImage = await compressImageForUpload(imageUri);
-
-  const { storagePath, contentType } = buildGuestPhotoPath(
+  return uploadGuestPhotos({
     invitationId,
-    normalizedCode,
-    compressedImage.uri,
-    compressedImage.wasCompressed,
-  );
-
-  await uploadImageToR2({
-    imageUri: compressedImage.uri,
-    key: storagePath,
-    contentType,
+    guestUploadCode,
+    imageUris: [imageUri],
   });
+};
 
-  const { error: uploadRecordError } = await supabase.rpc(
-    "upload_guest_photo_record",
-    {
-      target_invitation_id: invitationId,
-      target_upload_code: normalizedCode,
-      target_storage_path: storagePath,
-    },
-  );
+export const uploadGuestPhotos = async ({
+  invitationId,
+  guestUploadCode,
+  imageUris,
+}: UploadGuestPhotosParams) => {
+  const normalizedCode = normalizeGuestUploadCode(guestUploadCode);
+  const uploadedStoragePaths: string[] = [];
+  const createdPhotos: UploadedGuestPhotoRecord[] = [];
 
-  if (uploadRecordError) {
-    console.log("Guest photo record RPC failed:", uploadRecordError);
-
-    try {
-      await deleteR2Object(storagePath);
-    } catch (deleteError) {
-      console.log("R2 guest photo rollback delete failed:", deleteError);
-    }
-
-    throw new Error(uploadRecordError.message);
+  if (imageUris.length === 0) {
+    return true;
   }
 
-  return true;
+  try {
+    for (const imageUri of imageUris) {
+      const compressedImage = await compressImageForUpload(imageUri);
+
+      const { storagePath, contentType } = buildGuestPhotoPath(
+        invitationId,
+        normalizedCode,
+        compressedImage.uri,
+        compressedImage.wasCompressed,
+      );
+
+      await uploadImageToR2({
+        imageUri: compressedImage.uri,
+        key: storagePath,
+        contentType,
+      });
+
+      uploadedStoragePaths.push(storagePath);
+
+      const { data: createdPhoto, error: uploadRecordError } =
+        await supabase.rpc("upload_guest_photo_record", {
+          target_invitation_id: invitationId,
+          target_upload_code: normalizedCode,
+          target_storage_path: storagePath,
+        });
+
+      if (uploadRecordError) {
+        console.log("Guest photo record RPC failed:", uploadRecordError);
+        throw new Error(uploadRecordError.message);
+      }
+
+      if (createdPhoto) {
+        createdPhotos.push(createdPhoto as UploadedGuestPhotoRecord);
+      }
+    }
+
+    if (createdPhotos.length > 0) {
+      const { error: notificationError } = await supabase.rpc(
+        "create_guest_photo_upload_notification",
+        {
+          target_invitation_id: invitationId,
+          target_upload_code: normalizedCode,
+          target_photo_count: createdPhotos.length,
+          target_first_photo_id: createdPhotos[0]?.id ?? null,
+        },
+      );
+
+      if (notificationError) {
+        console.log("Guest photo notification RPC failed:", notificationError);
+      }
+    }
+
+    return true;
+  } catch (error) {
+    await Promise.allSettled(
+      uploadedStoragePaths.map((storagePath) => deleteR2Object(storagePath)),
+    );
+
+    console.log("Guest photo upload failed:", error);
+
+    throw new Error(
+      error instanceof Error ? error.message : "Fotoğraflar yüklenemedi.",
+    );
+  }
 };
 
 export const getGuestPhotosByInvitation = async (
