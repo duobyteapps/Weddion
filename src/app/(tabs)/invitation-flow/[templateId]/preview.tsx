@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, Alert, ScrollView, View } from "react-native";
+import { ActivityIndicator, ScrollView, View } from "react-native";
 import { captureRef } from "react-native-view-shot";
 
 import { ScreenHeader } from "@/components/common/ScreenHeader";
@@ -8,6 +8,7 @@ import { InvitationEditSteps } from "@/components/invitations/create/InvitationE
 import { InvitationPreviewActions } from "@/components/invitations/create/InvitationPreviewActions";
 import { InvitationPreviewCard } from "@/components/invitations/create/InvitationPreviewCard";
 import { InvitationPreviewSuccessCard } from "@/components/invitations/create/InvitationPreviewSuccessCard";
+import { useAppAlert } from "@/components/ui/AppAlert";
 import { AppText } from "@/components/ui/AppText";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { defaultInvitationContent } from "@/constants/invitationDefaultContent";
@@ -64,9 +65,40 @@ function cleanOptionalParam(value?: string) {
   return value;
 }
 
+function getInvitationSaveErrorInfo(error: unknown) {
+  const fallbackMessage =
+    "Davetiye kaydedilirken bir sorun oluştu. Lütfen tekrar deneyin.";
+
+  if (!(error instanceof Error)) {
+    return {
+      isLimitError: false,
+      message: fallbackMessage,
+    };
+  }
+
+  const isLimitError =
+    error.message.includes("INVITATION_LIMIT_REACHED") ||
+    error.message.includes("En fazla 3 davetiye") ||
+    error.message.includes("en fazla 3 davetiye");
+
+  if (isLimitError) {
+    return {
+      isLimitError: true,
+      message:
+        "Her hesap en fazla 3 davetiye oluşturabilir. Yeni davetiye oluşturmak için mevcut davetiyelerinizden birini silebilirsiniz.",
+    };
+  }
+
+  return {
+    isLimitError: false,
+    message: fallbackMessage,
+  };
+}
+
 export default function InvitationFlowPreviewScreen() {
   const params = useLocalSearchParams<PreviewParams>();
   const invitationCaptureRef = useRef<View>(null);
+  const { showAlert } = useAppAlert();
 
   const [template, setTemplate] = useState<InvitationTemplateDto | null>(null);
   const [loading, setLoading] = useState(true);
@@ -226,10 +258,13 @@ export default function InvitationFlowPreviewScreen() {
     }
 
     if (!formData.eventTypeId) {
-      Alert.alert(
-        "Davetiye türü seçilmedi",
-        "Lütfen düzenleme ekranına dönüp Düğün veya Kına seçimi yapın.",
-      );
+      showAlert({
+        title: "Davetiye türü seçilmedi",
+        message:
+          "Lütfen düzenleme ekranına dönüp Düğün veya Kına seçimi yapın.",
+        type: "warning",
+        confirmText: "Tamam",
+      });
       return;
     }
 
@@ -252,12 +287,16 @@ export default function InvitationFlowPreviewScreen() {
         params: getShareRouteParams(invitation),
       });
     } catch (error) {
-      Alert.alert(
-        "Davetiye kaydedilemedi",
-        error instanceof Error
-          ? error.message
-          : "Davetiye kaydedilirken bir hata oluştu.",
-      );
+      const errorInfo = getInvitationSaveErrorInfo(error);
+
+      showAlert({
+        title: errorInfo.isLimitError
+          ? "Davetiye limiti doldu"
+          : "Davetiye kaydedilemedi",
+        message: errorInfo.message,
+        type: errorInfo.isLimitError ? "warning" : "error",
+        confirmText: "Tamam",
+      });
     } finally {
       setSaving(false);
     }
