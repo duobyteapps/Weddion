@@ -27,6 +27,8 @@ type UpdateGuestPhotoStatusParams = {
 
 const normalizeGuestUploadCode = (code: string) => code.trim().toUpperCase();
 
+const getCurrentIsoDate = () => new Date().toISOString();
+
 const getFileExtensionFromUri = (uri: string) => {
   const cleanUri = uri.split("?")[0] ?? uri;
   const extension = cleanUri.split(".").pop()?.toLowerCase();
@@ -161,6 +163,7 @@ export const uploadGuestPhoto = async ({
 
     throw new Error(uploadRecordError.message);
   }
+
   return true;
 };
 
@@ -173,6 +176,7 @@ export const getGuestPhotosByInvitation = async (
     .from("invitation_guest_photos")
     .select("*")
     .eq("invitation_id", invitationId)
+    .gt("expires_at", getCurrentIsoDate())
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -264,9 +268,9 @@ export async function getCurrentUserGuestPhotoCount(): Promise<number> {
 
   const { count, error } = await supabase
     .from("invitation_guest_photos")
-    .select("*", { count: "exact", head: true })
+    .select("id", { count: "exact", head: true })
     .in("invitation_id", invitationIds)
-    .gt("expires_at", new Date().toISOString());
+    .gt("expires_at", getCurrentIsoDate());
 
   if (error) {
     throw new Error(error.message);
