@@ -365,10 +365,7 @@ export default function InvitationFlowShareScreen() {
   }
 
   function handleBackPress() {
-    router.push({
-      pathname: "/invitation-flow/[templateId]/preview",
-      params: getRouteParams(),
-    });
+    router.replace("/(tabs)/my-invitations");
   }
 
   if (loading) {

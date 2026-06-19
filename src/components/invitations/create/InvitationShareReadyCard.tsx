@@ -44,7 +44,7 @@ export function InvitationShareReadyCard({
   return (
     <AppCard>
       <View className="flex-row gap-5">
-        <View className="w-[40%] overflow-hidden rounded-2xl border border-borderSoft bg-background">
+        <View className="w-[40%] overflow-hidden rounded-xl border border-borderSoft bg-background">
           <View className="aspect-[3/4] w-full">
             {normalizedImageUri ? (
               <Image
