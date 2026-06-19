@@ -45,14 +45,6 @@ export async function getDowryCategories(): Promise<DowryCategoryItem[]> {
     mapDowryCategory,
   );
 
-  await Promise.all(
-    categories.map((category) =>
-      supabase.rpc("sync_user_dowry_items", {
-        p_category_slug: category.slug,
-      }),
-    ),
-  );
-
   const categoryIds = categories.map((category) => category.dbId);
 
   if (categoryIds.length === 0) {

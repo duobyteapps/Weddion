@@ -37,27 +37,25 @@ export function ScreenHeader({
   };
 
   return (
-    <View className="relative mb-8 mt-4 justify-center">
-      <AppBackButton
-        onPress={handleBackPress}
-        className="absolute left-0 z-10"
-      />
+    <View className="mb-8 mt-4">
+      <View className="flex-row items-center justify-between">
+        <View className="w-10 items-start">
+          <AppBackButton onPress={handleBackPress} />
+        </View>
 
-      <View className="items-center px-10">
-        <AppText
-          variant="serifTitle"
-          className="text-center"
-          numberOfLines={1}
-          adjustsFontSizeToFit
-        >
-          {title}
-        </AppText>
-
-        {description ? (
-          <AppText variant="body" className="mt-1 text-center">
-            {description}
+        <View className="flex-1 items-center px-2">
+          <AppText variant="serifTitle" numberOfLines={1} adjustsFontSizeToFit>
+            {title}
           </AppText>
-        ) : null}
+
+          {description ? (
+            <AppText variant="body" className="text-center">
+              {description}
+            </AppText>
+          ) : null}
+        </View>
+
+        <View className="w-10" />
       </View>
     </View>
   );

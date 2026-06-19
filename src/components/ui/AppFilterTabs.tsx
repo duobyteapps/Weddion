@@ -35,7 +35,7 @@ export function AppFilterTabs<T extends string = string>({
         activeOpacity={0.85}
         onPress={() => onChangeValue(item.id)}
         className={[
-          "h-10 rounded-xl flex-row items-center justify-center gap-1.5 shadow-sm",
+          "h-10 rounded-xl flex-row items-center justify-center gap-1.5",
           fullWidth ? "flex-1 px-2" : "px-4",
           isActive ? "bg-primary" : "bg-white",
         ].join(" ")}

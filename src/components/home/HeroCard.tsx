@@ -3,6 +3,7 @@ import { Image, Pressable, View } from "react-native";
 
 import { AppCard } from "@/components/ui/AppCard";
 import { AppText } from "@/components/ui/AppText";
+import { router } from "expo-router";
 
 export function HeroCard() {
   return (
@@ -30,7 +31,10 @@ export function HeroCard() {
         </AppText>
       </View>
 
-      <Pressable className="mt-5 h-12 flex-row items-center justify-center gap-2 rounded-2xl bg-primary">
+      <Pressable
+        onPress={() => router.push("/invitation-select")}
+        className="mt-5 h-12 flex-row items-center justify-center gap-2 rounded-2xl bg-primary"
+      >
         <Ionicons name="add" size={18} color="#FFFFFF" />
         <AppText variant="caption" className="font-manropeSemiBold text-white">
           Yeni Davetiye Oluştur

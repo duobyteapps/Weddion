@@ -60,7 +60,6 @@ export type UserDowryItem = {
   userId: string;
   categoryId: string;
   categorySlug: string;
-  templateId: string | null;
   title: string;
   brandName: string | null;
   quantity: number;
@@ -76,7 +75,6 @@ export type UserDowryItemTableRow = {
   user_id: string;
   category_id: string;
   category_slug: string;
-  template_id: string | null;
   title: string;
   brand_name: string | null;
   quantity: number;

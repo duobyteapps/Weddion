@@ -60,11 +60,11 @@ export function InvitationEditFormSection({
 
   return (
     <>
-      <AppCard className="rounded-[28px] px-5 py-6">
+      <AppCard>
         <View className="gap-5">
-          <View className="gap-4">
+          <View>
             <InvitationFormField label="Davetiye türü">
-              <View className="z-20">
+              <View className="z-20 mb-4">
                 <AppDropdown
                   value={formData.eventTypeId}
                   placeholder={

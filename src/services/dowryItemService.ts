@@ -8,7 +8,6 @@ function mapUserDowryItem(row: UserDowryItemTableRow): UserDowryItem {
     userId: row.user_id,
     categoryId: row.category_id,
     categorySlug: row.category_slug,
-    templateId: row.template_id,
     title: row.title,
     brandName: row.brand_name,
     quantity: row.quantity,
@@ -23,16 +22,6 @@ function mapUserDowryItem(row: UserDowryItemTableRow): UserDowryItem {
 export async function getUserDowryItems(
   categorySlug: string,
 ): Promise<UserDowryItem[]> {
-  await getAuthenticatedUser();
-
-  const { error: syncError } = await supabase.rpc("sync_user_dowry_items", {
-    p_category_slug: categorySlug,
-  });
-
-  if (syncError) {
-    throw new Error(syncError.message);
-  }
-
   const { data, error } = await supabase.rpc("get_user_dowry_items", {
     p_category_slug: categorySlug,
   });
@@ -87,13 +76,13 @@ export async function createUserDowryItemByCategorySlug({
   const { error } = await supabase.from("user_dowry_items").insert({
     user_id: user.id,
     category_id: category.id,
-    template_id: null,
     title: title.trim(),
     brand_name: brandName?.trim() || null,
     quantity,
     price: price ?? null,
     completed,
     sort_order: nextSortOrder,
+    is_active: true,
   });
 
   if (error) {
@@ -132,46 +121,6 @@ export async function deleteUserDowryItem(itemId: string) {
     .delete()
     .eq("id", itemId)
     .eq("user_id", user.id);
-
-  if (error) {
-    throw new Error(error.message);
-  }
-}
-
-export async function createAdminDowryItemTemplate({
-  categoryId,
-  title,
-  brandName,
-  quantity = 1,
-  completed = false,
-  sortOrder = 0,
-}: {
-  categoryId: string;
-  title: string;
-  brandName?: string;
-  quantity?: number;
-  completed?: boolean;
-  sortOrder?: number;
-}) {
-  const { error } = await supabase.from("dowry_item_templates").insert({
-    category_id: categoryId,
-    title: title.trim(),
-    brand_name: brandName?.trim() || null,
-    quantity,
-    completed,
-    sort_order: sortOrder,
-  });
-
-  if (error) {
-    throw new Error(error.message);
-  }
-}
-
-export async function deleteAdminDowryItemTemplate(templateId: string) {
-  const { error } = await supabase
-    .from("dowry_item_templates")
-    .delete()
-    .eq("id", templateId);
 
   if (error) {
     throw new Error(error.message);
