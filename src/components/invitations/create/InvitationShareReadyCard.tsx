@@ -73,10 +73,11 @@ export function InvitationShareReadyCard({
           </AppText>
 
           <AppButton
-            title="Davetiyeyi İndir"
+            title={loading ? "İndiriliyor..." : "Davetiyeyi İndir"}
             variant="primary"
             onPress={onDownloadImagePress}
             loading={loading}
+            disabled={loading}
             className="mt-5 h-11 rounded-full px-3"
             textClassName="text-[11px]"
           />
