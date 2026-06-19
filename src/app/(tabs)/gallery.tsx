@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { ComponentProps, useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, ScrollView, View } from "react-native";
+import { ActivityIndicator, Platform, ScrollView, View } from "react-native";
 
 import { ScreenHeader } from "@/components/common/ScreenHeader";
 import { EmptyGalleryNoInvitation } from "@/components/gallery/EmptyGalleryNoInvitation";
@@ -17,6 +17,10 @@ import {
   deleteGuestPhoto,
   getGuestPhotosByInvitation,
 } from "@/services/guestPhotoService";
+import {
+  downloadImageToGallery,
+  downloadImagesToGallery,
+} from "@/services/imageDownloadService";
 import { getCurrentUserInvitations } from "@/services/invitationService";
 import { SESSION_EXPIRED_MESSAGE } from "@/services/sessionService";
 import { InvitationGuestPhoto, UserInvitation } from "@/types/invitation";
@@ -80,6 +84,10 @@ export default function GalleryScreen() {
   const [loadingInvitations, setLoadingInvitations] = useState(true);
   const [loadingPhotos, setLoadingPhotos] = useState(false);
   const [deletingPhotoId, setDeletingPhotoId] = useState<string | null>(null);
+  const [downloadingPhotoId, setDownloadingPhotoId] = useState<string | null>(
+    null,
+  );
+  const [downloadingAllPhotos, setDownloadingAllPhotos] = useState(false);
 
   const isMountedRef = useRef(true);
 
@@ -276,6 +284,127 @@ export default function GalleryScreen() {
     );
   };
 
+  const handleDownloadPhoto = async (photo: GalleryPhoto) => {
+    if (downloadingPhotoId || downloadingAllPhotos) {
+      return;
+    }
+
+    if (!photo.imageUrl) {
+      showAlert({
+        type: "warning",
+        title: "Fotoğraf bulunamadı",
+        message: "İndirilecek fotoğraf bağlantısı bulunamadı.",
+        confirmText: "Tamam",
+      });
+
+      return;
+    }
+
+    try {
+      setDownloadingPhotoId(photo.id);
+
+      await downloadImageToGallery({
+        imageUri: photo.imageUrl,
+        fileNamePrefix: `weddion-galeri-${
+          selectedInvitation?.bride_name ?? "misafir"
+        }-${selectedInvitation?.groom_name ?? "fotograf"}`,
+      });
+
+      showAlert({
+        type: "success",
+        title: "Fotoğraf indirildi",
+        message:
+          Platform.OS === "ios"
+            ? "Fotoğraf, Fotoğraflar uygulamasına kaydedildi."
+            : "Fotoğraf galerinize kaydedildi.",
+        confirmText: "Tamam",
+      });
+    } catch (error) {
+      console.log(
+        "Galeri fotoğrafı indirilemedi:",
+        error,
+        "photoImageUrl:",
+        photo.imageUrl?.slice(0, 120),
+      );
+
+      const message =
+        error instanceof Error && error.message === "GALLERY_PERMISSION_DENIED"
+          ? "Fotoğrafı galeriye kaydedebilmek için fotoğraf ekleme izni vermelisiniz. Ayarlar > Weddion > Fotoğraflar kısmından erişimi açın."
+          : "Fotoğraf galeriye kaydedilemedi. Fotoğraf iznini ve görsel bağlantısını kontrol edip tekrar deneyin.";
+
+      showAlert({
+        type: "error",
+        title: "İndirme başarısız",
+        message,
+        confirmText: "Tamam",
+      });
+    } finally {
+      if (isMountedRef.current) {
+        setDownloadingPhotoId(null);
+      }
+    }
+  };
+
+  const handleDownloadAllPhotos = async () => {
+    if (downloadingAllPhotos || downloadingPhotoId || photos.length === 0) {
+      return;
+    }
+
+    const imageUris = photos
+      .map((photo) => photo.imageUrl)
+      .filter((imageUrl): imageUrl is string => Boolean(imageUrl));
+
+    if (imageUris.length === 0) {
+      showAlert({
+        type: "warning",
+        title: "Fotoğraf bulunamadı",
+        message: "İndirilecek fotoğraf bağlantısı bulunamadı.",
+        confirmText: "Tamam",
+      });
+
+      return;
+    }
+
+    try {
+      setDownloadingAllPhotos(true);
+
+      const downloadedUris = await downloadImagesToGallery({
+        imageUris,
+        fileNamePrefix: `weddion-galeri-${
+          selectedInvitation?.bride_name ?? "misafir"
+        }-${selectedInvitation?.groom_name ?? "fotograf"}`,
+      });
+
+      showAlert({
+        type: "success",
+        title: "Fotoğraflar indirildi",
+        message:
+          Platform.OS === "ios"
+            ? `${downloadedUris.length} fotoğraf Fotoğraflar uygulamasına kaydedildi.`
+            : `${downloadedUris.length} fotoğraf galerinize kaydedildi.`,
+        confirmText: "Tamam",
+      });
+    } catch (error) {
+      console.log("Tüm galeri fotoğrafları indirilemedi:", error);
+
+      const message =
+        error instanceof Error && error.message === "GALLERY_PERMISSION_DENIED"
+          ? "Fotoğrafları galeriye kaydedebilmek için fotoğraf ekleme izni vermelisiniz. Ayarlar > Weddion > Fotoğraflar kısmından erişimi açın."
+          : "Fotoğraflar galeriye kaydedilemedi. Fotoğraf iznini ve görsel bağlantılarını kontrol edip tekrar deneyin.";
+
+      showAlert({
+        type: "error",
+        title: "Toplu indirme başarısız",
+        message,
+        confirmText: "Tamam",
+      });
+    } finally {
+      if (isMountedRef.current) {
+        setDownloadingAllPhotos(false);
+      }
+    }
+  };
+
   const handleDeletePhoto = (photo: GalleryPhoto) => {
     const targetPhoto = guestPhotos.find(
       (guestPhoto) => guestPhoto.id === photo.id,
@@ -371,6 +500,9 @@ export default function GalleryScreen() {
                 photos={photos}
                 photoCount={photos.length}
                 photoLimit={MAX_GUEST_PHOTOS_PER_INVITATION}
+                onDownloadPhoto={handleDownloadPhoto}
+                onDownloadAllPhotos={handleDownloadAllPhotos}
+                downloadAllLoading={downloadingAllPhotos}
                 onDeletePhoto={handleDeletePhoto}
               />
             ) : (

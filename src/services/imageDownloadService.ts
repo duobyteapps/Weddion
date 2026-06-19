@@ -6,6 +6,11 @@ type DownloadImageToGalleryParams = {
   fileNamePrefix?: string;
 };
 
+type DownloadImagesToGalleryParams = {
+  imageUris: string[];
+  fileNamePrefix?: string;
+};
+
 function normalizeTurkishText(value: string) {
   return value
     .toLocaleLowerCase("tr-TR")
@@ -21,9 +26,10 @@ function normalizeTurkishText(value: string) {
 
 function createDownloadFileName(fileNamePrefix = "weddion-gorsel") {
   const timestamp = Date.now();
+  const randomPart = Math.random().toString(36).slice(2, 8);
   const normalizedPrefix = normalizeTurkishText(fileNamePrefix);
 
-  return `${normalizedPrefix}-${timestamp}`;
+  return `${normalizedPrefix}-${timestamp}-${randomPart}`;
 }
 
 function getFileExtensionFromUri(imageUri: string) {
@@ -169,4 +175,36 @@ export async function downloadImageToGallery({
   await MediaLibrary.saveToLibraryAsync(localImageUri);
 
   return localImageUri;
+}
+
+export async function downloadImagesToGallery({
+  imageUris,
+  fileNamePrefix = "weddion-galeri",
+}: DownloadImagesToGalleryParams) {
+  const validImageUris = imageUris.filter(Boolean);
+
+  if (validImageUris.length === 0) {
+    throw new Error("IMAGE_URIS_REQUIRED");
+  }
+
+  const hasPermission = await requestGallerySavePermission();
+
+  if (!hasPermission) {
+    throw new Error("GALLERY_PERMISSION_DENIED");
+  }
+
+  const downloadedUris: string[] = [];
+
+  for (const imageUri of validImageUris) {
+    const localImageUri = await prepareImageForMediaLibrary(
+      imageUri,
+      fileNamePrefix,
+    );
+
+    await MediaLibrary.saveToLibraryAsync(localImageUri);
+
+    downloadedUris.push(localImageUri);
+  }
+
+  return downloadedUris;
 }

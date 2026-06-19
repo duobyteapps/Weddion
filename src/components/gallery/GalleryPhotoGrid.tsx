@@ -1,5 +1,6 @@
 import { View } from "react-native";
 
+import { AppButton } from "@/components/ui/AppButton";
 import { AppText } from "@/components/ui/AppText";
 import { GalleryFilterTabs } from "./GalleryFilterTabs";
 import { GalleryPhoto, GalleryPhotoCard } from "./GalleryPhotoCard";
@@ -12,15 +13,20 @@ type Props = {
   onPressPhoto?: (photo: GalleryPhoto) => void;
   onDownloadPhoto?: (photo: GalleryPhoto) => void;
   onDeletePhoto?: (photo: GalleryPhoto) => void;
+  onDownloadAllPhotos?: () => void | Promise<void>;
+  downloadAllLoading?: boolean;
 };
 
 export function GalleryPhotoGrid({
+  title = "Tüm Fotoğraflar",
   photos,
   photoLimit,
   photoCount,
   onPressPhoto,
   onDownloadPhoto,
   onDeletePhoto,
+  onDownloadAllPhotos,
+  downloadAllLoading = false,
 }: Props) {
   const currentPhotoCount = photoCount ?? photos.length;
 
@@ -38,15 +44,27 @@ export function GalleryPhotoGrid({
 
   return (
     <View>
-      <View className="flex-row items-center justify-between">
-        <AppText variant="title" className="mb-4">
-          Tüm Fotoğraflar
-        </AppText>
+      <View className="mb-4 flex-row items-center justify-between gap-3">
+        <View className="flex-1">
+          <AppText variant="title">{title}</AppText>
 
-        {typeof photoLimit === "number" ? (
-          <AppText variant="caption">
-            {currentPhotoCount}/{photoLimit}
-          </AppText>
+          {typeof photoLimit === "number" ? (
+            <AppText variant="caption" className="mt-1 text-textMuted">
+              {currentPhotoCount}/{photoLimit} fotoğraf
+            </AppText>
+          ) : null}
+        </View>
+
+        {onDownloadAllPhotos && photos.length > 0 ? (
+          <AppButton
+            title={downloadAllLoading ? "İndiriliyor..." : "Tümünü İndir"}
+            variant="ghost"
+            onPress={onDownloadAllPhotos}
+            loading={downloadAllLoading}
+            disabled={downloadAllLoading}
+            className="h-10 rounded-full px-4"
+            textClassName="text-xs"
+          />
         ) : null}
       </View>
 
