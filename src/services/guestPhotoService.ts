@@ -184,6 +184,19 @@ export const uploadGuestPhotos = async ({
 
       if (uploadRecordError) {
         console.log("Guest photo record RPC failed:", uploadRecordError);
+
+        try {
+          await deleteR2Object(storagePath);
+        } catch (deleteError) {
+          console.log("R2 guest photo rollback delete failed:", deleteError);
+        }
+
+        if (uploadRecordError.message.includes("GUEST_PHOTO_LIMIT_REACHED")) {
+          throw new Error(
+            "Fotoğraf yükleme limiti doldu. Bu hesap için en fazla 100 fotoğraf yüklenebilir.",
+          );
+        }
+
         throw new Error(uploadRecordError.message);
       }
 

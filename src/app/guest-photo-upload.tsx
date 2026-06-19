@@ -14,9 +14,8 @@ import { AppBackButton } from "@/components/ui/AppBackButton";
 import { AppButton } from "@/components/ui/AppButton";
 import { AppText } from "@/components/ui/AppText";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
+import { MAX_PHOTOS_PER_UPLOAD } from "@/constants/guestPhotoLimits";
 import { uploadGuestPhotos } from "@/services/guestPhotoService";
-
-const MAX_PHOTOS_PER_UPLOAD = 20;
 
 type GuestPhotoUploadParams = {
   invitationId?: string;
