@@ -40,19 +40,13 @@ export function AppText({
     serifTitle: "font-cormorantBold text-[24px]",
     serifSubtitle: "font-cormorantBold text-[18px]",
 
-    invitationNames:
-      "font-tangerineBold text-[54px] leading-[58px] text-textDark",
-    invitationAmpersand:
-      "font-tangerineBold text-[44px] leading-[46px] text-textDark",
-    invitationParents: "font-cormorantSemiBold text-[13px] leading-[17px]",
-    invitationMeta:
-      "font-cormorantSemiBold text-[15px] leading-[20px] text-textDark",
-    invitationBody:
-      "font-cormorantSemiBold text-[14px] leading-[20px] text-textMuted",
-    invitationVenue:
-      "font-cormorantBold text-[24px] leading-[29px] text-textDark",
-    invitationLocation:
-      "font-cormorantSemiBold text-[13px] leading-[18px] text-textMuted",
+    invitationNames: "font-tangerineBold text-[54px] text-textDark",
+    invitationAmpersand: "font-tangerineBold text-[44px] text-textDark",
+    invitationParents: "font-cormorantSemiBold text-[13px]",
+    invitationMeta: "font-cormorantSemiBold text-[15px] text-textDark",
+    invitationBody: "font-cormorantSemiBold text-[14px]  text-textMuted",
+    invitationVenue: "font-cormorantBold text-[24px]  text-textDark",
+    invitationLocation: "font-cormorantSemiBold text-[13px]  text-textMuted",
   };
 
   return (

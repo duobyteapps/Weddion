@@ -1,10 +1,12 @@
 import * as Clipboard from "expo-clipboard";
 import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, Platform, ScrollView, View } from "react-native";
+import { captureRef } from "react-native-view-shot";
 
 import { ScreenHeader } from "@/components/common/ScreenHeader";
 import { InvitationEditSteps } from "@/components/invitations/create/InvitationEditSteps";
+import { InvitationQrDownloadCard } from "@/components/invitations/create/InvitationQrDownloadCard";
 import { InvitationQrShareCard } from "@/components/invitations/create/InvitationQrShareCard";
 import { InvitationShareNoteCard } from "@/components/invitations/create/InvitationShareNoteCard";
 import { InvitationShareReadyCard } from "@/components/invitations/create/InvitationShareReadyCard";
@@ -67,6 +69,8 @@ function cleanOptionalParam(value?: string) {
 export default function InvitationFlowShareScreen() {
   const params = useLocalSearchParams<ShareParams>();
   const { showAlert } = useAppAlert();
+
+  const qrDownloadCardRef = useRef<View>(null);
 
   const [template, setTemplate] = useState<InvitationTemplateDto | null>(null);
   const [loading, setLoading] = useState(true);
@@ -269,35 +273,56 @@ export default function InvitationFlowShareScreen() {
     }
   }
 
-  async function handleDownloadQrPress(qrImageUri: string) {
+  async function handleDownloadQrPress() {
+    if (!qrDownloadCardRef.current) {
+      showAlert({
+        type: "warning",
+        title: "QR kart hazırlanamadı",
+        message: "İndirilecek QR paylaşım kartı henüz hazır değil.",
+        confirmText: "Tamam",
+      });
+
+      return;
+    }
+
     try {
       setDownloadingQr(true);
 
+      const qrCardImageUri = await captureRef(qrDownloadCardRef, {
+        format: "png",
+        quality: 1,
+        result: "tmpfile",
+        width: 1200,
+        height: 900,
+      });
+
       await downloadImageToGallery({
-        imageUri: qrImageUri,
-        fileNamePrefix: `weddion-qr-${formData.brideName}-${formData.groomName}`,
+        imageUri: qrCardImageUri,
+        fileNamePrefix: `weddion-qr-kart-${formData.brideName}-${formData.groomName}`,
       });
 
       showAlert({
         type: "success",
-        title: "QR kod indirildi",
+        title: "QR kart indirildi",
         message:
           Platform.OS === "ios"
-            ? "QR kod Fotoğraflar uygulamasına kaydedildi."
-            : "QR kod galerinize kaydedildi.",
+            ? "QR paylaşım kartı Fotoğraflar uygulamasına kaydedildi."
+            : "QR paylaşım kartı galerinize kaydedildi.",
         confirmText: "Tamam",
       });
     } catch (error) {
-      console.log("QR kod indirme hatası:", error);
+      console.log("QR paylaşım kartı indirme hatası:", error);
 
       const message =
         error instanceof Error && error.message === "GALLERY_PERMISSION_DENIED"
-          ? "QR kodu galeriye kaydedebilmek için fotoğraf ekleme izni vermelisiniz. Ayarlar > Weddion > Fotoğraflar kısmından erişimi açın."
-          : "QR kod galeriye kaydedilemedi. Fotoğraf iznini kontrol edip tekrar deneyin.";
+          ? "QR paylaşım kartını galeriye kaydedebilmek için fotoğraf ekleme izni vermelisiniz. Ayarlar > Weddion > Fotoğraflar kısmından erişimi açın."
+          : error instanceof Error && error.message === "UNSUPPORTED_IMAGE_URI"
+            ? "QR paylaşım kartının dosya adresi desteklenmiyor. Lütfen tekrar deneyin."
+            : "QR paylaşım kartı galeriye kaydedilemedi. Fotoğraf iznini kontrol edip tekrar deneyin.";
 
       showAlert({
         type: "error",
-        title: "QR indirilemedi",
+        title: "QR kart indirilemedi",
         message,
         confirmText: "Tamam",
       });
@@ -375,37 +400,57 @@ export default function InvitationFlowShareScreen() {
 
   return (
     <ScreenContainer className="bg-background">
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerClassName="pb-10"
-      >
-        <ScreenHeader
-          title="Paylaş"
-          description="Davetiyenizi Instagram için hazırlayın."
-          backTo={{
-            pathname: "/my-invitations",
+      <View className="flex-1">
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerClassName="pb-10"
+        >
+          <ScreenHeader
+            title="Paylaş"
+            description="Davetiyenizi Instagram için hazırlayın."
+            onBackPress={handleBackPress}
+          />
+
+          <InvitationEditSteps activeStep={3} />
+
+          <InvitationShareReadyCard
+            imageUrl={finalInvitationImageUri}
+            onDownloadImagePress={handleDownloadInstagramImage}
+            loading={downloadingInvitation}
+          />
+
+          <InvitationQrShareCard
+            qrValue={qrValue}
+            guestUploadCode={guestUploadCode}
+            onCopyCodePress={handleCopyCodePress}
+            onCopyLinkPress={handleCopyLinkPress}
+            onDownloadQrPress={handleDownloadQrPress}
+            qrDownloadLoading={downloadingQr}
+          />
+
+          <InvitationShareNoteCard />
+        </ScrollView>
+
+        <View
+          pointerEvents="none"
+          style={{
+            position: "absolute",
+            left: -3000,
+            top: -3000,
+            width: 1200,
+            height: 900,
+            opacity: 1,
           }}
-        />
-
-        <InvitationEditSteps activeStep={3} />
-
-        <InvitationShareReadyCard
-          imageUrl={finalInvitationImageUri}
-          onDownloadImagePress={handleDownloadInstagramImage}
-          loading={downloadingInvitation}
-        />
-
-        <InvitationQrShareCard
-          qrValue={qrValue}
-          guestUploadCode={guestUploadCode}
-          onCopyCodePress={handleCopyCodePress}
-          onCopyLinkPress={handleCopyLinkPress}
-          onDownloadQrPress={handleDownloadQrPress}
-          qrDownloadLoading={downloadingQr}
-        />
-
-        <InvitationShareNoteCard />
-      </ScrollView>
+        >
+          <InvitationQrDownloadCard
+            ref={qrDownloadCardRef}
+            qrValue={qrValue}
+            brideName={formData.brideName}
+            groomName={formData.groomName}
+            guestUploadCode={guestUploadCode}
+          />
+        </View>
+      </View>
     </ScreenContainer>
   );
 }
