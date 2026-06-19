@@ -98,6 +98,8 @@ export type InvitationGuestPhoto = {
   status: InvitationGuestPhotoStatus;
 
   created_at: string;
+
+  expires_at: string;
 };
 
 export type GuestInvitationAccess = {

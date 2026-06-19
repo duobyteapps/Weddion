@@ -264,8 +264,9 @@ export async function getCurrentUserGuestPhotoCount(): Promise<number> {
 
   const { count, error } = await supabase
     .from("invitation_guest_photos")
-    .select("id", { count: "exact", head: true })
-    .in("invitation_id", invitationIds);
+    .select("*", { count: "exact", head: true })
+    .in("invitation_id", invitationIds)
+    .gt("expires_at", new Date().toISOString());
 
   if (error) {
     throw new Error(error.message);

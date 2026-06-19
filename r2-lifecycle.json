@@ -1,0 +1,14 @@
+{
+  "Rules": [
+    {
+      "ID": "Delete guest photos after 7 days",
+      "Status": "Enabled",
+      "Filter": {
+        "Prefix": "guest-photos/"
+      },
+      "Expiration": {
+        "Days": 7
+      }
+    }
+  ]
+}
