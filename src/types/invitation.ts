@@ -45,6 +45,8 @@ export type UserInvitation = {
   template_id: string;
 
   event_type_id: string;
+  invitation_name: string | null;
+
   invitation_event_types?: {
     id: string;
     slug: string;
@@ -100,6 +102,7 @@ export type InvitationGuestPhoto = {
 
 export type GuestInvitationAccess = {
   id: string;
+  invitation_name: string | null;
   bride_name: string;
   groom_name: string;
   event_date: string | null;

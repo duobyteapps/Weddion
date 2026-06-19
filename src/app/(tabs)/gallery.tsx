@@ -27,15 +27,24 @@ type GalleryPhotos = ComponentProps<typeof GalleryPhotoGrid>["photos"];
 type GalleryPhoto = GalleryPhotos[number];
 
 function formatEventTitle(invitation: UserInvitation) {
-  const brideName = invitation.bride_name ?? "";
-  const groomName = invitation.groom_name ?? "";
-  const title = `${brideName} & ${groomName}`.trim();
+  const invitationName = invitation.invitation_name?.trim();
 
-  if (title === "&") {
-    return "İsimsiz Davetiye";
+  if (invitationName) {
+    return invitationName;
   }
 
-  return title;
+  const brideName = invitation.bride_name?.trim();
+  const groomName = invitation.groom_name?.trim();
+  const eventTypeTitle = invitation.invitation_event_types?.title?.trim();
+
+  const coupleName =
+    brideName && groomName
+      ? `${brideName} & ${groomName}`
+      : brideName || groomName || "";
+
+  const fallbackTitle = [coupleName, eventTypeTitle].filter(Boolean).join(" ");
+
+  return fallbackTitle || "İsimsiz Davetiye";
 }
 
 function formatEventDate(date?: string | null) {
@@ -330,7 +339,7 @@ export default function GalleryScreen() {
     <ScreenContainer className="flex-1 bg-background">
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerClassName="pb-32"
+        contentContainerClassName="pb-10"
       >
         <ScreenHeader
           title="Galeri"

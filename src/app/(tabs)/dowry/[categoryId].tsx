@@ -157,7 +157,7 @@ export default function DowryCategoryDetailScreen() {
       <ScrollView
         nestedScrollEnabled
         showsVerticalScrollIndicator={false}
-        contentContainerClassName="pb-32"
+        contentContainerClassName="pb-10"
       >
         <ScreenHeader title={category.title} backTo="/(tabs)/dowry-summary" />
 

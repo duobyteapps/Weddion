@@ -32,6 +32,7 @@ function getInvitationRouteParams(invitation: UserInvitation) {
     invitationImageUrl: invitation.invitation_image_url ?? "",
 
     eventTypeId: invitation.event_type_id,
+    invitationName: invitation.invitation_name ?? "",
 
     guestUploadCode: invitation.guest_upload_code ?? "",
     guestUploadSlug: invitation.guest_upload_slug ?? "",
@@ -49,6 +50,27 @@ function getInvitationRouteParams(invitation: UserInvitation) {
     venueName: invitation.venue_name ?? "",
     venueLocation: invitation.venue_location ?? "",
   };
+}
+
+function getInvitationDisplayName(invitation: UserInvitation) {
+  const invitationName = invitation.invitation_name?.trim();
+
+  if (invitationName) {
+    return invitationName;
+  }
+
+  const brideName = invitation.bride_name?.trim();
+  const groomName = invitation.groom_name?.trim();
+  const eventTypeTitle = invitation.invitation_event_types?.title?.trim();
+
+  const coupleName =
+    brideName && groomName
+      ? `${brideName} & ${groomName}`
+      : brideName || groomName || "";
+
+  const fallbackTitle = [coupleName, eventTypeTitle].filter(Boolean).join(" ");
+
+  return fallbackTitle || "İsimsiz Davetiye";
 }
 
 export default function MyInvitationsScreen() {
@@ -197,9 +219,11 @@ export default function MyInvitationsScreen() {
   }
 
   function handleDeleteInvitation(invitation: UserInvitation) {
+    const invitationDisplayName = getInvitationDisplayName(invitation);
+
     showAlert({
       title: "Davetiyeyi sil",
-      message: `${invitation.bride_name} & ${invitation.groom_name} davetiyesini silmek istediğinize emin misiniz? Bu işlem geri alınamaz.`,
+      message: `${invitationDisplayName} davetiyesini silmek istediğinize emin misiniz? Bu işlem geri alınamaz.`,
       type: "warning",
       confirmText: "Sil",
       cancelText: "İptal",
@@ -210,9 +234,11 @@ export default function MyInvitationsScreen() {
   }
 
   function handleMenuPress(invitation: UserInvitation) {
+    const invitationDisplayName = getInvitationDisplayName(invitation);
+
     showAlert({
       title: "Davetiye İşlemleri",
-      message: `${invitation.bride_name} & ${invitation.groom_name} davetiyesi için işlemler daha sonra aktif edilecek.`,
+      message: `${invitationDisplayName} davetiyesi için işlemler daha sonra aktif edilecek.`,
       type: "info",
       confirmText: "Tamam",
     });
@@ -233,7 +259,7 @@ export default function MyInvitationsScreen() {
     <ScreenContainer className="bg-background">
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerClassName="pb-32"
+        contentContainerClassName="pb-10"
         refreshControl={
           <RefreshControl
             refreshing={refreshing}

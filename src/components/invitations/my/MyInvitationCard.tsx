@@ -33,16 +33,24 @@ function normalizeImageUri(imageUrl?: string | null) {
 }
 
 function formatInvitationTitle(invitation: UserInvitation) {
-  const brideName = invitation.bride_name?.trim();
-  const groomName = invitation.groom_name?.trim();
-  const eventTypeTitle =
-    invitation.invitation_event_types?.title?.trim() || "Düğün";
+  const invitationName = invitation.invitation_name?.trim();
 
-  if (brideName && groomName) {
-    return `${brideName} & ${groomName} ${eventTypeTitle}`;
+  if (invitationName) {
+    return invitationName;
   }
 
-  return `${eventTypeTitle}`;
+  const brideName = invitation.bride_name?.trim();
+  const groomName = invitation.groom_name?.trim();
+  const eventTypeTitle = invitation.invitation_event_types?.title?.trim();
+
+  const coupleName =
+    brideName && groomName
+      ? `${brideName} & ${groomName}`
+      : brideName || groomName || "";
+
+  const fallbackTitle = [coupleName, eventTypeTitle].filter(Boolean).join(" ");
+
+  return fallbackTitle || "İsimsiz Davetiye";
 }
 
 function formatVenue(invitation: UserInvitation) {

@@ -285,7 +285,7 @@ export default function GuestPhotoUploadScreen() {
     <ScreenContainer className="bg-background">
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerClassName="pb-32"
+        contentContainerClassName="pb-10"
       >
         <AppBackButton onPress={handleBack} />
 

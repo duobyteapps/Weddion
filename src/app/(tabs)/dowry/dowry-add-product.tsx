@@ -176,7 +176,7 @@ export default function DowryAddProductScreen() {
     <ScreenContainer>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerClassName="pb-32"
+        contentContainerClassName="pb-10"
       >
         <ScreenHeader
           title={isEditMode ? "Ürünü Güncelle" : "Yeni Ürün Ekle"}

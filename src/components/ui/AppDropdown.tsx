@@ -104,8 +104,16 @@ export function AppDropdown({
               top: position.top,
               left: position.left,
               width: position.width,
+              shadowColor: "#4B2B63",
+              shadowOffset: {
+                width: 0,
+                height: 10,
+              },
+              shadowOpacity: 0.25,
+              shadowRadius: 18,
+              elevation: 12,
             }}
-            className="overflow-hidden rounded-2xl bg-white"
+            className="overflow-hidden rounded-xl border border-[#F0E6F6] bg-[#FFFFFF]"
           >
             {options.map((item, index) => {
               const isSelected = item.value === value;
@@ -116,15 +124,25 @@ export function AppDropdown({
                   <TouchableOpacity
                     activeOpacity={0.85}
                     onPress={() => handleSelect(item.value)}
-                    className="h-[42px] justify-center px-4"
+                    className={[
+                      "mx-1.5 my-1 h-[40px] flex-row items-center justify-between rounded-xl px-3",
+                      isSelected ? "bg-primaryLight" : "bg-white",
+                    ].join(" ")}
                   >
                     <AppText
                       variant="body"
                       numberOfLines={1}
-                      className={isSelected ? "text-primary" : "text-textMuted"}
+                      className={[
+                        "flex-1 !text-[13px]",
+                        isSelected ? "text-primary" : "text-textDark",
+                      ].join(" ")}
                     >
                       {item.label}
                     </AppText>
+
+                    {isSelected ? (
+                      <Ionicons name="checkmark" size={15} color="#A875D1" />
+                    ) : null}
                   </TouchableOpacity>
 
                   {!isLastItem ? (

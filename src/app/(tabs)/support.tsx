@@ -12,7 +12,7 @@ export default function support() {
     <ScreenContainer className="flex-1 bg-background">
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerClassName="pb-32"
+        contentContainerClassName="pb-10"
       >
         <ScreenHeader
           title="Yardım ve Destek"

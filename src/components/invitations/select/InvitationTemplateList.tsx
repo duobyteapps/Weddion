@@ -1,8 +1,8 @@
 import { FlatList, View } from "react-native";
 
 import {
-    InvitationTemplate,
-    InvitationTemplateCard,
+  InvitationTemplate,
+  InvitationTemplateCard,
 } from "./InvitationTemplateCard";
 
 type Props = {
@@ -24,7 +24,7 @@ export function InvitationTemplateList({
       keyExtractor={(item) => item.id}
       numColumns={2}
       showsVerticalScrollIndicator={false}
-      contentContainerClassName="pb-32"
+      contentContainerClassName="pb-10"
       columnWrapperClassName="justify-between"
       ListHeaderComponent={ListHeaderComponent}
       renderItem={({ item }) => (

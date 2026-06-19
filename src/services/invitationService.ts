@@ -11,6 +11,15 @@ import {
   UserInvitation,
 } from "@/types/invitation";
 
+const USER_INVITATION_SELECT = `
+  *,
+  invitation_event_types (
+    id,
+    slug,
+    title
+  )
+`;
+
 function cleanText(value: string) {
   const trimmed = value.trim();
 
@@ -123,7 +132,7 @@ export async function createUserInvitation(
       invitation_image_path: null,
       updated_at: new Date().toISOString(),
     })
-    .select("*")
+    .select(USER_INVITATION_SELECT)
     .single();
 
   if (createError) {
@@ -148,7 +157,7 @@ export async function createUserInvitation(
     })
     .eq("id", createdInvitation.id)
     .eq("user_id", user.id)
-    .select("*")
+    .select(USER_INVITATION_SELECT)
     .single();
 
   if (updateError) {
@@ -204,7 +213,7 @@ export async function updateUserInvitation(
     .update(updatePayload)
     .eq("id", payload.invitationId)
     .eq("user_id", user.id)
-    .select("*")
+    .select(USER_INVITATION_SELECT)
     .single();
 
   if (updateError) {
@@ -263,16 +272,7 @@ export async function getCurrentUserInvitations(): Promise<UserInvitation[]> {
 
   const { data, error } = await supabase
     .from("user_invitations")
-    .select(
-      `
-      *,
-      invitation_event_types (
-        id,
-        slug,
-        title
-      )
-    `,
-    )
+    .select(USER_INVITATION_SELECT)
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 
