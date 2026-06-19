@@ -6,6 +6,7 @@ import { ScreenHeader } from "@/components/common/ScreenHeader";
 import { DowryCategoryDetailHeader } from "@/components/dowry/dowry-detail/DowryCategoryDetailHeader";
 import { DowryCategoryFilterTabs } from "@/components/dowry/dowry-detail/DowryCategoryFilterTabs";
 import { DowryChecklistCard } from "@/components/dowry/dowry-detail/DowryChecklistCard";
+import { EmptyDowryItems } from "@/components/dowry/dowry-detail/EmptyDowryItems";
 import { AppButton } from "@/components/ui/AppButton";
 import { AppText } from "@/components/ui/AppText";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
@@ -78,6 +79,16 @@ export default function DowryCategoryDetailScreen() {
       fetchItems();
     }, [fetchItems]),
   );
+
+  function handleAddProduct() {
+    router.push({
+      pathname: "/dowry/dowry-add-product",
+      params: {
+        categoryId: categorySlug,
+        categoryName: category?.title ?? "",
+      },
+    });
+  }
 
   async function handleToggleItem(selectedItem: DowryChecklistItem) {
     const nextCompleted = !selectedItem.completed;
@@ -176,33 +187,29 @@ export default function DowryCategoryDetailScreen() {
           onChangeFilter={setActiveFilter}
         />
 
-        <View className="mb-6 max-h-[400px]">
-          {isLoading ? (
-            <View className="items-center justify-center py-8">
-              <ActivityIndicator color={Colors.primary} />
+        {isLoading ? (
+          <View className="mt-6 items-center justify-center py-8">
+            <ActivityIndicator color={Colors.primary} />
+          </View>
+        ) : items.length === 0 ? (
+          <EmptyDowryItems
+            categoryName={category.title}
+            onAddPress={handleAddProduct}
+          />
+        ) : (
+          <>
+            <View className="mb-6 max-h-[400px]">
+              <DowryChecklistCard
+                items={filteredItems}
+                onToggleItem={handleToggleItem}
+                onDeleteItem={handleDeleteItem}
+                onUpdateItem={handleUpdateItem}
+              />
             </View>
-          ) : (
-            <DowryChecklistCard
-              items={filteredItems}
-              onToggleItem={handleToggleItem}
-              onDeleteItem={handleDeleteItem}
-              onUpdateItem={handleUpdateItem}
-            />
-          )}
-        </View>
 
-        <AppButton
-          title="Ürün Ekle"
-          onPress={() =>
-            router.push({
-              pathname: "/dowry/dowry-add-product",
-              params: {
-                categoryId: categorySlug,
-                categoryName: category.title,
-              },
-            })
-          }
-        />
+            <AppButton title="Ürün Ekle" onPress={handleAddProduct} />
+          </>
+        )}
       </ScrollView>
     </ScreenContainer>
   );
