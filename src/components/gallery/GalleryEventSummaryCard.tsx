@@ -39,7 +39,6 @@ export function GalleryEventSummaryCard({
           <AppDropdown
             value={selectedEventId}
             placeholder="Davetiye seç"
-            suffix=" Düğünü"
             options={dropdownOptions}
             onChange={onChangeEvent}
             dropdownWidth={190}

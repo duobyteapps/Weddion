@@ -91,9 +91,6 @@ export type InvitationGuestPhoto = {
   storage_path: string;
   public_url: string | null;
 
-  guest_name: string | null;
-  guest_note: string | null;
-
   upload_code: string;
   status: InvitationGuestPhotoStatus;
 

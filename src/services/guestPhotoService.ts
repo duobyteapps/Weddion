@@ -16,8 +16,6 @@ type UploadGuestPhotoParams = {
   invitationId: string;
   guestUploadCode: string;
   imageUri: string;
-  guestName?: string;
-  guestNote?: string;
 };
 
 type UpdateGuestPhotoStatusParams = {
@@ -121,8 +119,6 @@ export const uploadGuestPhoto = async ({
   invitationId,
   guestUploadCode,
   imageUri,
-  guestName,
-  guestNote,
 }: UploadGuestPhotoParams) => {
   const normalizedCode = normalizeGuestUploadCode(guestUploadCode);
 
@@ -147,8 +143,6 @@ export const uploadGuestPhoto = async ({
       target_invitation_id: invitationId,
       target_upload_code: normalizedCode,
       target_storage_path: storagePath,
-      target_guest_name: guestName?.trim() || null,
-      target_guest_note: guestNote?.trim() || null,
     },
   );
 
@@ -183,7 +177,7 @@ export const getGuestPhotosByInvitation = async (
     throw new Error(error.message);
   }
 
-  const photos = (data ?? []) as InvitationGuestPhoto[];
+  const photos = (data ?? []) as Omit<InvitationGuestPhoto, "public_url">[];
 
   const photosWithSignedUrls = await Promise.all(
     photos.map(async (photo) => {
@@ -228,7 +222,10 @@ export const updateGuestPhotoStatus = async ({
     throw new Error(error.message);
   }
 
-  return data as InvitationGuestPhoto;
+  return {
+    ...(data as Omit<InvitationGuestPhoto, "public_url">),
+    public_url: null,
+  };
 };
 
 export const deleteGuestPhoto = async (photo: InvitationGuestPhoto) => {
