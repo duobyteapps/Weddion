@@ -1,69 +1,57 @@
 import { useMemo, useState } from "react";
-import { TouchableOpacity, View } from "react-native";
+import { View } from "react-native";
 
 import { AppButton } from "@/components/ui/AppButton";
-import { AppIconBox } from "@/components/ui/AppIconBox";
 import { AppText } from "@/components/ui/AppText";
-import { GalleryFilter, GalleryFilterTabs } from "./GalleryFilterTabs";
+
+import { GalleryFilterTabs, type GalleryFilter } from "./GalleryFilterTabs";
 import { GalleryPhoto, GalleryPhotoCard } from "./GalleryPhotoCard";
+import { GallerySelectionActions } from "./GallerySelectionActions";
 
 type Props = {
   title?: string;
   photos: GalleryPhoto[];
   photoLimit?: number;
   photoCount?: number;
+  downloadAllLoading?: boolean;
+  downloadSelectedLoading?: boolean;
+  deleteSelectedLoading?: boolean;
   onPressPhoto?: (photo: GalleryPhoto) => void;
+  onLongPressPhoto?: (photo: GalleryPhoto) => void;
   onDownloadPhoto?: (photo: GalleryPhoto) => void;
   onDeletePhoto?: (photo: GalleryPhoto) => void;
   onDownloadAllPhotos?: () => void | Promise<void>;
   onDownloadSelectedPhotos?: (photos: GalleryPhoto[]) => void | Promise<void>;
   onDeleteSelectedPhotos?: (photos: GalleryPhoto[]) => void | Promise<void>;
-  downloadAllLoading?: boolean;
-  downloadSelectedLoading?: boolean;
-  deleteSelectedLoading?: boolean;
 };
 
-function getPhotoAgeInDays(createdAt?: string) {
-  if (!createdAt) {
-    return null;
-  }
-
-  const createdDate = new Date(createdAt);
-
-  if (Number.isNaN(createdDate.getTime())) {
-    return null;
-  }
-
-  const now = new Date();
-  const diffMs = now.getTime() - createdDate.getTime();
-
-  return diffMs / (1000 * 60 * 60 * 24);
-}
-
-function shouldShowPhotoByFilter(photo: GalleryPhoto, filter: GalleryFilter) {
+function isPhotoInFilter(photo: GalleryPhoto, filter: GalleryFilter) {
   if (filter === "all") {
     return true;
   }
 
-  const photoAgeInDays = getPhotoAgeInDays(photo.createdAt);
-
-  if (photoAgeInDays === null) {
-    return true;
+  if (!photo.createdAt) {
+    return false;
   }
 
-  if (filter === "last-1-day") {
-    return photoAgeInDays <= 1;
+  const createdAtTime = new Date(photo.createdAt).getTime();
+
+  if (Number.isNaN(createdAtTime)) {
+    return false;
   }
 
-  if (filter === "last-4-days") {
-    return photoAgeInDays <= 4;
-  }
+  const now = Date.now();
 
-  if (filter === "last-7-days") {
-    return photoAgeInDays <= 7;
-  }
+  const filterDays: Record<Exclude<GalleryFilter, "all">, number> = {
+    "last-1-day": 1,
+    "last-4-days": 4,
+    "last-7-days": 7,
+  };
 
-  return true;
+  const dayCount = filterDays[filter];
+  const minTime = now - dayCount * 24 * 60 * 60 * 1000;
+
+  return createdAtTime >= minTime;
 }
 
 export function GalleryPhotoGrid({
@@ -71,31 +59,34 @@ export function GalleryPhotoGrid({
   photos,
   photoLimit,
   photoCount,
+  downloadAllLoading = false,
+  downloadSelectedLoading = false,
+  deleteSelectedLoading = false,
   onPressPhoto,
+  onLongPressPhoto,
   onDownloadPhoto,
   onDeletePhoto,
   onDownloadAllPhotos,
   onDownloadSelectedPhotos,
   onDeleteSelectedPhotos,
-  downloadAllLoading = false,
-  downloadSelectedLoading = false,
-  deleteSelectedLoading = false,
 }: Props) {
   const [selectedFilter, setSelectedFilter] = useState<GalleryFilter>("all");
   const [selectedPhotoIds, setSelectedPhotoIds] = useState<string[]>([]);
 
   const filteredPhotos = useMemo(() => {
-    return photos.filter((photo) =>
-      shouldShowPhotoByFilter(photo, selectedFilter),
-    );
+    return photos.filter((photo) => isPhotoInFilter(photo, selectedFilter));
   }, [photos, selectedFilter]);
+
+  const selectionMode = selectedPhotoIds.length > 0;
+  const currentPhotoCount = photoCount ?? photos.length;
 
   const selectedPhotos = useMemo(() => {
     return photos.filter((photo) => selectedPhotoIds.includes(photo.id));
   }, [photos, selectedPhotoIds]);
 
-  const currentPhotoCount = photoCount ?? photos.length;
-  const isSelectionMode = selectedPhotoIds.length > 0;
+  const allSelected =
+    filteredPhotos.length > 0 &&
+    filteredPhotos.every((photo) => selectedPhotoIds.includes(photo.id));
 
   const rows = filteredPhotos.reduce<GalleryPhoto[][]>((acc, photo, index) => {
     const rowIndex = Math.floor(index / 3);
@@ -109,18 +100,8 @@ export function GalleryPhotoGrid({
     return acc;
   }, []);
 
-  const handleLongPressPhoto = (photo: GalleryPhoto) => {
-    setSelectedPhotoIds((currentIds) => {
-      if (currentIds.includes(photo.id)) {
-        return currentIds;
-      }
-
-      return [...currentIds, photo.id];
-    });
-  };
-
   const handlePressPhoto = (photo: GalleryPhoto) => {
-    if (!isSelectionMode) {
+    if (!selectionMode) {
       onPressPhoto?.(photo);
       return;
     }
@@ -134,12 +115,42 @@ export function GalleryPhotoGrid({
     });
   };
 
-  const handleCloseSelectionMode = () => {
+  const handleLongPressPhoto = (photo: GalleryPhoto) => {
+    onLongPressPhoto?.(photo);
+
+    setSelectedPhotoIds((currentIds) => {
+      if (currentIds.includes(photo.id)) {
+        return currentIds;
+      }
+
+      return [...currentIds, photo.id];
+    });
+  };
+
+  const handleSelectAllPhotos = () => {
+    setSelectedPhotoIds((currentIds) => {
+      const filteredPhotoIds = filteredPhotos.map((photo) => photo.id);
+
+      const isEveryFilteredPhotoSelected = filteredPhotoIds.every((photoId) =>
+        currentIds.includes(photoId),
+      );
+
+      if (isEveryFilteredPhotoSelected) {
+        return currentIds.filter(
+          (photoId) => !filteredPhotoIds.includes(photoId),
+        );
+      }
+
+      return Array.from(new Set([...currentIds, ...filteredPhotoIds]));
+    });
+  };
+
+  const handleCancelSelection = () => {
     setSelectedPhotoIds([]);
   };
 
-  const handleSelectAll = () => {
-    setSelectedPhotoIds(filteredPhotos.map((photo) => photo.id));
+  const handleChangeFilter = (filter: GalleryFilter) => {
+    setSelectedFilter(filter);
   };
 
   const handleDownloadSelectedPhotos = async () => {
@@ -156,159 +167,85 @@ export function GalleryPhotoGrid({
     }
 
     await onDeleteSelectedPhotos?.(selectedPhotos);
+
     setSelectedPhotoIds([]);
   };
 
   return (
-    <View>
-      {isSelectionMode ? (
-        <View className="mb-4">
-          <View className="flex-row items-start justify-between gap-3">
-            <View className="flex-1">
-              <AppText variant="title">Seçilen Fotoğraflar</AppText>
-
-              <AppText variant="caption" className="mt-1 text-textMuted">
-                {selectedPhotoIds.length} fotoğraf seçildi
+    <View className="mt-7">
+      {!selectionMode ? (
+        <View className="mb-5">
+          <View className="mb-5 flex-row items-center justify-between">
+            <View>
+              <AppText variant="title" className="text-textDark">
+                {title}
               </AppText>
+
+              {typeof photoLimit === "number" ? (
+                <AppText className="mt-1 text-[13px] text-textMuted">
+                  {currentPhotoCount}/{photoLimit} fotoğraf
+                </AppText>
+              ) : null}
             </View>
 
-            <TouchableOpacity
-              activeOpacity={0.85}
-              onPress={handleCloseSelectionMode}
-              className="h-12 w-12 items-center justify-center rounded-2xl border border-border bg-white"
-            >
-              <AppIconBox
-                icon="x"
-                iconSet="feather"
-                color="#3D4266"
-                size={24}
-                className="h-8 w-8 bg-transparent"
+            {onDownloadAllPhotos && photos.length > 0 ? (
+              <AppButton
+                title="Tümünü İndir"
+                variant="ghost"
+                loading={downloadAllLoading}
+                disabled={downloadAllLoading}
+                onPress={onDownloadAllPhotos}
               />
-            </TouchableOpacity>
-          </View>
-
-          <View className="mt-5 flex-row gap-2">
-            <TouchableOpacity
-              activeOpacity={0.85}
-              onPress={handleSelectAll}
-              className="h-12 flex-1 items-center justify-center rounded-xl border border-primary bg-white px-2"
-            >
-              <AppText className="text-center text-sm font-semibold text-primary">
-                Tümünü Seç
-              </AppText>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              activeOpacity={0.85}
-              onPress={handleDownloadSelectedPhotos}
-              disabled={
-                selectedPhotos.length === 0 ||
-                downloadSelectedLoading ||
-                !onDownloadSelectedPhotos
-              }
-              className="h-12 flex-1 flex-row items-center justify-center gap-2 rounded-xl border border-primary bg-white px-2"
-            >
-              <AppIconBox
-                icon="download"
-                iconSet="feather"
-                color="#9A5BD6"
-                size={18}
-                className="h-6 w-6 bg-transparent"
-              />
-
-              <AppText className="text-center text-sm font-semibold text-primary">
-                {downloadSelectedLoading
-                  ? "İndiriliyor..."
-                  : "Seçilenleri İndir"}
-              </AppText>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              activeOpacity={0.85}
-              onPress={handleDeleteSelectedPhotos}
-              disabled={
-                selectedPhotos.length === 0 ||
-                deleteSelectedLoading ||
-                !onDeleteSelectedPhotos
-              }
-              className="h-12 flex-1 flex-row items-center justify-center gap-2 rounded-xl border border-red-400 bg-white px-2"
-            >
-              <AppIconBox
-                icon="trash-2"
-                iconSet="feather"
-                color="#FF4D45"
-                size={18}
-                className="h-6 w-6 bg-transparent"
-              />
-
-              <AppText className="text-center text-sm font-semibold text-red-500">
-                {deleteSelectedLoading ? "Siliniyor..." : "Seçilenleri Sil"}
-              </AppText>
-            </TouchableOpacity>
-          </View>
-        </View>
-      ) : (
-        <View className="mb-4 flex-row items-center justify-between gap-3">
-          <View className="flex-1">
-            <AppText variant="title">{title}</AppText>
-
-            {typeof photoLimit === "number" ? (
-              <AppText variant="caption" className="mt-1 text-textMuted">
-                {currentPhotoCount}/{photoLimit} fotoğraf
-              </AppText>
             ) : null}
           </View>
 
-          {onDownloadAllPhotos && photos.length > 0 ? (
-            <AppButton
-              title={downloadAllLoading ? "İndiriliyor..." : "Tümünü İndir"}
-              variant="ghost"
-              onPress={onDownloadAllPhotos}
-              loading={downloadAllLoading}
-              disabled={downloadAllLoading}
-              className="h-10 rounded-full px-4"
-              textClassName="text-xs"
-            />
-          ) : null}
+          <GalleryFilterTabs
+            selectedFilter={selectedFilter}
+            onChangeFilter={handleChangeFilter}
+          />
         </View>
+      ) : (
+        <GallerySelectionActions
+          selectedCount={selectedPhotoIds.length}
+          allSelected={allSelected}
+          downloadLoading={downloadSelectedLoading}
+          deleteLoading={deleteSelectedLoading}
+          onSelectAll={handleSelectAllPhotos}
+          onDownloadSelected={handleDownloadSelectedPhotos}
+          onDeleteSelected={handleDeleteSelectedPhotos}
+          onCancelSelection={handleCancelSelection}
+        />
       )}
 
-      <GalleryFilterTabs
-        selectedFilter={selectedFilter}
-        onChangeFilter={setSelectedFilter}
-      />
+      {rows.map((row, rowIndex) => (
+        <View key={`gallery-row-${rowIndex}`} className="mb-3 flex-row gap-3">
+          {row.map((photo) => {
+            const selected = selectedPhotoIds.includes(photo.id);
 
-      <View className="gap-4">
-        {rows.map((row, rowIndex) => (
-          <View key={`row-${rowIndex}`} className="flex-row gap-4">
-            {row.map((photo) => {
-              const isSelected = selectedPhotoIds.includes(photo.id);
+            return (
+              <GalleryPhotoCard
+                key={photo.id}
+                photo={photo}
+                selected={selected}
+                selectionMode={selectionMode}
+                onPress={() => handlePressPhoto(photo)}
+                onLongPress={() => handleLongPressPhoto(photo)}
+                onDownload={() => onDownloadPhoto?.(photo)}
+                onDelete={() => onDeletePhoto?.(photo)}
+              />
+            );
+          })}
 
-              return (
-                <GalleryPhotoCard
-                  key={photo.id}
-                  photo={photo}
-                  isSelectionMode={isSelectionMode}
-                  isSelected={isSelected}
-                  onPress={() => handlePressPhoto(photo)}
-                  onLongPress={() => handleLongPressPhoto(photo)}
-                  onDownload={() => onDownloadPhoto?.(photo)}
-                  onDelete={() => onDeletePhoto?.(photo)}
+          {row.length < 3
+            ? Array.from({ length: 3 - row.length }).map((_, index) => (
+                <View
+                  key={`gallery-empty-${rowIndex}-${index}`}
+                  className="flex-1"
                 />
-              );
-            })}
-
-            {row.length < 3
-              ? Array.from({ length: 3 - row.length }).map((_, index) => (
-                  <View
-                    key={`empty-${rowIndex}-${index}`}
-                    className="aspect-square flex-1"
-                  />
-                ))
-              : null}
-          </View>
-        ))}
-      </View>
+              ))
+            : null}
+        </View>
+      ))}
     </View>
   );
 }

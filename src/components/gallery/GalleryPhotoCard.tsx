@@ -1,4 +1,5 @@
 import { AppIconBox } from "@/components/ui/AppIconBox";
+import { Feather } from "@expo/vector-icons";
 import { Image, TouchableOpacity, View } from "react-native";
 
 export type GalleryPhoto = {
@@ -10,8 +11,8 @@ export type GalleryPhoto = {
 
 type Props = {
   photo: GalleryPhoto;
-  isSelectionMode?: boolean;
-  isSelected?: boolean;
+  selected?: boolean;
+  selectionMode?: boolean;
   onPress?: () => void;
   onLongPress?: () => void;
   onDownload?: () => void;
@@ -20,8 +21,8 @@ type Props = {
 
 export function GalleryPhotoCard({
   photo,
-  isSelectionMode = false,
-  isSelected = false,
+  selected = false,
+  selectionMode = false,
   onPress,
   onLongPress,
   onDownload,
@@ -30,9 +31,9 @@ export function GalleryPhotoCard({
   return (
     <TouchableOpacity
       activeOpacity={0.9}
+      delayLongPress={250}
       onPress={onPress}
       onLongPress={onLongPress}
-      delayLongPress={350}
       className="relative aspect-square flex-1 overflow-hidden rounded-xl bg-white"
     >
       <Image
@@ -41,60 +42,57 @@ export function GalleryPhotoCard({
         className="h-full w-full"
       />
 
-      {isSelectionMode ? (
-        <View
-          pointerEvents="none"
-          className="absolute inset-0"
-          style={{
-            backgroundColor: isSelected
-              ? "rgba(151, 93, 213, 0.42)"
-              : "rgba(0, 0, 0, 0.04)",
-          }}
-        />
-      ) : null}
+      {selectionMode ? (
+        <View className="absolute inset-0">
+          {selected ? (
+            <View className="absolute inset-0 bg-primary/25" />
+          ) : null}
 
-      {isSelected ? (
-        <View className="absolute right-2 top-2 h-10 w-10 items-center justify-center rounded-full border-2 border-white bg-primary">
-          <AppIconBox
-            icon="check"
-            iconSet="feather"
-            color="#FFFFFF"
-            size={22}
-            className="h-8 w-8 rounded-full bg-transparent"
-          />
+          <View
+            className={[
+              "absolute right-2 top-2 h-6 w-6 items-center justify-center rounded-full border border-white",
+              selected ? "bg-primary" : "bg-black/20",
+            ].join(" ")}
+          >
+            {selected ? (
+              <Feather name="check" size={10} color="#FFFFFF" />
+            ) : null}
+          </View>
         </View>
-      ) : null}
-
-      {!isSelectionMode ? (
+      ) : (
         <>
-          <TouchableOpacity
-            activeOpacity={0.85}
-            onPress={onDelete}
-            className="absolute right-2 top-2"
-          >
-            <AppIconBox
-              icon="trash-2"
-              iconSet="feather"
-              color="#FF5A5F"
-              size={12}
-              className="h-6 w-6 rounded-full bg-red-50"
-            />
-          </TouchableOpacity>
+          {onDelete ? (
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={onDelete}
+              className="absolute right-2 top-2"
+            >
+              <AppIconBox
+                icon="trash-2"
+                iconSet="feather"
+                color="#FF5A5F"
+                size={12}
+                className="h-6 w-6 rounded-full bg-red-50"
+              />
+            </TouchableOpacity>
+          ) : null}
 
-          <TouchableOpacity
-            activeOpacity={0.85}
-            onPress={onDownload}
-            className="absolute bottom-2 right-2"
-          >
-            <AppIconBox
-              icon="download"
-              iconSet="feather"
-              size={12}
-              className="h-6 w-6 rounded-full bg-white"
-            />
-          </TouchableOpacity>
+          {onDownload ? (
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={onDownload}
+              className="absolute bottom-2 right-2"
+            >
+              <AppIconBox
+                icon="download"
+                iconSet="feather"
+                size={12}
+                className="h-6 w-6 rounded-full bg-white"
+              />
+            </TouchableOpacity>
+          ) : null}
         </>
-      ) : null}
+      )}
     </TouchableOpacity>
   );
 }
