@@ -18,22 +18,21 @@ type Props = {
   downloadAllLoading?: boolean;
 };
 
-function getRemainingDaysUntilExpire(expiresAt?: string) {
-  if (!expiresAt) {
+function getPhotoAgeInDays(createdAt?: string) {
+  if (!createdAt) {
     return null;
   }
 
-  const expireDate = new Date(expiresAt);
+  const createdDate = new Date(createdAt);
+
+  if (Number.isNaN(createdDate.getTime())) {
+    return null;
+  }
+
   const now = new Date();
+  const diffMs = now.getTime() - createdDate.getTime();
 
-  if (Number.isNaN(expireDate.getTime())) {
-    return null;
-  }
-
-  const diffMs = expireDate.getTime() - now.getTime();
-  const diffDays = diffMs / (1000 * 60 * 60 * 24);
-
-  return diffDays;
+  return diffMs / (1000 * 60 * 60 * 24);
 }
 
 function shouldShowPhotoByFilter(photo: GalleryPhoto, filter: GalleryFilter) {
@@ -41,22 +40,22 @@ function shouldShowPhotoByFilter(photo: GalleryPhoto, filter: GalleryFilter) {
     return true;
   }
 
-  const remainingDays = getRemainingDaysUntilExpire(photo.expiresAt);
+  const photoAgeInDays = getPhotoAgeInDays(photo.createdAt);
 
-  if (remainingDays === null) {
-    return false;
+  if (photoAgeInDays === null) {
+    return true;
   }
 
-  if (filter === "expires-1") {
-    return remainingDays <= 1;
+  if (filter === "last-1-day") {
+    return photoAgeInDays <= 1;
   }
 
-  if (filter === "expires-4") {
-    return remainingDays <= 4;
+  if (filter === "last-4-days") {
+    return photoAgeInDays <= 4;
   }
 
-  if (filter === "expires-7") {
-    return remainingDays <= 7;
+  if (filter === "last-7-days") {
+    return photoAgeInDays <= 7;
   }
 
   return true;
