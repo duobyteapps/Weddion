@@ -109,9 +109,9 @@ export const InvitationQrDownloadCard = forwardRef<View, Props>(
                   position: "absolute",
                   left: 0,
                   right: 0,
-                  bottom: 95,
+                  bottom: 105,
                   alignItems: "center",
-                  paddingHorizontal: 20,
+                  paddingHorizontal: 30,
                 }}
               >
                 <AppText variant="invitationMeta" className="!text-[22px]">
@@ -119,8 +119,8 @@ export const InvitationQrDownloadCard = forwardRef<View, Props>(
                 </AppText>
 
                 <AppText
-                  variant="captionStrong"
-                  className="!text-[28px] !font-manropeSemiBold"
+                  variant="serifSubtitle"
+                  className="!text-[24px] text-primaryDark"
                   style={{
                     letterSpacing: 4,
                   }}
