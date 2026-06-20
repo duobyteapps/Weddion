@@ -24,11 +24,15 @@ export function NotificationBootstrap({ enabled }: Props) {
       try {
         const settings = await getCurrentUserNotificationSettings();
 
-        if (settings.system_notifications) {
+        if (!settings.system_notifications) {
           return;
         }
 
         const permission = await registerCurrentDeviceForPushNotifications();
+
+        if (!permission.granted) {
+          await updateCurrentUserSystemNotificationStatus(false);
+        }
 
         await updateCurrentUserSystemNotificationStatus(permission.granted);
       } catch (error) {

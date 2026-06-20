@@ -104,6 +104,37 @@ export default function NotificationSettingsScreen() {
     });
   }
 
+  async function ensureSystemNotificationPermission() {
+    try {
+      const permission = await registerCurrentDeviceForPushNotifications();
+
+      if (!permission.granted) {
+        showAlert({
+          title: "Bildirim İzni Gerekli",
+          message: getPushPermissionMessage(permission.reason),
+          type: "warning",
+          confirmText: "Tamam",
+        });
+
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.log("Push bildirim izni alınamadı:", error);
+
+      showAlert({
+        title: "Bildirim İzni Alınamadı",
+        message:
+          "Telefon bildirimi açılırken bir sorun oluştu. Lütfen tekrar deneyin.",
+        type: "error",
+        confirmText: "Tamam",
+      });
+
+      return false;
+    }
+  }
+
   async function loadSettings() {
     try {
       setLoading(true);
@@ -146,9 +177,34 @@ export default function NotificationSettingsScreen() {
     try {
       setSaving(true);
 
-      await updateCurrentUserNotificationSettings(settings);
+      if (settings.system_notifications) {
+        const canEnableSystemNotifications =
+          await ensureSystemNotificationPermission();
 
-      setInitialSettings(settings);
+        if (!canEnableSystemNotifications) {
+          const nextSettings: NotificationState = {
+            ...settings,
+            system_notifications: false,
+            all_notifications: false,
+          };
+
+          setSettings(nextSettings);
+          await updateCurrentUserNotificationSettings(nextSettings);
+          setInitialSettings(nextSettings);
+
+          return;
+        }
+      }
+
+      const normalizedSettings: NotificationState = {
+        ...settings,
+        all_notifications: getNextAllNotificationsValue(settings),
+      };
+
+      await updateCurrentUserNotificationSettings(normalizedSettings);
+
+      setSettings(normalizedSettings);
+      setInitialSettings(normalizedSettings);
 
       showAlert({
         title: "Bildirim Ayarları Kaydedildi",
@@ -181,38 +237,8 @@ export default function NotificationSettingsScreen() {
       return;
     }
 
-    let canEnableSystemNotifications = settings.system_notifications;
-
-    if (!settings.system_notifications) {
-      try {
-        const permission = await registerCurrentDeviceForPushNotifications();
-
-        if (permission.granted) {
-          canEnableSystemNotifications = true;
-        } else {
-          canEnableSystemNotifications = false;
-
-          showAlert({
-            title: "Bildirim İzni Gerekli",
-            message: getPushPermissionMessage(permission.reason),
-            type: "warning",
-            confirmText: "Tamam",
-          });
-        }
-      } catch (error) {
-        console.log("Push bildirim izni alınamadı:", error);
-
-        canEnableSystemNotifications = false;
-
-        showAlert({
-          title: "Bildirim İzni Alınamadı",
-          message:
-            "Telefon bildirimi açılırken bir sorun oluştu. Lütfen tekrar deneyin.",
-          type: "error",
-          confirmText: "Tamam",
-        });
-      }
-    }
+    const canEnableSystemNotifications =
+      await ensureSystemNotificationPermission();
 
     setSettings({
       all_notifications: canEnableSystemNotifications,
@@ -266,39 +292,45 @@ export default function NotificationSettingsScreen() {
   }
 
   async function handleSystemNotifications(value: boolean) {
-    if (value) {
-      try {
-        const permission = await registerCurrentDeviceForPushNotifications();
+    if (!value) {
+      setSettings((currentSettings) => {
+        const nextSettings: NotificationState = {
+          ...currentSettings,
+          system_notifications: false,
+        };
 
-        if (!permission.granted) {
-          showAlert({
-            title: "Bildirim İzni Gerekli",
-            message: getPushPermissionMessage(permission.reason),
-            type: "warning",
-            confirmText: "Tamam",
-          });
+        return {
+          ...nextSettings,
+          all_notifications: getNextAllNotificationsValue(nextSettings),
+        };
+      });
 
-          return;
-        }
-      } catch (error) {
-        console.log("Push bildirim izni alınamadı:", error);
+      return;
+    }
 
-        showAlert({
-          title: "Bildirim İzni Alınamadı",
-          message:
-            "Telefon bildirimi açılırken bir sorun oluştu. Lütfen tekrar deneyin.",
-          type: "error",
-          confirmText: "Tamam",
-        });
+    const canEnableSystemNotifications =
+      await ensureSystemNotificationPermission();
 
-        return;
-      }
+    if (!canEnableSystemNotifications) {
+      setSettings((currentSettings) => {
+        const nextSettings: NotificationState = {
+          ...currentSettings,
+          system_notifications: false,
+        };
+
+        return {
+          ...nextSettings,
+          all_notifications: getNextAllNotificationsValue(nextSettings),
+        };
+      });
+
+      return;
     }
 
     setSettings((currentSettings) => {
       const nextSettings: NotificationState = {
         ...currentSettings,
-        system_notifications: value,
+        system_notifications: true,
       };
 
       return {
