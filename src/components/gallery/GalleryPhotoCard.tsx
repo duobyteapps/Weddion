@@ -5,6 +5,7 @@ export type GalleryPhoto = {
   id: string;
   imageUrl: string;
   createdAt?: string;
+  expiresAt?: string;
 };
 
 type Props = {

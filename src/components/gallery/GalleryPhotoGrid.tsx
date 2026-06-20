@@ -1,8 +1,9 @@
+import { useMemo, useState } from "react";
 import { View } from "react-native";
 
 import { AppButton } from "@/components/ui/AppButton";
 import { AppText } from "@/components/ui/AppText";
-import { GalleryFilterTabs } from "./GalleryFilterTabs";
+import { GalleryFilter, GalleryFilterTabs } from "./GalleryFilterTabs";
 import { GalleryPhoto, GalleryPhotoCard } from "./GalleryPhotoCard";
 
 type Props = {
@@ -17,6 +18,50 @@ type Props = {
   downloadAllLoading?: boolean;
 };
 
+function getRemainingDaysUntilExpire(expiresAt?: string) {
+  if (!expiresAt) {
+    return null;
+  }
+
+  const expireDate = new Date(expiresAt);
+  const now = new Date();
+
+  if (Number.isNaN(expireDate.getTime())) {
+    return null;
+  }
+
+  const diffMs = expireDate.getTime() - now.getTime();
+  const diffDays = diffMs / (1000 * 60 * 60 * 24);
+
+  return diffDays;
+}
+
+function shouldShowPhotoByFilter(photo: GalleryPhoto, filter: GalleryFilter) {
+  if (filter === "all") {
+    return true;
+  }
+
+  const remainingDays = getRemainingDaysUntilExpire(photo.expiresAt);
+
+  if (remainingDays === null) {
+    return false;
+  }
+
+  if (filter === "expires-1") {
+    return remainingDays <= 1;
+  }
+
+  if (filter === "expires-4") {
+    return remainingDays <= 4;
+  }
+
+  if (filter === "expires-7") {
+    return remainingDays <= 7;
+  }
+
+  return true;
+}
+
 export function GalleryPhotoGrid({
   title = "Tüm Fotoğraflar",
   photos,
@@ -28,9 +73,17 @@ export function GalleryPhotoGrid({
   onDownloadAllPhotos,
   downloadAllLoading = false,
 }: Props) {
+  const [selectedFilter, setSelectedFilter] = useState<GalleryFilter>("all");
+
+  const filteredPhotos = useMemo(() => {
+    return photos.filter((photo) =>
+      shouldShowPhotoByFilter(photo, selectedFilter),
+    );
+  }, [photos, selectedFilter]);
+
   const currentPhotoCount = photoCount ?? photos.length;
 
-  const rows = photos.reduce<GalleryPhoto[][]>((acc, photo, index) => {
+  const rows = filteredPhotos.reduce<GalleryPhoto[][]>((acc, photo, index) => {
     const rowIndex = Math.floor(index / 3);
 
     if (!acc[rowIndex]) {
@@ -68,7 +121,10 @@ export function GalleryPhotoGrid({
         ) : null}
       </View>
 
-      <GalleryFilterTabs />
+      <GalleryFilterTabs
+        selectedFilter={selectedFilter}
+        onChangeFilter={setSelectedFilter}
+      />
 
       <View className="gap-4">
         {rows.map((row, rowIndex) => (

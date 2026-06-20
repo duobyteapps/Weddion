@@ -1,25 +1,26 @@
 import { AppFilterTabItem, AppFilterTabs } from "@/components/ui/AppFilterTabs";
-import { useState } from "react";
 
-type GalleryFilter = "all" | "today" | "yesterday" | "week" | "month";
+export type GalleryFilter = "all" | "expires-1" | "expires-4" | "expires-7";
 
-const galleryFilterOptions: AppFilterTabItem<GalleryFilter>[] = [
+export const galleryFilterOptions: AppFilterTabItem<GalleryFilter>[] = [
   { id: "all", title: "Tümü" },
-  { id: "today", title: "Bugün" },
-  { id: "yesterday", title: "Dün" },
-  { id: "week", title: "Bu Hafta" },
-  { id: "month", title: "Bu Ay" },
+  { id: "expires-1", title: "1 Gün" },
+  { id: "expires-4", title: "4 Gün" },
+  { id: "expires-7", title: "7 Gün" },
 ];
 
-export function GalleryFilterTabs() {
-  const [selectedFilter, setSelectedFilter] = useState<GalleryFilter>("all");
+type Props = {
+  selectedFilter: GalleryFilter;
+  onChangeFilter: (filter: GalleryFilter) => void;
+};
 
+export function GalleryFilterTabs({ selectedFilter, onChangeFilter }: Props) {
   return (
     <AppFilterTabs
       fullWidth
       items={galleryFilterOptions}
       selectedValue={selectedFilter}
-      onChangeValue={setSelectedFilter}
+      onChangeValue={onChangeFilter}
     />
   );
 }

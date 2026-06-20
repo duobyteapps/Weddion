@@ -72,6 +72,7 @@ function mapGuestPhotoToGalleryPhoto(
     id: photo.id,
     imageUrl: photo.public_url ?? "",
     createdAt: photo.created_at,
+    expiresAt: photo.expires_at,
   };
 }
 
