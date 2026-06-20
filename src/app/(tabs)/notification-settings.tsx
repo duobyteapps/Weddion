@@ -122,7 +122,10 @@ export default function NotificationSettingsScreen() {
       if (!permission.granted) {
         showAlert({
           title: "Bildirim İzni Gerekli",
-          message: getPushPermissionMessage(permission.reason),
+          message: getPushPermissionMessage(
+            permission.reason,
+            permission.message,
+          ),
           type: "warning",
           confirmText: "Tamam",
         });

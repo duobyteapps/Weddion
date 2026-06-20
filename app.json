@@ -16,6 +16,7 @@
     },
     "android": {
       "package": "com.duobyteapps.weddion",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#F7F2FA",
         "foregroundImage": "./assets/images/adaptive-icon.png"
