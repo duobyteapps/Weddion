@@ -32,10 +32,12 @@ export function NotificationBootstrap({ enabled }: Props) {
 
         if (!permission.granted) {
           await updateCurrentUserSystemNotificationStatus(false);
+          return;
         }
 
-        await updateCurrentUserSystemNotificationStatus(permission.granted);
+        await updateCurrentUserSystemNotificationStatus(true);
       } catch (error) {
+        initializedRef.current = false;
         console.log("Bildirim izni başlatılamadı:", error);
       }
     }

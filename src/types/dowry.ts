@@ -22,6 +22,14 @@ export type DowryChecklistItem = {
   completed: boolean;
 };
 
+export type DowryCategoryDetail = {
+  id: DowryCategoryImageKey;
+  title: string;
+  icon: MaterialIconName;
+  imageKey: DowryCategoryImageKey;
+  items: DowryChecklistItem[];
+};
+
 export type DowryCategory = {
   id: string;
   slug: string;
@@ -74,8 +82,8 @@ export type UserDowryItemTableRow = {
   id: string;
   user_id: string;
   category_id: string;
-  category_slug: string;
   title: string;
+  category_slug: string;
   brand_name: string | null;
   quantity: number;
   price: number | null;

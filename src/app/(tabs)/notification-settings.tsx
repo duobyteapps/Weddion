@@ -48,9 +48,13 @@ function getNextAllNotificationsValue(settings: NotificationState) {
   );
 }
 
-function getPushPermissionMessage(reason?: string) {
+function getPushPermissionMessage(reason?: string, message?: string) {
+  if (message) {
+    return message;
+  }
+
   if (reason === "expo_go") {
-    return "Sistem bildirimleri Expo Go içinde test edilemez. Android için development build alındığında bu özellik çalışacaktır.";
+    return "Sistem bildirimleri Expo Go içinde test edilemez.\nAndroid için development build alındığında bu özellik çalışacaktır.";
   }
 
   if (reason === "not_device") {
@@ -58,12 +62,19 @@ function getPushPermissionMessage(reason?: string) {
   }
 
   if (reason === "missing_project_id") {
-    return "Expo projectId bulunamadı. app.json içindeki EAS projectId alanını kontrol edin.";
+    return "Expo projectId bulunamadı.\napp.json içindeki EAS projectId alanını kontrol edin.";
+  }
+
+  if (reason === "save_error") {
+    return "Bildirim tokenı kaydedilemedi. Lütfen tekrar deneyin.";
+  }
+
+  if (reason === "token_error") {
+    return "Bildirim tokenı alınamadı. Lütfen tekrar deneyin.";
   }
 
   return "Telefonunuza bildirim gönderebilmemiz için bildirim izni vermeniz gerekiyor.";
 }
-
 export default function NotificationSettingsScreen() {
   const { showAlert } = useAppAlert();
 
