@@ -333,7 +333,7 @@ export default function InvitationFlowPreviewScreen() {
     <ScreenContainer className="bg-background">
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerClassName="pb-10"
+        contentContainerClassName="pb-24"
       >
         <ScreenHeader
           title="Önizle"

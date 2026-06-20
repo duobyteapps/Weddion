@@ -75,7 +75,10 @@ function mapGuestPhotoToGalleryPhoto(
 
 export default function GalleryScreen() {
   const { showAlert } = useAppAlert();
-  const { invitationId } = useLocalSearchParams<{ invitationId?: string }>();
+  const { invitationId, from } = useLocalSearchParams<{
+    invitationId?: string;
+    from?: string;
+  }>();
 
   const [invitations, setInvitations] = useState<UserInvitation[]>([]);
   const [selectedInvitationId, setSelectedInvitationId] = useState<string>();
@@ -464,6 +467,20 @@ export default function GalleryScreen() {
     });
   };
 
+  const handleGalleryBackPress = () => {
+    if (from === "my-invitations") {
+      router.replace("/my-invitations");
+      return;
+    }
+
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+
+    router.replace("/home");
+  };
+
   return (
     <ScreenContainer className="flex-1 bg-background">
       <ScrollView
@@ -473,6 +490,7 @@ export default function GalleryScreen() {
         <ScreenHeader
           title="Galeri"
           description="Davetlerinizin fotoğraflarını yönetin."
+          onBackPress={handleGalleryBackPress}
         />
 
         {loadingInvitations ? (

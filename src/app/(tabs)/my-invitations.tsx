@@ -214,6 +214,7 @@ export default function MyInvitationsScreen() {
       pathname: "/gallery",
       params: {
         invitationId: invitation.id,
+        from: "my-invitations",
       },
     });
   }

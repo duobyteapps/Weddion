@@ -247,7 +247,7 @@ export default function InvitationFlowEditScreen() {
       <ScrollView
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
-        contentContainerClassName="pb-10"
+        contentContainerClassName="pb-24"
       >
         <ScreenHeader
           title="Davetiyeni Düzenle"

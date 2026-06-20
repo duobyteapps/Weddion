@@ -12,7 +12,7 @@ export function GuestPhotoEventHeader({
   date = "24 Mayıs 2025",
 }: Props) {
   return (
-    <View className="relative mb-10 mt-7 items-center justify-center">
+    <View className="relative mb-10 mt-10 items-center justify-center">
       <Image
         source={require("@/assets/images/illustration/lavender-floral-arch-frame.png")}
         className="absolute h-[190px] w-full"

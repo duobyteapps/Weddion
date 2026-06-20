@@ -11,6 +11,10 @@ import {
   Manrope_700Bold,
   Manrope_800ExtraBold,
 } from "@expo-google-fonts/manrope";
+import {
+  Tangerine_400Regular,
+  Tangerine_700Bold,
+} from "@expo-google-fonts/tangerine";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -35,8 +39,12 @@ export default function RootLayout() {
     Manrope_600SemiBold,
     Manrope_700Bold,
     Manrope_800ExtraBold,
+
     CormorantGaramond_600SemiBold,
     CormorantGaramond_700Bold,
+
+    Tangerine_400Regular,
+    Tangerine_700Bold,
   });
 
   if (!fontsLoaded) return null;

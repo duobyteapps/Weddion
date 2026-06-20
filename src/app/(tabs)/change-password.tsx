@@ -116,7 +116,7 @@ export default function ChangePasswordScreen() {
       >
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerClassName="pb-10"
+          contentContainerClassName="pb-24"
         >
           <ChangePasswordHeader />
 
