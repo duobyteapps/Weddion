@@ -70,3 +70,17 @@ export async function markAllNotificationsAsRead() {
     throw new Error(error.message);
   }
 }
+
+export async function deleteNotification(notificationId: string) {
+  const user = await getAuthenticatedUser();
+
+  const { error } = await supabase
+    .from("app_notifications")
+    .delete()
+    .eq("id", notificationId)
+    .eq("user_id", user.id);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}

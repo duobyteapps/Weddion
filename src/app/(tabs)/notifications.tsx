@@ -10,6 +10,7 @@ import { useAppAlert } from "@/components/ui/AppAlert";
 import { AppButton } from "@/components/ui/AppButton";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import {
+  deleteNotification,
   getCurrentUserNotifications,
   markAllNotificationsAsRead,
   markNotificationAsRead,
@@ -23,6 +24,9 @@ export default function NotificationsScreen() {
   const [notifications, setNotifications] = useState<UserNotification[]>([]);
   const [loading, setLoading] = useState(true);
   const [markingAll, setMarkingAll] = useState(false);
+  const [deletingNotificationId, setDeletingNotificationId] = useState<
+    string | null
+  >(null);
 
   const unreadCount = useMemo(() => {
     return notifications.filter((notification) => !notification.is_read).length;
@@ -112,6 +116,43 @@ export default function NotificationsScreen() {
     }
   }
 
+  function handleDeleteNotification(notification: UserNotification) {
+    showAlert({
+      title: "Bildirim Silinsin mi?",
+      message: "Bu bildirim listeden kaldırılacak.",
+      type: "warning",
+      cancelText: "Vazgeç",
+      confirmText: "Sil",
+      onConfirm: () => {
+        runDeleteNotification(notification);
+      },
+    });
+  }
+
+  async function runDeleteNotification(notification: UserNotification) {
+    try {
+      setDeletingNotificationId(notification.id);
+
+      await deleteNotification(notification.id);
+
+      setNotifications((currentNotifications) =>
+        currentNotifications.filter(
+          (currentNotification) => currentNotification.id !== notification.id,
+        ),
+      );
+    } catch (error) {
+      console.log("Bildirim silinemedi:", error);
+
+      handleServiceError({
+        error,
+        fallbackTitle: "Bildirim Silinemedi",
+        fallbackMessage: "Bildirim silinirken bir hata oluştu.",
+      });
+    } finally {
+      setDeletingNotificationId(null);
+    }
+  }
+
   async function handleMarkAllAsRead() {
     if (unreadCount === 0) {
       return;
@@ -161,7 +202,7 @@ export default function NotificationsScreen() {
     <ScreenContainer>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerClassName="pb-28"
+        contentContainerClassName="pb-10"
       >
         <ScreenHeader
           title="Bildirimler"
@@ -189,6 +230,8 @@ export default function NotificationsScreen() {
                 key={notification.id}
                 notification={notification}
                 onPress={handlePressNotification}
+                onDelete={handleDeleteNotification}
+                deleting={deletingNotificationId === notification.id}
               />
             ))}
           </View>

@@ -1,27 +1,28 @@
-import { Ionicons } from "@expo/vector-icons";
-import { View } from "react-native";
+import { Image, View } from "react-native";
 
+import { AppCard } from "@/components/ui/AppCard";
 import { AppText } from "@/components/ui/AppText";
-import { Colors } from "@/constants/Colors";
 
 export function EmptyNotifications() {
   return (
-    <View className="mt-10 items-center rounded-3xl bg-white px-6 py-10">
-      <View className="mb-4 h-16 w-16 items-center justify-center rounded-full bg-primarySoft">
-        <Ionicons
-          name="notifications-outline"
-          size={30}
-          color={Colors.primary}
-        />
+    <AppCard className="mt-6 min-h-[520px] items-center justify-center px-6 py-10">
+      <Image
+        source={require("@/assets/images/illustration/empty-invitation.png")}
+        className="h-[210px] w-[260px]"
+        resizeMode="contain"
+      />
+
+      <View className="mt-6 items-center">
+        <AppText variant="title">Henüz bildiriminiz yok</AppText>
+
+        <AppText
+          variant="body"
+          className="mt-3 max-w-[300px] text-center !text-[14px] !leading-[23px]"
+        >
+          Davetlerinize yeni fotoğraf geldiğinde bildirimleriniz burada
+          görünecek.
+        </AppText>
       </View>
-
-      <AppText variant="serifTitle" className="text-center text-textDark">
-        Henüz bildiriminiz yok
-      </AppText>
-
-      <AppText className="mt-2 text-center text-[14px] leading-5 text-textMuted">
-        Davetlerinize yeni fotoğraf geldiğinde burada görünecek.
-      </AppText>
-    </View>
+    </AppCard>
   );
 }

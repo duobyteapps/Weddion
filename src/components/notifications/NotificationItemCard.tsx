@@ -1,3 +1,5 @@
+import { Ionicons } from "@expo/vector-icons";
+import type { GestureResponderEvent } from "react-native";
 import { Pressable, View } from "react-native";
 
 import { AppIconBox } from "@/components/ui/AppIconBox";
@@ -7,6 +9,8 @@ import type { UserNotification } from "@/types/notification";
 type Props = {
   notification: UserNotification;
   onPress?: (notification: UserNotification) => void;
+  onDelete?: (notification: UserNotification) => void;
+  deleting?: boolean;
 };
 
 function formatNotificationDate(date: string) {
@@ -50,29 +54,55 @@ function getNotificationIcon(type: UserNotification["type"]) {
   }
 }
 
-export function NotificationItemCard({ notification, onPress }: Props) {
+export function NotificationItemCard({
+  notification,
+  onPress,
+  onDelete,
+  deleting = false,
+}: Props) {
   const iconName = getNotificationIcon(notification.type);
+
+  function handleDeletePress(event: GestureResponderEvent) {
+    event.stopPropagation();
+    onDelete?.(notification);
+  }
 
   return (
     <Pressable
       onPress={() => onPress?.(notification)}
-      className="mb-3 rounded-xl bg-white px-4 py-4"
+      disabled={deleting}
+      className={`mb-3 rounded-xl bg-white px-4 py-4 ${
+        deleting ? "opacity-60" : ""
+      }`}
     >
-      <View className="flex-row items-start">
-        <AppIconBox icon={iconName} className="mr-3 h-11 w-11" />
+      <Pressable
+        onPress={handleDeletePress}
+        disabled={deleting}
+        hitSlop={12}
+        className="absolute right-3 top-3 z-10 h-8 w-8 items-center justify-center rounded-full bg-softPink"
+      >
+        <Ionicons name="close" size={18} color="#8E6A9E" />
+      </Pressable>
+
+      <View className="flex-row pr-8">
+        <AppIconBox icon={iconName} className="mr-3 mt-1" />
 
         <View className="flex-1">
-          <View className="flex-row items-start justify-between">
-            <AppText variant="serifSubtitle">{notification.title}</AppText>
+          <View className="mb-1 flex-row items-start justify-between gap-2">
+            <AppText variant="subtitle" className="flex-1 text-textDark">
+              {notification.title}
+            </AppText>
 
             {!notification.is_read && (
-              <View className="mt-1 h-2.5 w-2.5 rounded-full bg-primary" />
+              <View className="mt-2 h-2.5 w-2.5 rounded-full bg-primary" />
             )}
           </View>
 
-          <AppText variant="body">{notification.message}</AppText>
+          <AppText variant="caption" className="leading-5 text-textSoft">
+            {notification.message}
+          </AppText>
 
-          <AppText variant="caption">
+          <AppText variant="caption" className="mt-2 text-textSoft">
             {formatNotificationDate(notification.created_at)}
           </AppText>
         </View>
