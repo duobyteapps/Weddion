@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { View } from "react-native";
 
 import { AppButton } from "@/components/ui/AppButton";
@@ -167,9 +167,15 @@ export function GalleryPhotoGrid({
     }
 
     await onDeleteSelectedPhotos?.(selectedPhotos);
-
-    setSelectedPhotoIds([]);
   };
+
+  useEffect(() => {
+    setSelectedPhotoIds((currentIds) => {
+      const existingPhotoIds = new Set(photos.map((photo) => photo.id));
+
+      return currentIds.filter((photoId) => existingPhotoIds.has(photoId));
+    });
+  }, [photos]);
 
   return (
     <View className="mt-7">
