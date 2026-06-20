@@ -90,10 +90,7 @@ export function AppAlertProvider({ children }: { children: ReactNode }) {
               {alert?.title}
             </AppText>
 
-            <AppText
-              variant="body"
-              className="mb-8 text-center leading-7 text-textMuted"
-            >
+            <AppText variant="body" className="mb-8 text-center text-textMuted">
               {alert?.message}
             </AppText>
 
