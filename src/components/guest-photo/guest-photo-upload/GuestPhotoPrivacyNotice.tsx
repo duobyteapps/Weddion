@@ -18,8 +18,8 @@ export function GuestPhotoPrivacyNotice({ className = "" }: Props) {
       </View>
 
       <AppText variant="body" className="flex-1">
-        Yüklediğiniz fotoğraflar sadece etkinlik sahipleri ve davetliler
-        tarafından görüntülenebilir.
+        Yüklediğiniz fotoğraflar sadece etkinlik sahipleri tarafından
+        görüntülenebilir.
       </AppText>
     </AppCard>
   );

@@ -9,6 +9,7 @@ import {
   GalleryEventOption,
   GalleryEventSummaryCard,
 } from "@/components/gallery/GalleryEventSummaryCard";
+import { GalleryLoadMoreButton } from "@/components/gallery/GalleryLoadMoreButton";
 import { GalleryPhotoGrid } from "@/components/gallery/GalleryPhotoGrid";
 import { GalleryQrInfoCard } from "@/components/gallery/GalleryQrInfoCard";
 import { useAppAlert } from "@/components/ui/AppAlert";
@@ -16,10 +17,11 @@ import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import {
   deleteGuestPhoto,
   getGuestPhotosByInvitation,
+  GUEST_PHOTO_PAGE_SIZE,
 } from "@/services/guestPhotoService";
 import {
-  downloadImageToGallery,
   downloadImagesToGallery,
+  downloadImageToGallery,
 } from "@/services/imageDownloadService";
 import { getCurrentUserInvitations } from "@/services/invitationService";
 import { SESSION_EXPIRED_MESSAGE } from "@/services/sessionService";
@@ -86,6 +88,9 @@ export default function GalleryScreen() {
   const [photos, setPhotos] = useState<GalleryPhotos>([]);
   const [loadingInvitations, setLoadingInvitations] = useState(true);
   const [loadingPhotos, setLoadingPhotos] = useState(false);
+  const [photoPage, setPhotoPage] = useState(0);
+  const [hasMorePhotos, setHasMorePhotos] = useState(false);
+  const [loadingMorePhotos, setLoadingMorePhotos] = useState(false);
   const [deletingPhotoId, setDeletingPhotoId] = useState<string | null>(null);
   const [downloadingPhotoId, setDownloadingPhotoId] = useState<string | null>(
     null,
@@ -107,10 +112,14 @@ export default function GalleryScreen() {
     if (!selectedInvitationId) {
       setGuestPhotos([]);
       setPhotos([]);
+      setPhotoPage(0);
+      setHasMorePhotos(false);
       return;
     }
 
-    fetchPhotos(selectedInvitationId);
+    setPhotoPage(0);
+    setHasMorePhotos(false);
+    fetchPhotos(selectedInvitationId, 0);
   }, [selectedInvitationId]);
 
   function handleServiceError(params: {
@@ -185,13 +194,21 @@ export default function GalleryScreen() {
     }
   };
 
-  const fetchPhotos = async (invitationId: string) => {
+  const fetchPhotos = async (targetInvitationId: string, nextPage = 0) => {
     try {
       if (isMountedRef.current) {
-        setLoadingPhotos(true);
+        if (nextPage === 0) {
+          setLoadingPhotos(true);
+        } else {
+          setLoadingMorePhotos(true);
+        }
       }
 
-      const data = await getGuestPhotosByInvitation(invitationId);
+      const data = await getGuestPhotosByInvitation({
+        invitationId: targetInvitationId,
+        page: nextPage,
+        pageSize: GUEST_PHOTO_PAGE_SIZE,
+      });
 
       if (!isMountedRef.current) {
         return;
@@ -203,14 +220,28 @@ export default function GalleryScreen() {
 
       const galleryPhotos = visibleGuestPhotos.map(mapGuestPhotoToGalleryPhoto);
 
-      setGuestPhotos(visibleGuestPhotos);
-      setPhotos(galleryPhotos);
+      if (nextPage === 0) {
+        setGuestPhotos(visibleGuestPhotos);
+        setPhotos(galleryPhotos);
+      } else {
+        setGuestPhotos((currentPhotos) => [
+          ...currentPhotos,
+          ...visibleGuestPhotos,
+        ]);
+
+        setPhotos((currentPhotos) => [...currentPhotos, ...galleryPhotos]);
+      }
+
+      setPhotoPage(nextPage);
+      setHasMorePhotos(data.length === GUEST_PHOTO_PAGE_SIZE);
     } catch (error) {
       console.log("Galeri fotoğrafları alınamadı:", error);
 
-      if (isMountedRef.current) {
+      if (isMountedRef.current && nextPage === 0) {
         setGuestPhotos([]);
         setPhotos([]);
+        setPhotoPage(0);
+        setHasMorePhotos(false);
       }
 
       handleServiceError({
@@ -221,9 +252,26 @@ export default function GalleryScreen() {
       });
     } finally {
       if (isMountedRef.current) {
-        setLoadingPhotos(false);
+        if (nextPage === 0) {
+          setLoadingPhotos(false);
+        } else {
+          setLoadingMorePhotos(false);
+        }
       }
     }
+  };
+
+  const handleLoadMorePhotos = () => {
+    if (
+      !selectedInvitationId ||
+      loadingPhotos ||
+      loadingMorePhotos ||
+      !hasMorePhotos
+    ) {
+      return;
+    }
+
+    fetchPhotos(selectedInvitationId, photoPage + 1);
   };
 
   const eventOptions: GalleryEventOption[] = useMemo(() => {
@@ -514,15 +562,24 @@ export default function GalleryScreen() {
                 <ActivityIndicator />
               </View>
             ) : hasPhotos ? (
-              <GalleryPhotoGrid
-                photos={photos}
-                photoCount={photos.length}
-                photoLimit={MAX_GUEST_PHOTOS_PER_INVITATION}
-                onDownloadPhoto={handleDownloadPhoto}
-                onDownloadAllPhotos={handleDownloadAllPhotos}
-                downloadAllLoading={downloadingAllPhotos}
-                onDeletePhoto={handleDeletePhoto}
-              />
+              <>
+                <GalleryPhotoGrid
+                  photos={photos}
+                  photoCount={photos.length}
+                  photoLimit={MAX_GUEST_PHOTOS_PER_INVITATION}
+                  onDownloadPhoto={handleDownloadPhoto}
+                  onDownloadAllPhotos={handleDownloadAllPhotos}
+                  downloadAllLoading={downloadingAllPhotos}
+                  onDeletePhoto={handleDeletePhoto}
+                />
+
+                {hasMorePhotos ? (
+                  <GalleryLoadMoreButton
+                    isLoading={loadingMorePhotos}
+                    onPress={handleLoadMorePhotos}
+                  />
+                ) : null}
+              </>
             ) : (
               <EmptyGalleryNoPhotos onPressShareQrCode={handlePressQrCode} />
             )}

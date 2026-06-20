@@ -13,7 +13,7 @@ export function GalleryLoadMoreButton({ isLoading = false, onPress }: Props) {
       activeOpacity={0.85}
       disabled={isLoading}
       onPress={onPress}
-      className="mb-6 h-14 flex-row items-center justify-center rounded-2xl border border-[#EFE3F7] bg-[#FBF7FD]"
+      className="mb-6 mt-6 h-14 flex-row items-center justify-center rounded-2xl border border-[#EFE3F7] bg-[#FBF7FD]"
     >
       {isLoading ? (
         <ActivityIndicator />

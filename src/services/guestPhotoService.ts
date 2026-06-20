@@ -39,6 +39,14 @@ type UpdateGuestPhotoStatusParams = {
   status: InvitationGuestPhotoStatus;
 };
 
+export const GUEST_PHOTO_PAGE_SIZE = 30;
+
+type GetGuestPhotosByInvitationParams = {
+  invitationId: string;
+  page?: number;
+  pageSize?: number;
+};
+
 const normalizeGuestUploadCode = (code: string) => code.trim().toUpperCase();
 
 const getCurrentIsoDate = () => new Date().toISOString();
@@ -235,23 +243,26 @@ export const uploadGuestPhotos = async ({
   }
 };
 
-export const getGuestPhotosByInvitation = async (
-  invitationId: string,
-): Promise<InvitationGuestPhoto[]> => {
-  await getAuthenticatedUser();
+export const getGuestPhotosByInvitation = async ({
+  invitationId,
+  page = 0,
+  pageSize = GUEST_PHOTO_PAGE_SIZE,
+}: GetGuestPhotosByInvitationParams): Promise<InvitationGuestPhoto[]> => {
+  const from = page * pageSize;
+  const to = from + pageSize - 1;
 
   const { data, error } = await supabase
     .from("invitation_guest_photos")
     .select("*")
     .eq("invitation_id", invitationId)
-    .gt("expires_at", getCurrentIsoDate())
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .range(from, to);
 
   if (error) {
     throw new Error(error.message);
   }
 
-  const photos = (data ?? []) as Omit<InvitationGuestPhoto, "public_url">[];
+  const photos = (data ?? []) as InvitationGuestPhoto[];
 
   const photosWithSignedUrls = await Promise.all(
     photos.map(async (photo) => {
