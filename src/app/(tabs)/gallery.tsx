@@ -97,6 +97,9 @@ export default function GalleryScreen() {
     null,
   );
   const [downloadingAllPhotos, setDownloadingAllPhotos] = useState(false);
+  const [downloadingSelectedPhotos, setDownloadingSelectedPhotos] =
+    useState(false);
+  const [deletingSelectedPhotos, setDeletingSelectedPhotos] = useState(false);
 
   const isMountedRef = useRef(true);
 
@@ -337,7 +340,11 @@ export default function GalleryScreen() {
   };
 
   const handleDownloadPhoto = async (photo: GalleryPhoto) => {
-    if (downloadingPhotoId || downloadingAllPhotos) {
+    if (
+      downloadingPhotoId ||
+      downloadingAllPhotos ||
+      downloadingSelectedPhotos
+    ) {
       return;
     }
 
@@ -398,7 +405,12 @@ export default function GalleryScreen() {
   };
 
   const handleDownloadAllPhotos = async () => {
-    if (downloadingAllPhotos || downloadingPhotoId || photos.length === 0) {
+    if (
+      downloadingAllPhotos ||
+      downloadingPhotoId ||
+      downloadingSelectedPhotos ||
+      photos.length === 0
+    ) {
       return;
     }
 
@@ -453,6 +465,73 @@ export default function GalleryScreen() {
     } finally {
       if (isMountedRef.current) {
         setDownloadingAllPhotos(false);
+      }
+    }
+  };
+
+  const handleDownloadSelectedPhotos = async (
+    selectedPhotos: GalleryPhoto[],
+  ) => {
+    if (
+      downloadingAllPhotos ||
+      downloadingPhotoId ||
+      downloadingSelectedPhotos ||
+      selectedPhotos.length === 0
+    ) {
+      return;
+    }
+
+    const imageUris = selectedPhotos
+      .map((photo) => photo.imageUrl)
+      .filter((imageUrl): imageUrl is string => Boolean(imageUrl));
+
+    if (imageUris.length === 0) {
+      showAlert({
+        type: "warning",
+        title: "Fotoğraf bulunamadı",
+        message: "İndirilecek fotoğraf bağlantısı bulunamadı.",
+        confirmText: "Tamam",
+      });
+
+      return;
+    }
+
+    try {
+      setDownloadingSelectedPhotos(true);
+
+      const downloadedUris = await downloadImagesToGallery({
+        imageUris,
+        fileNamePrefix: `weddion-galeri-${
+          selectedInvitation?.bride_name ?? "misafir"
+        }-${selectedInvitation?.groom_name ?? "fotograf"}`,
+      });
+
+      showAlert({
+        type: "success",
+        title: "Fotoğraflar indirildi",
+        message:
+          Platform.OS === "ios"
+            ? `${downloadedUris.length} fotoğraf Fotoğraflar uygulamasına kaydedildi.`
+            : `${downloadedUris.length} fotoğraf galerinize kaydedildi.`,
+        confirmText: "Tamam",
+      });
+    } catch (error) {
+      console.log("Seçilen galeri fotoğrafları indirilemedi:", error);
+
+      const message =
+        error instanceof Error && error.message === "GALLERY_PERMISSION_DENIED"
+          ? "Fotoğrafları galeriye kaydedebilmek için fotoğraf ekleme izni vermelisiniz. Ayarlar > Weddion > Fotoğraflar kısmından erişimi açın."
+          : "Fotoğraflar galeriye kaydedilemedi. Fotoğraf iznini ve görsel bağlantılarını kontrol edip tekrar deneyin.";
+
+      showAlert({
+        type: "error",
+        title: "Toplu indirme başarısız",
+        message,
+        confirmText: "Tamam",
+      });
+    } finally {
+      if (isMountedRef.current) {
+        setDownloadingSelectedPhotos(false);
       }
     }
   };
@@ -516,6 +595,84 @@ export default function GalleryScreen() {
     });
   };
 
+  const handleDeleteSelectedPhotos = async (selectedPhotos: GalleryPhoto[]) => {
+    if (deletingSelectedPhotos || selectedPhotos.length === 0) {
+      return;
+    }
+
+    const selectedPhotoIds = selectedPhotos.map((photo) => photo.id);
+
+    const targetPhotos = guestPhotos.filter((guestPhoto) =>
+      selectedPhotoIds.includes(guestPhoto.id),
+    );
+
+    if (targetPhotos.length === 0) {
+      showAlert({
+        type: "error",
+        title: "Fotoğraf bulunamadı",
+        message: "Silmek istediğiniz fotoğraflar artık mevcut değil.",
+        confirmText: "Tamam",
+      });
+
+      return;
+    }
+
+    showAlert({
+      type: "warning",
+      title: "Seçilen fotoğraflar silinsin mi?",
+      message: `${targetPhotos.length} fotoğraf galeriden ve depolama alanından silinecek. Bu işlem geri alınamaz.`,
+      cancelText: "Vazgeç",
+      confirmText: "Sil",
+      onConfirm: async () => {
+        try {
+          setDeletingSelectedPhotos(true);
+
+          await Promise.all(
+            targetPhotos.map((photo) => deleteGuestPhoto(photo)),
+          );
+
+          if (!isMountedRef.current) {
+            return;
+          }
+
+          const deletedPhotoIds = targetPhotos.map((photo) => photo.id);
+
+          setGuestPhotos((currentPhotos) =>
+            currentPhotos.filter(
+              (photo) => !deletedPhotoIds.includes(photo.id),
+            ),
+          );
+
+          setPhotos((currentPhotos) =>
+            currentPhotos.filter(
+              (photo) => !deletedPhotoIds.includes(photo.id),
+            ),
+          );
+
+          showAlert({
+            type: "success",
+            title: "Fotoğraflar silindi",
+            message: `${targetPhotos.length} fotoğraf başarıyla silindi.`,
+            confirmText: "Tamam",
+          });
+        } catch (error) {
+          console.log("Seçilen fotoğraflar silinemedi:", error);
+
+          handleServiceError({
+            error,
+            fallbackTitle: "Silme başarısız",
+            fallbackMessage:
+              "Fotoğraflar silinirken bir hata oluştu. Lütfen tekrar deneyin.",
+          });
+        } finally {
+          if (isMountedRef.current) {
+            setDeletingSelectedPhotos(false);
+          }
+        }
+      },
+    });
+  };
+
   const handleGalleryBackPress = () => {
     if (from === "my-invitations") {
       router.replace("/my-invitations");
@@ -570,7 +727,11 @@ export default function GalleryScreen() {
                   photoLimit={MAX_GUEST_PHOTOS_PER_INVITATION}
                   onDownloadPhoto={handleDownloadPhoto}
                   onDownloadAllPhotos={handleDownloadAllPhotos}
+                  onDownloadSelectedPhotos={handleDownloadSelectedPhotos}
+                  onDeleteSelectedPhotos={handleDeleteSelectedPhotos}
                   downloadAllLoading={downloadingAllPhotos}
+                  downloadSelectedLoading={downloadingSelectedPhotos}
+                  deleteSelectedLoading={deletingSelectedPhotos}
                   onDeletePhoto={handleDeletePhoto}
                 />
 
