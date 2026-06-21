@@ -2,6 +2,7 @@ import { ImageBackground, View } from "react-native";
 
 import { AppCard } from "@/components/ui/AppCard";
 import { AppText } from "@/components/ui/AppText";
+import { defaultInvitationContent } from "@/constants/invitationDefaultContent";
 import { InvitationFormData } from "@/types/invitation";
 
 type Props = {
@@ -37,18 +38,61 @@ function getDisplayValue(value: string | null | undefined, fallback: string) {
 }
 
 export function InvitationPreviewCard({ imageUrl, formData }: Props) {
-  const brideParents = getDisplayValue(formData.brideParents, "Anne & Baba");
-  const groomParents = getDisplayValue(formData.groomParents, "Anne & Baba");
+  const brideName = getDisplayValue(
+    formData.brideName,
+    defaultInvitationContent.brideName,
+  );
 
-  const brideSurname = getDisplayValue(formData.brideSurname, "Soyad");
-  const groomSurname = getDisplayValue(formData.groomSurname, "Soyad");
+  const groomName = getDisplayValue(
+    formData.groomName,
+    defaultInvitationContent.groomName,
+  );
+
+  const brideParents = getDisplayValue(
+    formData.brideParents,
+    defaultInvitationContent.brideParents,
+  );
+
+  const groomParents = getDisplayValue(
+    formData.groomParents,
+    defaultInvitationContent.groomParents,
+  );
+
+  const brideSurname = getDisplayValue(
+    formData.brideSurname,
+    defaultInvitationContent.brideSurname,
+  );
+
+  const groomSurname = getDisplayValue(
+    formData.groomSurname,
+    defaultInvitationContent.groomSurname,
+  );
+
+  const date = getDisplayValue(formData.date, defaultInvitationContent.date);
+
+  const time = getDisplayValue(formData.time, defaultInvitationContent.time);
+
+  const description = getDisplayValue(
+    formData.description,
+    defaultInvitationContent.description,
+  );
+
+  const venueName = getDisplayValue(
+    formData.venueName,
+    defaultInvitationContent.venueName,
+  );
+
+  const venueLocation = getDisplayValue(
+    formData.venueLocation,
+    defaultInvitationContent.venueLocation,
+  );
 
   const content = (
     <View className="h-full w-full items-center justify-center px-7 py-10">
       <View className="w-full flex-1 items-center justify-center">
         <View className="items-center">
           <AppText variant="invitationNames" className="text-center">
-            {formData.brideName}
+            {brideName}
           </AppText>
 
           <AppText variant="invitationAmpersand" className="text-center">
@@ -56,7 +100,7 @@ export function InvitationPreviewCard({ imageUrl, formData }: Props) {
           </AppText>
 
           <AppText variant="invitationNames" className="text-center">
-            {formData.groomName}
+            {groomName}
           </AppText>
         </View>
 
@@ -96,15 +140,13 @@ export function InvitationPreviewCard({ imageUrl, formData }: Props) {
 
         <View className="mt-7 w-full flex-row items-center justify-center gap-3">
           <AppText variant="invitationMeta" className="text-center">
-            {formatInvitationDate(formData.date)}
+            {formatInvitationDate(date)}
           </AppText>
 
-          {!!formData.date && !!formData.time && (
-            <View className="h-4 w-px bg-border" />
-          )}
+          {!!date && !!time && <View className="h-4 w-px bg-border" />}
 
           <AppText variant="invitationMeta" className="text-center">
-            {formData.time}
+            {time}
           </AppText>
         </View>
 
@@ -113,11 +155,11 @@ export function InvitationPreviewCard({ imageUrl, formData }: Props) {
           className="mt-5 max-w-[230px] text-center"
           numberOfLines={4}
         >
-          {formData.description}
+          {description}
         </AppText>
 
         <AppText variant="invitationVenue" className="mt-6 text-center">
-          {formData.venueName}
+          {venueName}
         </AppText>
 
         <AppText
@@ -125,7 +167,7 @@ export function InvitationPreviewCard({ imageUrl, formData }: Props) {
           className="mt-2 max-w-[220px] text-center"
           numberOfLines={2}
         >
-          {formData.venueLocation}
+          {venueLocation}
         </AppText>
       </View>
     </View>

@@ -2,9 +2,9 @@ import { ScreenHeader } from "@/components/common/ScreenHeader";
 import { InvitationEditFormSection } from "@/components/invitations/create/InvitationEditFormSection";
 import { InvitationEditSteps } from "@/components/invitations/create/InvitationEditSteps";
 import { InvitationPreviewCard } from "@/components/invitations/create/InvitationPreviewCard";
+import { useAppAlert } from "@/components/ui/AppAlert";
 import { AppText } from "@/components/ui/AppText";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
-import { defaultInvitationContent } from "@/constants/invitationDefaultContent";
 import { useAppNavigation } from "@/hooks/useAppNavigation";
 import { getInvitationEventTypes } from "@/services/invitationEventTypeService";
 import {
@@ -37,6 +37,11 @@ type EditParams = {
   venueLocation?: string | string[];
 };
 
+type InvitationValidationResult = {
+  isValid: boolean;
+  message?: string;
+};
+
 function getParamValue(value?: string | string[]) {
   const resolvedValue = Array.isArray(value) ? value[0] : value;
   const trimmedValue = resolvedValue?.trim();
@@ -44,50 +49,185 @@ function getParamValue(value?: string | string[]) {
   return trimmedValue ? trimmedValue : undefined;
 }
 
-function createInitialFormData(params: EditParams): InvitationFormData {
+function isEmptyValue(value: string | null | undefined) {
+  return !value || value.trim().length === 0;
+}
+
+function createEmptyFormData(): InvitationFormData {
+  return {
+    eventTypeId: "",
+    brideName: "",
+    groomName: "",
+    brideParents: "",
+    groomParents: "",
+    brideSurname: "",
+    groomSurname: "",
+    date: "",
+    time: "",
+    description: "",
+    venueName: "",
+    venueLocation: "",
+  };
+}
+
+function createEditFormData(params: EditParams): InvitationFormData {
   return {
     eventTypeId: getParamValue(params.eventTypeId) ?? "",
+    brideName: getParamValue(params.brideName) ?? "",
+    groomName: getParamValue(params.groomName) ?? "",
+    brideParents: getParamValue(params.brideParents) ?? "",
+    groomParents: getParamValue(params.groomParents) ?? "",
+    brideSurname: getParamValue(params.brideSurname) ?? "",
+    groomSurname: getParamValue(params.groomSurname) ?? "",
+    date: getParamValue(params.date) ?? "",
+    time: getParamValue(params.time) ?? "",
+    description: getParamValue(params.description) ?? "",
+    venueName: getParamValue(params.venueName) ?? "",
+    venueLocation: getParamValue(params.venueLocation) ?? "",
+  };
+}
 
-    brideName:
-      getParamValue(params.brideName) ?? defaultInvitationContent.brideName,
+function hasFormDataParams(params: EditParams) {
+  return Boolean(
+    getParamValue(params.eventTypeId) ||
+    getParamValue(params.brideName) ||
+    getParamValue(params.groomName) ||
+    getParamValue(params.brideParents) ||
+    getParamValue(params.groomParents) ||
+    getParamValue(params.brideSurname) ||
+    getParamValue(params.groomSurname) ||
+    getParamValue(params.date) ||
+    getParamValue(params.time) ||
+    getParamValue(params.description) ||
+    getParamValue(params.venueName) ||
+    getParamValue(params.venueLocation),
+  );
+}
 
-    groomName:
-      getParamValue(params.groomName) ?? defaultInvitationContent.groomName,
+function createInitialFormData(params: EditParams): InvitationFormData {
+  const invitationId = getParamValue(params.invitationId);
 
-    brideParents:
-      getParamValue(params.brideParents) ??
-      defaultInvitationContent.brideParents,
+  if (invitationId || hasFormDataParams(params)) {
+    return createEditFormData(params);
+  }
 
-    groomParents:
-      getParamValue(params.groomParents) ??
-      defaultInvitationContent.groomParents,
+  return createEmptyFormData();
+}
 
-    brideSurname:
-      getParamValue(params.brideSurname) ??
-      defaultInvitationContent.brideSurname,
+function trimInvitationFormData(
+  formData: InvitationFormData,
+): InvitationFormData {
+  return {
+    eventTypeId: formData.eventTypeId.trim(),
+    brideName: formData.brideName.trim(),
+    groomName: formData.groomName.trim(),
+    brideParents: formData.brideParents.trim(),
+    groomParents: formData.groomParents.trim(),
+    brideSurname: formData.brideSurname.trim(),
+    groomSurname: formData.groomSurname.trim(),
+    date: formData.date.trim(),
+    time: formData.time.trim(),
+    description: formData.description.trim(),
+    venueName: formData.venueName.trim(),
+    venueLocation: formData.venueLocation.trim(),
+  };
+}
 
-    groomSurname:
-      getParamValue(params.groomSurname) ??
-      defaultInvitationContent.groomSurname,
+function validateInvitationFormData(
+  formData: InvitationFormData,
+): InvitationValidationResult {
+  if (isEmptyValue(formData.eventTypeId)) {
+    return {
+      isValid: false,
+      message: "Lütfen davetiye türünü seçin.",
+    };
+  }
 
-    date: getParamValue(params.date) ?? defaultInvitationContent.date,
+  if (isEmptyValue(formData.brideName)) {
+    return {
+      isValid: false,
+      message: "Lütfen gelin adını girin.",
+    };
+  }
 
-    time: getParamValue(params.time) ?? defaultInvitationContent.time,
+  if (isEmptyValue(formData.groomName)) {
+    return {
+      isValid: false,
+      message: "Lütfen damat adını girin.",
+    };
+  }
 
-    description:
-      getParamValue(params.description) ?? defaultInvitationContent.description,
+  if (isEmptyValue(formData.brideParents)) {
+    return {
+      isValid: false,
+      message: "Lütfen gelin tarafı anne - baba bilgisini girin.",
+    };
+  }
 
-    venueName:
-      getParamValue(params.venueName) ?? defaultInvitationContent.venueName,
+  if (isEmptyValue(formData.groomParents)) {
+    return {
+      isValid: false,
+      message: "Lütfen damat tarafı anne - baba bilgisini girin.",
+    };
+  }
 
-    venueLocation:
-      getParamValue(params.venueLocation) ??
-      defaultInvitationContent.venueLocation,
+  if (isEmptyValue(formData.brideSurname)) {
+    return {
+      isValid: false,
+      message: "Lütfen gelin tarafı soyadını girin.",
+    };
+  }
+
+  if (isEmptyValue(formData.groomSurname)) {
+    return {
+      isValid: false,
+      message: "Lütfen damat tarafı soyadını girin.",
+    };
+  }
+
+  if (isEmptyValue(formData.date)) {
+    return {
+      isValid: false,
+      message: "Lütfen davetiye tarihini girin.",
+    };
+  }
+
+  if (isEmptyValue(formData.time)) {
+    return {
+      isValid: false,
+      message: "Lütfen davetiye saatini girin.",
+    };
+  }
+
+  if (isEmptyValue(formData.description)) {
+    return {
+      isValid: false,
+      message: "Lütfen davetiye açıklamasını girin.",
+    };
+  }
+
+  if (isEmptyValue(formData.venueName)) {
+    return {
+      isValid: false,
+      message: "Lütfen mekan adını girin.",
+    };
+  }
+
+  if (isEmptyValue(formData.venueLocation)) {
+    return {
+      isValid: false,
+      message: "Lütfen mekan konumunu girin.",
+    };
+  }
+
+  return {
+    isValid: true,
   };
 }
 
 export default function InvitationFlowEditScreen() {
   const appRouter = useAppNavigation();
+  const { showAlert } = useAppAlert();
   const params = useLocalSearchParams<EditParams>();
 
   const templateId = useMemo(() => {
@@ -118,6 +258,25 @@ export default function InvitationFlowEditScreen() {
   const [formData, setFormData] = useState<InvitationFormData>(() =>
     createInitialFormData(params),
   );
+
+  useEffect(() => {
+    setFormData(createInitialFormData(params));
+  }, [
+    templateId,
+    invitationId,
+    params.eventTypeId,
+    params.brideName,
+    params.groomName,
+    params.brideParents,
+    params.groomParents,
+    params.brideSurname,
+    params.groomSurname,
+    params.date,
+    params.time,
+    params.description,
+    params.venueName,
+    params.venueLocation,
+  ]);
 
   useEffect(() => {
     fetchTemplate();
@@ -185,6 +344,22 @@ export default function InvitationFlowEditScreen() {
       return;
     }
 
+    const trimmedFormData = trimInvitationFormData(formData);
+    const validationResult = validateInvitationFormData(trimmedFormData);
+
+    if (!validationResult.isValid) {
+      showAlert({
+        type: "warning",
+        title: "Eksik bilgi var",
+        message:
+          validationResult.message ??
+          "Lütfen davetiye bilgilerini eksiksiz doldurun.",
+        confirmText: "Tamam",
+      });
+
+      return;
+    }
+
     const selectedEditableImageUrl =
       editableImageUrl || template.editableImageUrl || template.imageUrl;
 
@@ -197,18 +372,18 @@ export default function InvitationFlowEditScreen() {
         invitationImageUrl: invitationImageUrl ?? "",
         editableImageUrl: selectedEditableImageUrl ?? "",
 
-        eventTypeId: formData.eventTypeId,
-        brideName: formData.brideName,
-        groomName: formData.groomName,
-        brideParents: formData.brideParents,
-        groomParents: formData.groomParents,
-        brideSurname: formData.brideSurname,
-        groomSurname: formData.groomSurname,
-        date: formData.date,
-        time: formData.time,
-        description: formData.description,
-        venueName: formData.venueName,
-        venueLocation: formData.venueLocation,
+        eventTypeId: trimmedFormData.eventTypeId,
+        brideName: trimmedFormData.brideName,
+        groomName: trimmedFormData.groomName,
+        brideParents: trimmedFormData.brideParents,
+        groomParents: trimmedFormData.groomParents,
+        brideSurname: trimmedFormData.brideSurname,
+        groomSurname: trimmedFormData.groomSurname,
+        date: trimmedFormData.date,
+        time: trimmedFormData.time,
+        description: trimmedFormData.description,
+        venueName: trimmedFormData.venueName,
+        venueLocation: trimmedFormData.venueLocation,
       },
     });
   }
