@@ -74,7 +74,7 @@ export default function DowryAddProductScreen() {
       };
     }
 
-    return "/(tabs)/dowry-summary";
+    return "/(tabs)/dowry/dowry";
   }, [categorySlug]);
 
   const initialCategoryName = useMemo(() => {

@@ -212,7 +212,7 @@ export default function DowryCategoryDetailScreen() {
           <AppButton
             title="Çeyiz Defterine Dön"
             className="mt-5"
-            onPress={() => router.push("/(tabs)/dowry-summary")}
+            onPress={() => router.push("/(tabs)/dowry/dowry")}
           />
         </View>
       </ScreenContainer>
@@ -226,7 +226,7 @@ export default function DowryCategoryDetailScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerClassName="pb-10"
       >
-        <ScreenHeader title={category.title} backTo="/(tabs)/dowry-summary" />
+        <ScreenHeader title={category.title} backTo="/(tabs)/dowry/dowry" />
 
         <DowryCategoryDetailHeader
           title={category.title}

@@ -119,7 +119,7 @@ export default function HomeScreen() {
               icon="gift-outline"
               title="Çeyiz Listesi"
               subtitle="Eşyalarını planla"
-              onPress={() => router.push("/(tabs)/dowry-summary")}
+              onPress={() => router.push("/(tabs)/dowry/dowry")}
             />
           </View>
 

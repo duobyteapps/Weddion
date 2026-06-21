@@ -42,7 +42,7 @@ const TAB_ICONS: Record<string, { active: IconName; inactive: IconName }> = {
     active: "mail",
     inactive: "mail-outline",
   },
-  "dowry-summary": {
+  dowry: {
     active: "gift",
     inactive: "gift-outline",
   },
