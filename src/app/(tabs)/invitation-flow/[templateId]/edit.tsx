@@ -12,6 +12,7 @@ import {
   InvitationTemplateDto,
 } from "@/services/invitationTemplateService";
 import { InvitationEventType, InvitationFormData } from "@/types/invitation";
+import { validateTimeField } from "@/utils/timeValidation";
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, ScrollView } from "react-native";
@@ -192,10 +193,15 @@ function validateInvitationFormData(
     };
   }
 
-  if (isEmptyValue(formData.time)) {
+  const timeValidationMessage = validateTimeField(
+    formData.time,
+    "Davetiye saati",
+  );
+
+  if (timeValidationMessage) {
     return {
       isValid: false,
-      message: "Lütfen davetiye saatini girin.",
+      message: timeValidationMessage,
     };
   }
 

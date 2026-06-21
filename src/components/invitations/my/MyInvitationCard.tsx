@@ -55,18 +55,9 @@ function formatInvitationTitle(invitation: UserInvitation) {
 
 function formatVenue(invitation: UserInvitation) {
   const venueName = invitation.venue_name?.trim();
-  const venueLocation = invitation.venue_location?.trim();
-
-  if (venueName && venueLocation) {
-    return `${venueName} - ${venueLocation}`;
-  }
 
   if (venueName) {
     return venueName;
-  }
-
-  if (venueLocation) {
-    return venueLocation;
   }
 
   return "Mekan bilgisi eklenmedi";

@@ -7,6 +7,7 @@ import { AppDateInput } from "@/components/ui/AppDateInput";
 import { AppDropdown, AppDropdownOption } from "@/components/ui/AppDropdown";
 import { AppInput } from "@/components/ui/AppInput";
 import { AppText } from "@/components/ui/AppText";
+import { AppTimeInput } from "@/components/ui/AppTimeInput";
 import { InvitationEventType, InvitationFormData } from "@/types/invitation";
 
 type Props = {
@@ -175,14 +176,9 @@ export function InvitationEditFormSection({
             </InvitationFormField>
 
             <InvitationFormField label="Saat" className="w-[105px]">
-              <AppInput
+              <AppTimeInput
                 value={formData.time}
                 onChangeText={(value) => onChangeField("time", value)}
-                placeholder="19.00"
-                maxLength={20}
-                size="compact"
-                inputClassName="text-textDark"
-                keyboardType="numbers-and-punctuation"
               />
             </InvitationFormField>
           </View>
@@ -199,29 +195,28 @@ export function InvitationEditFormSection({
             />
           </InvitationFormField>
 
-          <View className="flex-row gap-3">
-            <InvitationFormField label="Mekan" className="flex-1">
-              <AppInput
-                value={formData.venueName}
-                onChangeText={(value) => onChangeField("venueName", value)}
-                placeholder="Mekan"
-                maxLength={60}
-                size="compact"
-                inputClassName="text-textDark"
-              />
-            </InvitationFormField>
+          <InvitationFormField label="Mekan">
+            <AppInput
+              value={formData.venueName}
+              onChangeText={(value) => onChangeField("venueName", value)}
+              placeholder="Mekan"
+              maxLength={60}
+              size="compact"
+              inputClassName="text-textDark"
+            />
+          </InvitationFormField>
 
-            <InvitationFormField label="Konum" className="flex-1">
-              <AppInput
-                value={formData.venueLocation}
-                onChangeText={(value) => onChangeField("venueLocation", value)}
-                placeholder="Konum"
-                maxLength={80}
-                size="compact"
-                inputClassName="text-textDark"
-              />
-            </InvitationFormField>
-          </View>
+          <InvitationFormField label="Konum">
+            <AppInput
+              value={formData.venueLocation}
+              onChangeText={(value) => onChangeField("venueLocation", value)}
+              placeholder="Konum"
+              maxLength={160}
+              multiline
+              textAlignVertical="top"
+              inputClassName="h-28 pt-3 text-textDark"
+            />
+          </InvitationFormField>
         </View>
       </AppCard>
 
