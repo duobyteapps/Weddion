@@ -9,7 +9,7 @@ export const defaultInvitationContent: InvitationFormData = {
   groomParents: "Anne - Baba",
   brideSurname: "Soyad",
   groomSurname: "Soyad",
-  date: "22 AĞUSTOS 2026",
+  date: "22 Ağustos 2026",
   time: "19.00",
   description:
     "Bu özel günümüzde\nsizleri de aramızda görmekten\nmutluluk duyarız.",

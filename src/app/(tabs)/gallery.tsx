@@ -27,7 +27,7 @@ import { getCurrentUserInvitations } from "@/services/invitationService";
 import { SESSION_EXPIRED_MESSAGE } from "@/services/sessionService";
 import { InvitationGuestPhoto, UserInvitation } from "@/types/invitation";
 
-const MAX_GUEST_PHOTOS_PER_INVITATION = 200;
+const MAX_GUEST_PHOTOS_PER_INVITATION = 100;
 
 type GalleryPhotos = ComponentProps<typeof GalleryPhotoGrid>["photos"];
 type GalleryPhoto = GalleryPhotos[number];

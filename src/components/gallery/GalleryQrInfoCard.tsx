@@ -34,6 +34,31 @@ export function GalleryQrInfoCard({ onPressQrCode }: Props) {
           textClassName="text-[8px]"
         />
       </View>
+
+      <View className="mt-5 flex-row">
+        <View className="w-12" />
+
+        <View className="ml-4 flex-1">
+          <View className="flex-row overflow-hidden">
+            {Array.from({ length: 60 }).map((_, index) => (
+              <View key={index} className="mr-1 h-[1px] w-2 bg-border" />
+            ))}
+          </View>
+
+          <View className="mt-4 flex-row items-center">
+            <Ionicons
+              name="information-circle-outline"
+              size={18}
+              color="#A66AD8"
+            />
+
+            <AppText variant="body" className="ml-2 flex-1 text-textLight">
+              Fotoğraflarınız burada{" "}
+              <AppText variant="captionStrong">7 gün</AppText> saklanmaktadır.
+            </AppText>
+          </View>
+        </View>
+      </View>
     </AppCard>
   );
 }
