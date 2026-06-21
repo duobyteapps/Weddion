@@ -10,7 +10,7 @@ import { Colors } from "@/constants/Colors";
 import { getDowryCategories } from "@/services/dowryCategoryService";
 import { DowryCategoryItem } from "@/types/dowry";
 
-export default function DowrySummaryScreen() {
+export default function DowryScreen() {
   const [categories, setCategories] = useState<DowryCategoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
