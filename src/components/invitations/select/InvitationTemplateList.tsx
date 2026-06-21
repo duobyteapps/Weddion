@@ -1,5 +1,5 @@
+import { ReactElement } from "react";
 import { FlatList, View } from "react-native";
-
 import {
   InvitationTemplate,
   InvitationTemplateCard,
@@ -7,7 +7,8 @@ import {
 
 type Props = {
   templates: InvitationTemplate[];
-  ListHeaderComponent?: React.ReactElement;
+  ListHeaderComponent?: ReactElement;
+  ListFooterComponent?: ReactElement | null;
   onPressTemplate?: (template: InvitationTemplate) => void;
   onFavoritePress?: (templateId: string) => void;
 };
@@ -15,6 +16,7 @@ type Props = {
 export function InvitationTemplateList({
   templates,
   ListHeaderComponent,
+  ListFooterComponent,
   onPressTemplate,
   onFavoritePress,
 }: Props) {
@@ -27,8 +29,9 @@ export function InvitationTemplateList({
       contentContainerClassName="pb-10"
       columnWrapperClassName="justify-between"
       ListHeaderComponent={ListHeaderComponent}
+      ListFooterComponent={ListFooterComponent}
       renderItem={({ item }) => (
-        <View className="mb-4 w-[48.5%]">
+        <View className="mb-5 w-[48%]">
           <InvitationTemplateCard
             template={item}
             onPress={() => onPressTemplate?.(item)}

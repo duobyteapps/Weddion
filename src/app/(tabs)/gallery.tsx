@@ -1,5 +1,12 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { ComponentProps, useEffect, useMemo, useRef, useState } from "react";
+import {
+  ComponentProps,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { ActivityIndicator, Platform, ScrollView, View } from "react-native";
 
 import { ScreenHeader } from "@/components/common/ScreenHeader";
@@ -14,6 +21,7 @@ import { GalleryPhotoGrid } from "@/components/gallery/GalleryPhotoGrid";
 import { GalleryQrInfoCard } from "@/components/gallery/GalleryQrInfoCard";
 import { useAppAlert } from "@/components/ui/AppAlert";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
+import { usePaginatedData } from "@/hooks/usePaginatedData";
 import {
   deleteGuestPhoto,
   getGuestPhotosByInvitation,
@@ -125,13 +133,7 @@ export default function GalleryScreen() {
 
   const [invitations, setInvitations] = useState<UserInvitation[]>([]);
   const [selectedInvitationId, setSelectedInvitationId] = useState<string>();
-  const [guestPhotos, setGuestPhotos] = useState<InvitationGuestPhoto[]>([]);
-  const [photos, setPhotos] = useState<GalleryPhotos>([]);
   const [loadingInvitations, setLoadingInvitations] = useState(true);
-  const [loadingPhotos, setLoadingPhotos] = useState(false);
-  const [photoPage, setPhotoPage] = useState(0);
-  const [hasMorePhotos, setHasMorePhotos] = useState(false);
-  const [loadingMorePhotos, setLoadingMorePhotos] = useState(false);
   const [deletingPhotoId, setDeletingPhotoId] = useState<string | null>(null);
   const [downloadingPhotoId, setDownloadingPhotoId] = useState<string | null>(
     null,
@@ -142,29 +144,6 @@ export default function GalleryScreen() {
   const [deletingSelectedPhotos, setDeletingSelectedPhotos] = useState(false);
 
   const isMountedRef = useRef(true);
-
-  useEffect(() => {
-    isMountedRef.current = true;
-    fetchInvitations();
-
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, [invitationId]);
-
-  useEffect(() => {
-    if (!selectedInvitationId) {
-      setGuestPhotos([]);
-      setPhotos([]);
-      setPhotoPage(0);
-      setHasMorePhotos(false);
-      return;
-    }
-
-    setPhotoPage(0);
-    setHasMorePhotos(false);
-    fetchPhotos(selectedInvitationId, 0);
-  }, [selectedInvitationId]);
 
   function handleServiceError(params: {
     error: unknown;
@@ -190,6 +169,60 @@ export default function GalleryScreen() {
       },
     });
   }
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    fetchInvitations();
+
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, [invitationId]);
+
+  const fetchGuestPhotoPage = useCallback(
+    async ({ page, pageSize }: { page: number; pageSize: number }) => {
+      if (!selectedInvitationId) {
+        return [];
+      }
+
+      const data = await getGuestPhotosByInvitation({
+        invitationId: selectedInvitationId,
+        page,
+        pageSize,
+      });
+
+      return data.filter((photo) => Boolean(photo.public_url));
+    },
+    [selectedInvitationId],
+  );
+
+  const {
+    items: guestPhotos,
+    setItems: setGuestPhotos,
+    loadingInitial: loadingPhotos,
+    loadingMore: loadingMorePhotos,
+    hasMore: hasMorePhotos,
+    loadMore: handleLoadMorePhotos,
+  } = usePaginatedData<InvitationGuestPhoto>({
+    pageSize: GUEST_PHOTO_PAGE_SIZE,
+    enabled: Boolean(selectedInvitationId),
+    dependencies: [selectedInvitationId],
+    fetchPage: fetchGuestPhotoPage,
+    onError: (error) => {
+      console.log("Galeri fotoğrafları alınamadı:", error);
+
+      handleServiceError({
+        error,
+        fallbackTitle: "Fotoğraflar alınamadı",
+        fallbackMessage:
+          "Misafir fotoğrafları yüklenirken bir hata oluştu. Lütfen tekrar deneyin.",
+      });
+    },
+  });
+
+  const photos = useMemo(() => {
+    return guestPhotos.map(mapGuestPhotoToGalleryPhoto);
+  }, [guestPhotos]);
 
   const fetchInvitations = async () => {
     try {
@@ -236,86 +269,6 @@ export default function GalleryScreen() {
         setLoadingInvitations(false);
       }
     }
-  };
-
-  const fetchPhotos = async (targetInvitationId: string, nextPage = 0) => {
-    try {
-      if (isMountedRef.current) {
-        if (nextPage === 0) {
-          setLoadingPhotos(true);
-        } else {
-          setLoadingMorePhotos(true);
-        }
-      }
-
-      const data = await getGuestPhotosByInvitation({
-        invitationId: targetInvitationId,
-        page: nextPage,
-        pageSize: GUEST_PHOTO_PAGE_SIZE,
-      });
-
-      if (!isMountedRef.current) {
-        return;
-      }
-
-      const visibleGuestPhotos = data.filter((photo) =>
-        Boolean(photo.public_url),
-      );
-
-      const galleryPhotos = visibleGuestPhotos.map(mapGuestPhotoToGalleryPhoto);
-
-      if (nextPage === 0) {
-        setGuestPhotos(visibleGuestPhotos);
-        setPhotos(galleryPhotos);
-      } else {
-        setGuestPhotos((currentPhotos) => [
-          ...currentPhotos,
-          ...visibleGuestPhotos,
-        ]);
-
-        setPhotos((currentPhotos) => [...currentPhotos, ...galleryPhotos]);
-      }
-
-      setPhotoPage(nextPage);
-      setHasMorePhotos(data.length === GUEST_PHOTO_PAGE_SIZE);
-    } catch (error) {
-      console.log("Galeri fotoğrafları alınamadı:", error);
-
-      if (isMountedRef.current && nextPage === 0) {
-        setGuestPhotos([]);
-        setPhotos([]);
-        setPhotoPage(0);
-        setHasMorePhotos(false);
-      }
-
-      handleServiceError({
-        error,
-        fallbackTitle: "Fotoğraflar alınamadı",
-        fallbackMessage:
-          "Misafir fotoğrafları yüklenirken bir hata oluştu. Lütfen tekrar deneyin.",
-      });
-    } finally {
-      if (isMountedRef.current) {
-        if (nextPage === 0) {
-          setLoadingPhotos(false);
-        } else {
-          setLoadingMorePhotos(false);
-        }
-      }
-    }
-  };
-
-  const handleLoadMorePhotos = () => {
-    if (
-      !selectedInvitationId ||
-      loadingPhotos ||
-      loadingMorePhotos ||
-      !hasMorePhotos
-    ) {
-      return;
-    }
-
-    fetchPhotos(selectedInvitationId, photoPage + 1);
   };
 
   const eventOptions: GalleryEventOption[] = useMemo(() => {
@@ -371,10 +324,6 @@ export default function GalleryScreen() {
 
   const removePhotoFromState = (photoId: string) => {
     setGuestPhotos((currentPhotos) =>
-      currentPhotos.filter((photo) => photo.id !== photoId),
-    );
-
-    setPhotos((currentPhotos) =>
       currentPhotos.filter((photo) => photo.id !== photoId),
     );
   };
@@ -678,12 +627,6 @@ export default function GalleryScreen() {
           const deletedPhotoIds = targetPhotos.map((photo) => photo.id);
 
           setGuestPhotos((currentPhotos) =>
-            currentPhotos.filter(
-              (photo) => !deletedPhotoIds.includes(photo.id),
-            ),
-          );
-
-          setPhotos((currentPhotos) =>
             currentPhotos.filter(
               (photo) => !deletedPhotoIds.includes(photo.id),
             ),

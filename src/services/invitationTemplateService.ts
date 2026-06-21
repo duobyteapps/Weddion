@@ -2,20 +2,19 @@ import { InvitationCategory } from "@/components/invitations/select/InvitationCa
 import { supabase } from "@/lib/supabase";
 import { getR2SignedUrl } from "@/services/r2ImageService";
 
+export const INVITATION_TEMPLATE_PAGE_SIZE = 10;
+
 export type InvitationTemplateDto = {
   id: string;
   title: string;
   category: InvitationCategory;
   categoryTitle: string;
-
   imageUrl: string;
   contentImageUrl: string | null;
   editableImageUrl: string | null;
-
   imagePath: string;
   contentImagePath: string | null;
   editableImagePath: string | null;
-
   isFavorite?: boolean;
 };
 
@@ -24,10 +23,15 @@ type InvitationTemplateRow = {
   title: string;
   category: InvitationCategory;
   category_title: string;
-
   image_path: string | null;
   content_image_path: string | null;
   editable_image_path: string | null;
+};
+
+type GetInvitationTemplatesParams = {
+  page?: number;
+  pageSize?: number;
+  category?: InvitationCategory | "all";
 };
 
 function isDirectImageUri(value: string) {
@@ -83,23 +87,25 @@ async function mapInvitationTemplateRow(
     title: item.title,
     category: item.category,
     categoryTitle: item.category_title,
-
     imageUrl,
     contentImageUrl,
     editableImageUrl,
-
     imagePath: item.image_path,
     contentImagePath: item.content_image_path,
     editableImagePath: item.editable_image_path,
-
     isFavorite: false,
   };
 }
 
-export async function getInvitationTemplates(): Promise<
-  InvitationTemplateDto[]
-> {
-  const { data, error } = await supabase
+export async function getInvitationTemplates({
+  page = 0,
+  pageSize = INVITATION_TEMPLATE_PAGE_SIZE,
+  category = "all",
+}: GetInvitationTemplatesParams = {}): Promise<InvitationTemplateDto[]> {
+  const from = page * pageSize;
+  const to = from + pageSize - 1;
+
+  let query = supabase
     .from("invitation_templates")
     .select(
       `
@@ -113,7 +119,14 @@ export async function getInvitationTemplates(): Promise<
     `,
     )
     .eq("is_active", true)
-    .order("sort_order", { ascending: true });
+    .order("sort_order", { ascending: true })
+    .range(from, to);
+
+  if (category !== "all") {
+    query = query.eq("category", category);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     throw new Error(error.message);

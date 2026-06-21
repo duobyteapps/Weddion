@@ -6,13 +6,16 @@ import {
 import { InvitationTemplate } from "@/components/invitations/select/InvitationTemplateCard";
 import { InvitationTemplateList } from "@/components/invitations/select/InvitationTemplateList";
 import { useAppAlert } from "@/components/ui/AppAlert";
+import { AppText } from "@/components/ui/AppText";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { MAX_USER_INVITATION_COUNT } from "@/constants/invitationLimits";
 import { useAppNavigation } from "@/hooks/useAppNavigation";
 import { getCurrentUserInvitationCount } from "@/services/invitationService";
 import { getInvitationTemplates } from "@/services/invitationTemplateService";
-import { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, View } from "react-native";
+import { useCallback, useEffect, useState } from "react";
+import { ActivityIndicator, TouchableOpacity, View } from "react-native";
+
+const INVITATION_TEMPLATE_PAGE_SIZE = 10;
 
 export default function InvitationSelectScreen() {
   const appRouter = useAppNavigation();
@@ -22,34 +25,59 @@ export default function InvitationSelectScreen() {
 
   const [templates, setTemplates] = useState<InvitationTemplate[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
 
   const { showAlert } = useAppAlert();
 
+  const fetchTemplates = useCallback(
+    async (targetPage = 0, replace = true) => {
+      try {
+        if (targetPage === 0) {
+          setLoading(true);
+        } else {
+          setLoadingMore(true);
+        }
+
+        const data = await getInvitationTemplates({
+          page: targetPage,
+          pageSize: INVITATION_TEMPLATE_PAGE_SIZE + 1,
+          category: selectedCategory,
+        });
+
+        const visibleTemplates = data.slice(0, INVITATION_TEMPLATE_PAGE_SIZE);
+
+        setTemplates((prev) =>
+          replace ? visibleTemplates : [...prev, ...visibleTemplates],
+        );
+
+        setPage(targetPage);
+        setHasMore(data.length > INVITATION_TEMPLATE_PAGE_SIZE);
+      } catch (error) {
+        console.log("Davetiye şablonları alınamadı:", error);
+      } finally {
+        setLoading(false);
+        setLoadingMore(false);
+      }
+    },
+    [selectedCategory],
+  );
+
   useEffect(() => {
-    fetchTemplates();
-  }, []);
+    setTemplates([]);
+    setPage(0);
+    setHasMore(true);
+    fetchTemplates(0, true);
+  }, [fetchTemplates]);
 
-  const fetchTemplates = async () => {
-    try {
-      setLoading(true);
-
-      const data = await getInvitationTemplates();
-
-      setTemplates(data);
-    } catch (error) {
-      console.log("Davetiye şablonları alınamadı:", error);
-    } finally {
-      setLoading(false);
+  const handleLoadMore = () => {
+    if (loading || loadingMore || !hasMore) {
+      return;
     }
+
+    fetchTemplates(page + 1, false);
   };
-
-  const filteredTemplates = useMemo(() => {
-    if (selectedCategory === "all") {
-      return templates;
-    }
-
-    return templates.filter((item) => item.category === selectedCategory);
-  }, [selectedCategory, templates]);
 
   const toggleFavorite = (id: string) => {
     setTemplates((prev) =>
@@ -95,7 +123,7 @@ export default function InvitationSelectScreen() {
   return (
     <ScreenContainer className="flex-1 bg-background">
       <InvitationTemplateList
-        templates={loading ? [] : filteredTemplates}
+        templates={loading ? [] : templates}
         onPressTemplate={handlePressTemplate}
         onFavoritePress={toggleFavorite}
         ListHeaderComponent={
@@ -116,6 +144,24 @@ export default function InvitationSelectScreen() {
               </View>
             )}
           </>
+        }
+        ListFooterComponent={
+          !loading && hasMore ? (
+            <TouchableOpacity
+              activeOpacity={0.85}
+              disabled={loadingMore}
+              onPress={handleLoadMore}
+              className="mt-5 mb-8 h-12 items-center justify-center rounded-2xl bg-primary"
+            >
+              {loadingMore ? (
+                <ActivityIndicator />
+              ) : (
+                <AppText className="font-semibold text-white">
+                  Daha Fazla Yükle
+                </AppText>
+              )}
+            </TouchableOpacity>
+          ) : null
         }
       />
     </ScreenContainer>
