@@ -22,14 +22,6 @@ export type DowryChecklistItem = {
   completed: boolean;
 };
 
-export type DowryCategoryDetail = {
-  id: DowryCategoryImageKey;
-  title: string;
-  icon: MaterialIconName;
-  imageKey: DowryCategoryImageKey;
-  items: DowryChecklistItem[];
-};
-
 export type DowryCategory = {
   id: string;
   slug: string;

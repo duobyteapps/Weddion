@@ -10,18 +10,41 @@ import { EmptyDowryItems } from "@/components/dowry/dowry-detail/EmptyDowryItems
 import { AppButton } from "@/components/ui/AppButton";
 import { AppText } from "@/components/ui/AppText";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
+
 import { Colors } from "@/constants/Colors";
-import { getDowryCategoryDetail } from "@/constants/dowryCategoryDetails";
+
+import { getDowryCategories } from "@/services/dowryCategoryService";
 import {
   deleteUserDowryItem,
   getUserDowryItems,
   toggleUserDowryItemCompleted,
 } from "@/services/dowryItemService";
+
 import {
+  DowryCategoryImageKey,
+  DowryCategoryItem,
   DowryChecklistItem,
   DowryFilterType,
   UserDowryItem,
 } from "@/types/dowry";
+
+const dowryCategoryImageKeys: DowryCategoryImageKey[] = [
+  "living-room",
+  "bedroom",
+  "kitchen",
+  "bathroom",
+  "home-decoration",
+  "technology",
+  "other",
+];
+
+function getCategoryImageKey(slug: string): DowryCategoryImageKey {
+  if (dowryCategoryImageKeys.includes(slug as DowryCategoryImageKey)) {
+    return slug as DowryCategoryImageKey;
+  }
+
+  return "other";
+}
 
 function mapDowryItemToChecklistItem(item: UserDowryItem): DowryChecklistItem {
   return {
@@ -36,9 +59,10 @@ function mapDowryItemToChecklistItem(item: UserDowryItem): DowryChecklistItem {
 
 export default function DowryCategoryDetailScreen() {
   const { categoryId } = useLocalSearchParams<{ categoryId: string }>();
-  const categorySlug = categoryId ?? "living-room";
-  const category = getDowryCategoryDetail(categorySlug);
 
+  const categorySlug = categoryId ?? "";
+
+  const [category, setCategory] = useState<DowryCategoryItem | null>(null);
   const [activeFilter, setActiveFilter] = useState<DowryFilterType>("all");
   const [items, setItems] = useState<DowryChecklistItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -58,16 +82,32 @@ export default function DowryCategoryDetailScreen() {
     return items;
   }, [activeFilter, items]);
 
-  const fetchItems = useCallback(async () => {
+  const fetchCategoryDetail = useCallback(async () => {
+    if (!categorySlug) {
+      setCategory(null);
+      setItems([]);
+      setIsLoading(false);
+      return;
+    }
+
     try {
       setIsLoading(true);
 
-      const dowryItems = await getUserDowryItems(categorySlug);
-      const formattedItems = dowryItems.map(mapDowryItemToChecklistItem);
+      const [categories, dowryItems] = await Promise.all([
+        getDowryCategories(),
+        getUserDowryItems(categorySlug),
+      ]);
 
-      setItems(formattedItems);
+      const currentCategory =
+        categories.find((item) => item.id === categorySlug) ??
+        categories.find((item) => item.slug === categorySlug) ??
+        null;
+
+      setCategory(currentCategory);
+      setItems(dowryItems.map(mapDowryItemToChecklistItem));
     } catch (error) {
-      console.log("Çeyiz ürünleri getirilemedi:", error);
+      console.log("Çeyiz kategori detayı getirilemedi:", error);
+      setCategory(null);
       setItems([]);
     } finally {
       setIsLoading(false);
@@ -76,8 +116,8 @@ export default function DowryCategoryDetailScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      fetchItems();
-    }, [fetchItems]),
+      fetchCategoryDetail();
+    }, [fetchCategoryDetail]),
   );
 
   function handleAddProduct() {
@@ -151,13 +191,29 @@ export default function DowryCategoryDetailScreen() {
     }
   }
 
-  if (!category) {
+  if (isLoading) {
     return (
       <ScreenContainer className="flex-1 bg-background">
         <View className="flex-1 items-center justify-center">
+          <ActivityIndicator color={Colors.primary} />
+        </View>
+      </ScreenContainer>
+    );
+  }
+
+  if (!category) {
+    return (
+      <ScreenContainer className="flex-1 bg-background">
+        <View className="flex-1 items-center justify-center px-6">
           <AppText variant="title" className="text-center text-primaryDark">
             Kategori bulunamadı
           </AppText>
+
+          <AppButton
+            title="Çeyiz Defterine Dön"
+            className="mt-5"
+            onPress={() => router.push("/(tabs)/dowry-summary")}
+          />
         </View>
       </ScreenContainer>
     );
@@ -174,7 +230,7 @@ export default function DowryCategoryDetailScreen() {
 
         <DowryCategoryDetailHeader
           title={category.title}
-          imageKey={category.imageKey}
+          imageKey={getCategoryImageKey(category.slug)}
           completed={completedCount}
           total={items.length}
         />
@@ -187,11 +243,7 @@ export default function DowryCategoryDetailScreen() {
           onChangeFilter={setActiveFilter}
         />
 
-        {isLoading ? (
-          <View className="mt-6 items-center justify-center py-8">
-            <ActivityIndicator color={Colors.primary} />
-          </View>
-        ) : items.length === 0 ? (
+        {items.length === 0 ? (
           <EmptyDowryItems
             categoryName={category.title}
             onAddPress={handleAddProduct}
