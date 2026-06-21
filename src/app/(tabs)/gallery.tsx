@@ -53,12 +53,52 @@ function formatEventTitle(invitation: UserInvitation) {
   return fallbackTitle || "İsimsiz Davetiye";
 }
 
+function parseEventDate(date?: string | null) {
+  const dateValue = date?.trim();
+
+  if (!dateValue) {
+    return null;
+  }
+
+  const isoDateMatch = dateValue.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+
+  if (isoDateMatch) {
+    const [, year, month, day] = isoDateMatch;
+    const parsedDate = new Date(Number(year), Number(month) - 1, Number(day));
+
+    return Number.isNaN(parsedDate.getTime()) ? null : parsedDate;
+  }
+
+  const turkishDateMatch = dateValue.match(
+    /^(\d{1,2})[./-](\d{1,2})[./-](\d{4})$/,
+  );
+
+  if (turkishDateMatch) {
+    const [, day, month, year] = turkishDateMatch;
+    const parsedDate = new Date(Number(year), Number(month) - 1, Number(day));
+
+    return Number.isNaN(parsedDate.getTime()) ? null : parsedDate;
+  }
+
+  const parsedDate = new Date(dateValue);
+
+  return Number.isNaN(parsedDate.getTime()) ? null : parsedDate;
+}
+
 function formatEventDate(date?: string | null) {
-  if (!date) {
+  const dateValue = date?.trim();
+
+  if (!dateValue) {
     return "Tarih belirtilmedi";
   }
 
-  return new Date(date).toLocaleDateString("tr-TR", {
+  const parsedDate = parseEventDate(dateValue);
+
+  if (!parsedDate) {
+    return dateValue;
+  }
+
+  return parsedDate.toLocaleDateString("tr-TR", {
     day: "numeric",
     month: "long",
     year: "numeric",
