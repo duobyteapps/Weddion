@@ -2,6 +2,7 @@ export default {
   expo: {
     name: "Weddion",
     slug: "Weddion",
+    owner: "duobyteapps",
     version: "1.0.11",
     orientation: "portrait",
     icon: "./assets/images/icon.png",
