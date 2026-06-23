@@ -1,5 +1,5 @@
 import { AppHeader } from "@/components/common/AppHeader";
-import { PremiumCard } from "@/components/profile/PremiumCard";
+// import { PremiumCard } from "@/components/profile/PremiumCard";
 import { ProfileEventCard } from "@/components/profile/ProfileEventCard";
 import { ProfileHero } from "@/components/profile/ProfileHero";
 import { ProfileMenuSection } from "@/components/profile/ProfileMenuSection";
@@ -198,7 +198,7 @@ export default function ProfileScreen() {
 
         <ProfileMenuSection title="Diğer" items={menuItems} />
 
-        <PremiumCard />
+        {/* <PremiumCard /> */}
       </ScrollView>
     </ScreenContainer>
   );

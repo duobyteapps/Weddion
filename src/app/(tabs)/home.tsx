@@ -5,7 +5,8 @@ import { ScrollView, View } from "react-native";
 
 import { AppHeader } from "@/components/common/AppHeader";
 import { HeroCard } from "@/components/home/HeroCard";
-import { PromoCard } from "@/components/home/PromoCard";
+// import { PromoCard } from "@/components/home/PromoCard";
+import { DowryPromoCard } from "@/components/home/DowryPromoCard";
 import { QuickActionCard } from "@/components/home/QuickActionCard";
 import { AppText } from "@/components/ui/AppText";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
@@ -123,7 +124,8 @@ export default function HomeScreen() {
             />
           </View>
 
-          <PromoCard />
+          {/* <PromoCard /> */}
+          <DowryPromoCard />
         </ScrollView>
       </View>
     </ScreenContainer>
