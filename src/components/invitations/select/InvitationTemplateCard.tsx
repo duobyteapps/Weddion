@@ -15,12 +15,12 @@ import {
 
 import { AppCard } from "@/components/ui/AppCard";
 import { AppText } from "@/components/ui/AppText";
-import { InvitationCategory } from "./InvitationCategoryFilter";
 
 export type InvitationTemplate = {
   id: string;
   title: string;
-  category: InvitationCategory;
+  categoryId: string;
+  categorySlug?: string | null;
   categoryTitle: string;
   imageUrl: string;
   contentImageUrl?: string | null;

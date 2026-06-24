@@ -1,3 +1,4 @@
+import { InvitationCategory } from "@/components/invitations/select/InvitationCategoryFilter";
 import { supabase } from "@/lib/supabase";
 import { getR2SignedUrl } from "@/services/r2ImageService";
 
@@ -18,7 +19,7 @@ export type InvitationTemplateDto = {
   isFavorite?: boolean;
 };
 
-type InvitationTemplateCategoryRelation = {
+type InvitationTemplateCategoryRow = {
   id: string;
   slug: string;
   title: string;
@@ -31,16 +32,12 @@ type InvitationTemplateRow = {
   image_path: string | null;
   content_image_path: string | null;
   editable_image_path: string | null;
-  category:
-    | InvitationTemplateCategoryRelation
-    | InvitationTemplateCategoryRelation[]
-    | null;
 };
 
 type GetInvitationTemplatesParams = {
   page?: number;
   pageSize?: number;
-  category?: string;
+  category?: InvitationCategory | "all";
 };
 
 function isDirectImageUri(value: string) {
@@ -51,19 +48,6 @@ function isDirectImageUri(value: string) {
     value.startsWith("content://") ||
     value.startsWith("data:image")
   );
-}
-
-function getCategoryRelation(
-  relation:
-    | InvitationTemplateCategoryRelation
-    | InvitationTemplateCategoryRelation[]
-    | null,
-) {
-  if (Array.isArray(relation)) {
-    return relation[0] ?? null;
-  }
-
-  return relation;
 }
 
 async function createR2ImageUrl(path: string | null) {
@@ -89,12 +73,14 @@ async function createR2ImageUrl(path: string | null) {
 
 async function mapInvitationTemplateRow(
   item: InvitationTemplateRow,
+  categoryMap: Map<string, InvitationTemplateCategoryRow>,
 ): Promise<InvitationTemplateDto> {
   if (!item.image_path) {
     throw new Error(`${item.title} şablonu için image_path bulunamadı.`);
   }
 
-  const category = getCategoryRelation(item.category);
+  const categoryId = item.category_id ?? "";
+  const category = categoryId ? categoryMap.get(categoryId) : null;
 
   const [imageUrl, contentImageUrl, editableImageUrl] = await Promise.all([
     createR2ImageUrl(item.image_path),
@@ -109,7 +95,7 @@ async function mapInvitationTemplateRow(
   return {
     id: item.id,
     title: item.title,
-    categoryId: category?.id ?? item.category_id ?? "",
+    categoryId,
     categorySlug: category?.slug ?? null,
     categoryTitle: category?.title ?? "Kategori Yok",
     imageUrl,
@@ -130,7 +116,7 @@ export async function getInvitationTemplates({
   const from = page * pageSize;
   const to = from + pageSize - 1;
 
-  let query = supabase
+  const templatesQuery = supabase
     .from("invitation_templates")
     .select(
       `
@@ -139,34 +125,52 @@ export async function getInvitationTemplates({
         category_id,
         image_path,
         content_image_path,
-        editable_image_path,
-        category:invitation_template_categories!invitation_templates_category_id_fkey (
-          id,
-          slug,
-          title
-        )
+        editable_image_path
       `,
     )
     .eq("is_active", true)
     .order("sort_order", { ascending: true })
     .range(from, to);
 
-  if (category !== "all") {
-    query = query.eq("category_id", category);
+  const filteredTemplatesQuery =
+    category !== "all"
+      ? templatesQuery.eq("category_id", category)
+      : templatesQuery;
+
+  const [templatesResult, categoriesResult] = await Promise.all([
+    filteredTemplatesQuery,
+    supabase
+      .from("invitation_template_categories")
+      .select(
+        `
+          id,
+          slug,
+          title
+        `,
+      )
+      .eq("is_active", true),
+  ]);
+
+  if (templatesResult.error) {
+    throw new Error(templatesResult.error.message);
   }
 
-  const { data, error } = await query;
-
-  if (error) {
-    throw new Error(error.message);
+  if (categoriesResult.error) {
+    throw new Error(categoriesResult.error.message);
   }
 
-  const templates = (data ?? []) as InvitationTemplateRow[];
+  const templates = (templatesResult.data ?? []) as InvitationTemplateRow[];
+  const categories = (categoriesResult.data ??
+    []) as InvitationTemplateCategoryRow[];
+
+  const categoryMap = new Map(
+    categories.map((categoryItem) => [categoryItem.id, categoryItem]),
+  );
 
   const mappedTemplates = await Promise.all(
     templates.map(async (template) => {
       try {
-        return await mapInvitationTemplateRow(template);
+        return await mapInvitationTemplateRow(template, categoryMap);
       } catch (error) {
         console.log("Davetiye şablonu dönüştürülemedi:", {
           templateId: template.id,
@@ -187,34 +191,56 @@ export async function getInvitationTemplates({
 export async function getInvitationTemplateById(
   templateId: string,
 ): Promise<InvitationTemplateDto | null> {
-  const { data, error } = await supabase
-    .from("invitation_templates")
-    .select(
-      `
-        id,
-        title,
-        category_id,
-        image_path,
-        content_image_path,
-        editable_image_path,
-        category:invitation_template_categories!invitation_templates_category_id_fkey (
+  const [templateResult, categoriesResult] = await Promise.all([
+    supabase
+      .from("invitation_templates")
+      .select(
+        `
+          id,
+          title,
+          category_id,
+          image_path,
+          content_image_path,
+          editable_image_path
+        `,
+      )
+      .eq("id", templateId)
+      .eq("is_active", true)
+      .maybeSingle(),
+
+    supabase
+      .from("invitation_template_categories")
+      .select(
+        `
           id,
           slug,
           title
-        )
-      `,
-    )
-    .eq("id", templateId)
-    .eq("is_active", true)
-    .maybeSingle();
+        `,
+      )
+      .eq("is_active", true),
+  ]);
 
-  if (error) {
-    throw new Error(error.message);
+  if (templateResult.error) {
+    throw new Error(templateResult.error.message);
   }
 
-  if (!data) {
+  if (categoriesResult.error) {
+    throw new Error(categoriesResult.error.message);
+  }
+
+  if (!templateResult.data) {
     return null;
   }
 
-  return mapInvitationTemplateRow(data as InvitationTemplateRow);
+  const categories = (categoriesResult.data ??
+    []) as InvitationTemplateCategoryRow[];
+
+  const categoryMap = new Map(
+    categories.map((categoryItem) => [categoryItem.id, categoryItem]),
+  );
+
+  return mapInvitationTemplateRow(
+    templateResult.data as InvitationTemplateRow,
+    categoryMap,
+  );
 }

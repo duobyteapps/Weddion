@@ -1,14 +1,13 @@
-import { AppText } from "@/components/ui/AppText";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { ScrollView, TouchableOpacity } from "react-native";
+import { AppFilterTabItem, AppFilterTabs } from "@/components/ui/AppFilterTabs";
 
 export type InvitationCategory = string;
 
 export type InvitationCategoryItem = {
   id: string;
   title: string;
-  icon?: keyof typeof Ionicons.glyphMap;
-  iconSet?: "ionicons" | "material";
+  slug?: string;
+  icon?: string;
+  iconSet?: "ionicons" | "material" | "feather";
 };
 
 type Props = {
@@ -17,40 +16,51 @@ type Props = {
   onChangeCategory: (category: InvitationCategory) => void;
 };
 
-function getCategoryIcon(categoryTitle: string) {
-  const normalizedTitle = categoryTitle.toLocaleLowerCase("tr-TR");
+function getCategoryIcon(
+  category: InvitationCategoryItem,
+): Pick<AppFilterTabItem<string>, "icon" | "iconSet"> {
+  const value = `${category.slug ?? ""} ${category.title}`.toLocaleLowerCase(
+    "tr-TR",
+  );
 
-  if (normalizedTitle.includes("çiçek")) {
+  if (value.includes("flower") || value.includes("çiçek")) {
     return {
-      icon: "flower-outline" as keyof typeof MaterialCommunityIcons.glyphMap,
-      iconSet: "material" as const,
+      icon: "flower-outline",
+      iconSet: "material",
     };
   }
 
-  if (normalizedTitle.includes("minimal")) {
+  if (value.includes("minimal")) {
     return {
-      icon: "leaf-outline" as keyof typeof Ionicons.glyphMap,
-      iconSet: "ionicons" as const,
+      icon: "leaf-outline",
+      iconSet: "ionicons",
     };
   }
 
-  if (normalizedTitle.includes("klasik")) {
+  if (value.includes("classic") || value.includes("klasik")) {
     return {
-      icon: "business-outline" as keyof typeof Ionicons.glyphMap,
-      iconSet: "ionicons" as const,
+      icon: "business-outline",
+      iconSet: "ionicons",
     };
   }
 
-  if (normalizedTitle.includes("modern")) {
+  if (value.includes("modern")) {
     return {
-      icon: "sparkles-outline" as keyof typeof Ionicons.glyphMap,
-      iconSet: "ionicons" as const,
+      icon: "sparkles-outline",
+      iconSet: "ionicons",
+    };
+  }
+
+  if (value.includes("nature") || value.includes("doğa")) {
+    return {
+      icon: "leaf-outline",
+      iconSet: "ionicons",
     };
   }
 
   return {
-    icon: "grid-outline" as keyof typeof Ionicons.glyphMap,
-    iconSet: "ionicons" as const,
+    icon: "grid-outline",
+    iconSet: "ionicons",
   };
 }
 
@@ -59,63 +69,29 @@ export function InvitationCategoryFilter({
   selectedCategory,
   onChangeCategory,
 }: Props) {
-  const filterCategories: InvitationCategoryItem[] = [
+  const filterItems: AppFilterTabItem<string>[] = [
     {
       id: "all",
       title: "Tümü",
       icon: "grid-outline",
-      iconSet: "ionicons",
     },
-    ...categories,
+    ...categories.map((category) => {
+      const fallbackIcon = getCategoryIcon(category);
+
+      return {
+        id: category.id,
+        title: category.title,
+        icon: category.icon ?? fallbackIcon.icon,
+        iconSet: category.iconSet ?? fallbackIcon.iconSet,
+      };
+    }),
   ];
 
   return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      contentContainerStyle={{ gap: 8, paddingHorizontal: 20 }}
-    >
-      {filterCategories.map((item) => {
-        const isActive = selectedCategory === item.id;
-        const fallbackIcon = getCategoryIcon(item.title);
-        const icon = item.icon ?? fallbackIcon.icon;
-        const iconSet = item.iconSet ?? fallbackIcon.iconSet;
-
-        return (
-          <TouchableOpacity
-            key={item.id}
-            activeOpacity={0.85}
-            onPress={() => onChangeCategory(item.id)}
-            className={[
-              "h-10 px-4 rounded-xl flex-row items-center gap-1.5 shadow-sm",
-              isActive ? "bg-primary" : "bg-white",
-            ].join(" ")}
-          >
-            {iconSet === "material" ? (
-              <MaterialCommunityIcons
-                name={icon as keyof typeof MaterialCommunityIcons.glyphMap}
-                size={17}
-                color={isActive ? "#FFFFFF" : "#8B5FBF"}
-              />
-            ) : (
-              <Ionicons
-                name={icon as keyof typeof Ionicons.glyphMap}
-                size={16}
-                color={isActive ? "#FFFFFF" : "#8B5FBF"}
-              />
-            )}
-
-            <AppText
-              className={[
-                "text-xs font-manropeSemiBold",
-                isActive ? "text-white" : "text-primary",
-              ].join(" ")}
-            >
-              {item.title}
-            </AppText>
-          </TouchableOpacity>
-        );
-      })}
-    </ScrollView>
+    <AppFilterTabs
+      items={filterItems}
+      selectedValue={selectedCategory}
+      onChangeValue={onChangeCategory}
+    />
   );
 }

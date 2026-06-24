@@ -14,6 +14,7 @@ function mapCategoryRowToItem(
 ): InvitationCategoryItem {
   return {
     id: row.id,
+    slug: row.slug,
     title: row.title,
   };
 }

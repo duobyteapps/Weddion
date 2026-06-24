@@ -2,6 +2,7 @@ import { ScreenHeader } from "@/components/common/ScreenHeader";
 import {
   InvitationCategory,
   InvitationCategoryFilter,
+  InvitationCategoryItem,
 } from "@/components/invitations/select/InvitationCategoryFilter";
 import { InvitationTemplate } from "@/components/invitations/select/InvitationTemplateCard";
 import { InvitationTemplateList } from "@/components/invitations/select/InvitationTemplateList";
@@ -11,6 +12,7 @@ import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { MAX_USER_INVITATION_COUNT } from "@/constants/invitationLimits";
 import { useAppNavigation } from "@/hooks/useAppNavigation";
 import { getCurrentUserInvitationCount } from "@/services/invitationService";
+import { getInvitationTemplateCategories } from "@/services/invitationTemplateCategoryService";
 import { getInvitationTemplates } from "@/services/invitationTemplateService";
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, TouchableOpacity, View } from "react-native";
@@ -23,6 +25,7 @@ export default function InvitationSelectScreen() {
   const [selectedCategory, setSelectedCategory] =
     useState<InvitationCategory>("all");
 
+  const [categories, setCategories] = useState<InvitationCategoryItem[]>([]);
   const [templates, setTemplates] = useState<InvitationTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -30,6 +33,16 @@ export default function InvitationSelectScreen() {
   const [hasMore, setHasMore] = useState(true);
 
   const { showAlert } = useAppAlert();
+
+  const fetchCategories = useCallback(async () => {
+    try {
+      const categoryList = await getInvitationTemplateCategories();
+
+      setCategories(categoryList);
+    } catch (error) {
+      console.log("Davetiye kategorileri alınamadı:", error);
+    }
+  }, []);
 
   const fetchTemplates = useCallback(
     async (targetPage = 0, replace = true) => {
@@ -63,6 +76,10 @@ export default function InvitationSelectScreen() {
     },
     [selectedCategory],
   );
+
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
 
   useEffect(() => {
     setTemplates([]);
