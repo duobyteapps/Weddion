@@ -134,6 +134,7 @@ export default function InvitationSelectScreen() {
             />
 
             <InvitationCategoryFilter
+              categories={categories}
               selectedCategory={selectedCategory}
               onChangeCategory={setSelectedCategory}
             />

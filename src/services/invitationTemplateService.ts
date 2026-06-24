@@ -1,4 +1,3 @@
-import { InvitationCategory } from "@/components/invitations/select/InvitationCategoryFilter";
 import { supabase } from "@/lib/supabase";
 import { getR2SignedUrl } from "@/services/r2ImageService";
 
@@ -7,7 +6,8 @@ export const INVITATION_TEMPLATE_PAGE_SIZE = 10;
 export type InvitationTemplateDto = {
   id: string;
   title: string;
-  category: InvitationCategory;
+  categoryId: string;
+  categorySlug: string | null;
   categoryTitle: string;
   imageUrl: string;
   contentImageUrl: string | null;
@@ -18,20 +18,29 @@ export type InvitationTemplateDto = {
   isFavorite?: boolean;
 };
 
+type InvitationTemplateCategoryRelation = {
+  id: string;
+  slug: string;
+  title: string;
+};
+
 type InvitationTemplateRow = {
   id: string;
   title: string;
-  category: InvitationCategory;
-  category_title: string;
+  category_id: string | null;
   image_path: string | null;
   content_image_path: string | null;
   editable_image_path: string | null;
+  category:
+    | InvitationTemplateCategoryRelation
+    | InvitationTemplateCategoryRelation[]
+    | null;
 };
 
 type GetInvitationTemplatesParams = {
   page?: number;
   pageSize?: number;
-  category?: InvitationCategory | "all";
+  category?: string;
 };
 
 function isDirectImageUri(value: string) {
@@ -42,6 +51,19 @@ function isDirectImageUri(value: string) {
     value.startsWith("content://") ||
     value.startsWith("data:image")
   );
+}
+
+function getCategoryRelation(
+  relation:
+    | InvitationTemplateCategoryRelation
+    | InvitationTemplateCategoryRelation[]
+    | null,
+) {
+  if (Array.isArray(relation)) {
+    return relation[0] ?? null;
+  }
+
+  return relation;
 }
 
 async function createR2ImageUrl(path: string | null) {
@@ -72,6 +94,8 @@ async function mapInvitationTemplateRow(
     throw new Error(`${item.title} şablonu için image_path bulunamadı.`);
   }
 
+  const category = getCategoryRelation(item.category);
+
   const [imageUrl, contentImageUrl, editableImageUrl] = await Promise.all([
     createR2ImageUrl(item.image_path),
     createR2ImageUrl(item.content_image_path),
@@ -85,8 +109,9 @@ async function mapInvitationTemplateRow(
   return {
     id: item.id,
     title: item.title,
-    category: item.category,
-    categoryTitle: item.category_title,
+    categoryId: category?.id ?? item.category_id ?? "",
+    categorySlug: category?.slug ?? null,
+    categoryTitle: category?.title ?? "Kategori Yok",
     imageUrl,
     contentImageUrl,
     editableImageUrl,
@@ -109,21 +134,25 @@ export async function getInvitationTemplates({
     .from("invitation_templates")
     .select(
       `
-      id,
-      title,
-      category,
-      category_title,
-      image_path,
-      content_image_path,
-      editable_image_path
-    `,
+        id,
+        title,
+        category_id,
+        image_path,
+        content_image_path,
+        editable_image_path,
+        category:invitation_template_categories!invitation_templates_category_id_fkey (
+          id,
+          slug,
+          title
+        )
+      `,
     )
     .eq("is_active", true)
     .order("sort_order", { ascending: true })
     .range(from, to);
 
   if (category !== "all") {
-    query = query.eq("category", category);
+    query = query.eq("category_id", category);
   }
 
   const { data, error } = await query;
@@ -162,14 +191,18 @@ export async function getInvitationTemplateById(
     .from("invitation_templates")
     .select(
       `
-      id,
-      title,
-      category,
-      category_title,
-      image_path,
-      content_image_path,
-      editable_image_path
-    `,
+        id,
+        title,
+        category_id,
+        image_path,
+        content_image_path,
+        editable_image_path,
+        category:invitation_template_categories!invitation_templates_category_id_fkey (
+          id,
+          slug,
+          title
+        )
+      `,
     )
     .eq("id", templateId)
     .eq("is_active", true)
