@@ -12,7 +12,7 @@ import {
 } from "expo-camera";
 import { router } from "expo-router";
 import { useState } from "react";
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, Linking, View } from "react-native";
 
 function getSlugFromQrValue(value: string) {
   const cleanValue = value.trim();
@@ -37,6 +37,15 @@ export default function GuestQrScanScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  async function handleRequestCameraPermission() {
+    if (permission?.canAskAgain) {
+      await requestPermission();
+      return;
+    }
+
+    Linking.openSettings();
+  }
 
   async function handleBarcodeScanned(result: BarcodeScanningResult) {
     if (scanned || loading) {
@@ -120,6 +129,8 @@ export default function GuestQrScanScreen() {
   }
 
   if (!permission.granted) {
+    const canAskCameraPermission = permission.canAskAgain;
+
     return (
       <ScreenContainer className="bg-background">
         <View className="flex-1 justify-center gap-5 px-6">
@@ -135,13 +146,16 @@ export default function GuestQrScanScreen() {
             </AppText>
 
             <AppText className="text-center text-sm leading-6 text-textMuted">
-              Davetiye QR kodunu tarayarak fotoğraf yükleme ekranına
-              geçebilirsiniz. Devam ettiğinizde cihazınızın kamera izin ekranı
-              açılacaktır.
+              {canAskCameraPermission
+                ? "Davetiye QR kodunu tarayarak fotoğraf yükleme ekranına geçebilirsiniz. Devam ettiğinizde cihazınızın kamera izin ekranı açılacaktır."
+                : "Kamera erişimi kapalı görünüyor. QR kodunu taramak için cihaz ayarlarından kamera erişimini açabilirsiniz."}
             </AppText>
           </View>
 
-          <AppButton title="Devam Et" onPress={requestPermission} />
+          <AppButton
+            title={canAskCameraPermission ? "Devam Et" : "Ayarları Aç"}
+            onPress={handleRequestCameraPermission}
+          />
         </View>
       </ScreenContainer>
     );
