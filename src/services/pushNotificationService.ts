@@ -67,7 +67,7 @@ export function getPushPermissionErrorMessage(
       return "Telefon bildirimi alabilmek için uygulamayı gerçek cihazda açman gerekiyor.";
 
     case "permission_denied":
-      return "Telefonunuza bildirim gönderebilmemiz için bildirim izni vermeniz gerekiyor.";
+      return "Düğün davetiyenizle ilgili yeni yüklenen fotoğrafları görebilmeniz için bildirimleri kullanabilirsiniz.";
 
     case "missing_project_id":
       return "Expo projectId bulunamadı. app.json içindeki EAS projectId alanını kontrol edin.";
@@ -137,7 +137,7 @@ export async function requestPushNotificationPermission(): Promise<PushPermissio
         granted: false,
         reason: "permission_denied",
         message:
-          "Telefonunuza bildirim gönderebilmemiz için bildirim izni vermeniz gerekiyor.",
+          "Düğün davetiyenizle ilgili yeni yüklenen fotoğrafları görebilmeniz için bildirimleri kullanabilirsiniz.",
       };
     }
 

@@ -73,7 +73,7 @@ function getPushPermissionMessage(reason?: string, message?: string) {
     return "Bildirim tokenı alınamadı. Lütfen tekrar deneyin.";
   }
 
-  return "Telefonunuza bildirim gönderebilmemiz için bildirim izni vermeniz gerekiyor.";
+  return "Düğün davetiyenizle ilgili yeni yüklenen fotoğrafları görebilmeniz için bildirimleri kullanabilirsiniz.";
 }
 export default function NotificationSettingsScreen() {
   const { showAlert } = useAppAlert();
@@ -121,7 +121,7 @@ export default function NotificationSettingsScreen() {
 
       if (!permission.granted) {
         showAlert({
-          title: "Bildirim İzni Gerekli",
+          title: "Bildirimler",
           message: getPushPermissionMessage(
             permission.reason,
             permission.message,

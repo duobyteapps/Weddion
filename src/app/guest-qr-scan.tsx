@@ -6,9 +6,9 @@ import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { getInvitationByGuestSlug } from "@/services/guestPhotoService";
 import { Ionicons } from "@expo/vector-icons";
 import {
-    BarcodeScanningResult,
-    CameraView,
-    useCameraPermissions,
+  BarcodeScanningResult,
+  CameraView,
+  useCameraPermissions,
 } from "expo-camera";
 import { router } from "expo-router";
 import { useState } from "react";
@@ -131,15 +131,17 @@ export default function GuestQrScanScreen() {
             </View>
 
             <AppText className="text-center text-2xl font-bold text-textDark">
-              Kamera İzni Gerekli
+              QR Kod Okutma
             </AppText>
 
             <AppText className="text-center text-sm leading-6 text-textMuted">
-              QR kodu okutabilmek için kamera izni vermeniz gerekiyor.
+              Davetiye QR kodunu tarayarak fotoğraf yükleme ekranına
+              geçebilirsiniz. Devam ettiğinizde cihazınızın kamera izin ekranı
+              açılacaktır.
             </AppText>
           </View>
 
-          <AppButton title="Kamera İzni Ver" onPress={requestPermission} />
+          <AppButton title="Devam Et" onPress={requestPermission} />
         </View>
       </ScreenContainer>
     );

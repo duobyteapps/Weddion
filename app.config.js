@@ -14,6 +14,8 @@ export default {
       bundleIdentifier: "com.duobyteapps.weddion",
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
+        NSCameraUsageDescription:
+          "Weddion, davetiye QR kodlarını tarayarak misafirlerin davetiyeye erişmesi ve fotoğraf yükleme ekranına yönlendirilmesi için kamera erişimini kullanır.",
       },
     },
 
