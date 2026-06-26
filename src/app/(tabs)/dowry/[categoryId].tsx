@@ -1,6 +1,7 @@
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
-import { ActivityIndicator, ScrollView, TextInput, View } from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, View } from "react-native";
 
 import { ScreenHeader } from "@/components/common/ScreenHeader";
 import { DowryCategoryDetailHeader } from "@/components/dowry/dowry-detail/DowryCategoryDetailHeader";
@@ -8,6 +9,8 @@ import { DowryCategoryFilterTabs } from "@/components/dowry/dowry-detail/DowryCa
 import { DowryChecklistCard } from "@/components/dowry/dowry-detail/DowryChecklistCard";
 import { EmptyDowryItems } from "@/components/dowry/dowry-detail/EmptyDowryItems";
 import { AppButton } from "@/components/ui/AppButton";
+import { AppCard } from "@/components/ui/AppCard";
+import { AppInput } from "@/components/ui/AppInput";
 import { AppText } from "@/components/ui/AppText";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 
@@ -93,6 +96,33 @@ function getSafeQuantity(value: number | null | undefined) {
   return value;
 }
 
+type BudgetSummaryRowProps = {
+  label: string;
+  value: string;
+  highlighted?: boolean;
+};
+
+function BudgetSummaryRow({
+  label,
+  value,
+  highlighted = false,
+}: BudgetSummaryRowProps) {
+  return (
+    <View className="flex-row items-center justify-between">
+      <AppText variant="caption" className="text-textSoft">
+        {label}
+      </AppText>
+
+      <AppText
+        variant="captionStrong"
+        className={highlighted ? "text-primaryDark" : "text-textDark"}
+      >
+        {value}
+      </AppText>
+    </View>
+  );
+}
+
 export default function DowryCategoryDetailScreen() {
   const { categoryId } = useLocalSearchParams<{ categoryId: string }>();
 
@@ -104,6 +134,9 @@ export default function DowryCategoryDetailScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [budgetInput, setBudgetInput] = useState("");
   const [isBudgetSaving, setIsBudgetSaving] = useState(false);
+  const [isBudgetOpen, setIsBudgetOpen] = useState(false);
+  const [isBudgetSavedMessageVisible, setIsBudgetSavedMessageVisible] =
+    useState(false);
 
   const completedCount = items.filter((item) => item.completed).length;
   const missingCount = items.length - completedCount;
@@ -118,6 +151,14 @@ export default function DowryCategoryDetailScreen() {
   }, 0);
 
   const categoryRemaining = categoryBudget - categoryExpense;
+  const isBudgetOverLimit = categoryBudget > 0 && categoryRemaining < 0;
+  const hasSavedBudget = Boolean(category && category.budget > 0);
+
+  const budgetButtonTitle = isBudgetSavedMessageVisible
+    ? "Bütçe Kaydedildi"
+    : hasSavedBudget
+      ? "Güncelle"
+      : "Kayıt";
 
   const filteredItems = useMemo(() => {
     if (activeFilter === "completed") {
@@ -183,6 +224,7 @@ export default function DowryCategoryDetailScreen() {
 
     try {
       setIsBudgetSaving(true);
+      setIsBudgetSavedMessageVisible(false);
 
       const nextBudget = parseBudgetValue(budgetInput);
 
@@ -205,6 +247,12 @@ export default function DowryCategoryDetailScreen() {
           remaining: savedBudget - categoryExpense,
         };
       });
+
+      setIsBudgetSavedMessageVisible(true);
+
+      setTimeout(() => {
+        setIsBudgetSavedMessageVisible(false);
+      }, 1800);
 
       console.log("Çeyiz bütçesi kaydedildi:", savedBudget);
     } catch (error) {
@@ -318,7 +366,7 @@ export default function DowryCategoryDetailScreen() {
       <ScrollView
         nestedScrollEnabled
         showsVerticalScrollIndicator={false}
-        contentContainerClassName="pb-10"
+        contentContainerClassName="pb-32"
       >
         <ScreenHeader title={category.title} backTo="/(tabs)/dowry/dowry" />
 
@@ -329,62 +377,81 @@ export default function DowryCategoryDetailScreen() {
           total={items.length}
         />
 
-        <View className="mx-5 mt-4 rounded-3xl bg-card p-5 shadow-card">
-          <AppText variant="serifSubtitle" className="text-primaryDark">
-            Bütçe
-          </AppText>
-
-          <View className="mt-4 rounded-2xl border border-primarySoft px-4 py-3">
-            <TextInput
-              value={budgetInput}
-              onChangeText={setBudgetInput}
-              placeholder="Kategori bütçesi"
-              keyboardType="decimal-pad"
-              className="text-base text-textDark"
-              placeholderTextColor="#AFA3A3"
-            />
-          </View>
-
-          <View className="mt-4 gap-3">
-            <View className="flex-row items-center justify-between">
-              <AppText variant="caption" className="text-textSoft">
-                Bütçe
-              </AppText>
-
-              <AppText variant="body" className="text-textDark">
-                {formatTryCurrency(categoryBudget)}
+        <AppCard className="mt-4">
+          <Pressable
+            onPress={() => setIsBudgetOpen((currentValue) => !currentValue)}
+            className="flex-row items-center justify-between"
+          >
+            <View className="flex-1 pr-4">
+              <AppText variant="captionStrong" className="text-textSoft">
+                Kalan Bütçe
               </AppText>
             </View>
 
-            <View className="flex-row items-center justify-between">
-              <AppText variant="caption" className="text-textSoft">
-                Gider
+            <View className="flex-row items-center gap-3">
+              <AppText variant="captionStrong" className="text-primaryDark">
+                {isBudgetOverLimit
+                  ? `-${formatTryCurrency(Math.abs(categoryRemaining))}`
+                  : formatTryCurrency(categoryRemaining)}
               </AppText>
 
-              <AppText variant="body" className="text-textDark">
-                {formatTryCurrency(categoryExpense)}
-              </AppText>
+              <View className="h-9 w-9 items-center justify-center rounded-full bg-primarySoft">
+                <MaterialCommunityIcons
+                  name={isBudgetOpen ? "chevron-up" : "chevron-down"}
+                  size={22}
+                  color={Colors.primaryDark}
+                />
+              </View>
             </View>
+          </Pressable>
+          {isBudgetOpen ? (
+            <View className="mt-5">
+              <AppInput
+                label="Kategori Bütçesi"
+                value={budgetInput}
+                onChangeText={setBudgetInput}
+                placeholder="Örn. 50000"
+                keyboardType="decimal-pad"
+                editable={!isBudgetSaving}
+                inputClassName="text-textDark"
+              />
 
-            <View className="flex-row items-center justify-between">
-              <AppText variant="caption" className="text-textSoft">
-                Kalan
-              </AppText>
+              <View className="mt-5 rounded-xl bg-background px-4 py-4">
+                <BudgetSummaryRow
+                  label="Bütçe"
+                  value={formatTryCurrency(categoryBudget)}
+                />
 
-              <AppText variant="body" className="text-primaryDark">
-                {formatTryCurrency(categoryRemaining)}
-              </AppText>
+                <View className="my-3 h-px bg-border" />
+
+                <BudgetSummaryRow
+                  label="Gider"
+                  value={formatTryCurrency(categoryExpense)}
+                />
+
+                <View className="my-3 h-px bg-border" />
+
+                <BudgetSummaryRow
+                  label={isBudgetOverLimit ? "Bütçe Aşımı" : "Kalan"}
+                  value={formatTryCurrency(
+                    isBudgetOverLimit
+                      ? Math.abs(categoryRemaining)
+                      : categoryRemaining,
+                  )}
+                  highlighted
+                />
+              </View>
+
+              <AppButton
+                title={budgetButtonTitle}
+                loading={isBudgetSaving}
+                disabled={isBudgetSaving}
+                className="mt-5"
+                onPress={handleSaveBudget}
+              />
             </View>
-          </View>
-
-          <AppButton
-            title="Bütçeyi Kaydet"
-            loading={isBudgetSaving}
-            disabled={isBudgetSaving}
-            className="mt-4"
-            onPress={handleSaveBudget}
-          />
-        </View>
+          ) : null}
+        </AppCard>
 
         <DowryCategoryFilterTabs
           activeFilter={activeFilter}

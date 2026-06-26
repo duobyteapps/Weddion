@@ -29,7 +29,7 @@ export function DowryCategoryFilterTabs({
   ];
 
   return (
-    <View className="my-6 flex-row gap-3">
+    <View className="mb-4 flex-row gap-3">
       {tabs.map((tab) => {
         const isActive = activeFilter === tab.key;
 
