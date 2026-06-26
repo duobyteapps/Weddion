@@ -1,13 +1,21 @@
 import { supabase } from "@/lib/supabase";
-import {
+import { getAuthenticatedUser } from "@/services/sessionService";
+import type {
   DowryCategoryItem,
-  DowryCategoryItemCountRow,
   DowryCategoryTableRow,
   MaterialIconName,
+  UserDowryCategoryBudgetTableRow,
+  UserDowryItemSummaryRow,
 } from "@/types/dowry";
 
 type DowryCategoryWithDbId = DowryCategoryItem & {
   dbId: string;
+};
+
+type DowryCategoryItemCountRow = {
+  category_slug: string;
+  total_count: number | string | null;
+  completed_count: number | string | null;
 };
 
 function mapDowryCategory(row: DowryCategoryTableRow): DowryCategoryWithDbId {
@@ -19,7 +27,28 @@ function mapDowryCategory(row: DowryCategoryTableRow): DowryCategoryWithDbId {
     icon: row.icon as MaterialIconName,
     completed: 0,
     total: 0,
+    budget: 0,
+    expense: 0,
+    remaining: 0,
   };
+}
+
+function toSafeNumber(value: number | string | null | undefined) {
+  const parsedValue = Number(value);
+
+  if (!Number.isFinite(parsedValue)) {
+    return 0;
+  }
+
+  return parsedValue;
+}
+
+function getSafeQuantity(value: number | null | undefined) {
+  if (!value || value < 1) {
+    return 1;
+  }
+
+  return value;
 }
 
 export async function getDowryCategories(): Promise<DowryCategoryItem[]> {
@@ -42,15 +71,6 @@ export async function getDowryCategories(): Promise<DowryCategoryItem[]> {
     return [];
   }
 
-  const { data: countData, error: countError } = await supabase.rpc(
-    "get_dowry_category_item_counts",
-  );
-
-  if (countError) {
-    console.log("Dowry item counts supabase error:", countError);
-    throw new Error(countError.message);
-  }
-
   const countsByCategorySlug = new Map<
     string,
     {
@@ -59,18 +79,83 @@ export async function getDowryCategories(): Promise<DowryCategoryItem[]> {
     }
   >();
 
-  ((countData ?? []) as DowryCategoryItemCountRow[]).forEach((item) => {
-    countsByCategorySlug.set(item.category_slug, {
-      total: Number(item.total_count ?? 0),
-      completed: Number(item.completed_count ?? 0),
+  const { data: countData, error: countError } = await supabase.rpc(
+    "get_dowry_category_item_counts",
+  );
+
+  if (countError) {
+    console.log("Dowry item counts supabase error:", countError);
+  } else {
+    ((countData ?? []) as DowryCategoryItemCountRow[]).forEach((item) => {
+      countsByCategorySlug.set(item.category_slug, {
+        total: Number(item.total_count ?? 0),
+        completed: Number(item.completed_count ?? 0),
+      });
     });
-  });
+  }
+
+  let userId: string | null = null;
+
+  try {
+    const user = await getAuthenticatedUser();
+    userId = user.id;
+  } catch (error) {
+    console.log("Dowry authenticated user error:", error);
+  }
+
+  const expenseByCategoryId = new Map<string, number>();
+  const budgetByCategoryId = new Map<string, number>();
+
+  if (userId) {
+    const categoryDbIds = categories.map((category) => category.dbId);
+
+    const { data: itemSummaryData, error: itemSummaryError } = await supabase
+      .from("user_dowry_items")
+      .select("category_id, quantity, price")
+      .eq("user_id", userId)
+      .in("category_id", categoryDbIds);
+
+    if (itemSummaryError) {
+      console.log("Dowry item summary supabase error:", itemSummaryError);
+    } else {
+      ((itemSummaryData ?? []) as UserDowryItemSummaryRow[]).forEach((item) => {
+        const currentExpense = expenseByCategoryId.get(item.category_id) ?? 0;
+        const quantity = getSafeQuantity(item.quantity);
+        const price = toSafeNumber(item.price);
+
+        expenseByCategoryId.set(
+          item.category_id,
+          currentExpense + price * quantity,
+        );
+      });
+    }
+
+    const { data: budgetData, error: budgetError } = await supabase
+      .from("user_dowry_category_budgets")
+      .select("category_id, budget")
+      .eq("user_id", userId)
+      .in("category_id", categoryDbIds);
+
+    if (budgetError) {
+      console.log("Dowry budget supabase error:", budgetError);
+    } else {
+      ((budgetData ?? []) as UserDowryCategoryBudgetTableRow[]).forEach(
+        (item) => {
+          budgetByCategoryId.set(item.category_id, toSafeNumber(item.budget));
+        },
+      );
+    }
+  }
 
   return categories.map((category) => {
     const counts = countsByCategorySlug.get(category.slug) ?? {
       total: 0,
       completed: 0,
     };
+
+    const budget = budgetByCategoryId.get(category.dbId) ?? 0;
+    const expense = expenseByCategoryId.get(category.dbId) ?? 0;
+    const remaining = budget - expense;
 
     return {
       id: category.id,
@@ -79,6 +164,85 @@ export async function getDowryCategories(): Promise<DowryCategoryItem[]> {
       icon: category.icon,
       completed: counts.completed,
       total: counts.total,
+      budget,
+      expense,
+      remaining,
     };
   });
+}
+
+export async function upsertDowryCategoryBudget({
+  categorySlug,
+  budget,
+}: {
+  categorySlug: string;
+  budget: number;
+}) {
+  const user = await getAuthenticatedUser();
+
+  const safeBudget = Number.isFinite(budget) && budget > 0 ? budget : 0;
+
+  const { data: categoryData, error: categoryError } = await supabase
+    .from("dowry_categories")
+    .select("id")
+    .eq("slug", categorySlug)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  if (categoryError) {
+    console.log("Dowry budget category supabase error:", categoryError);
+    throw new Error(categoryError.message);
+  }
+
+  if (!categoryData) {
+    throw new Error("Bütçe kaydedilecek çeyiz kategorisi bulunamadı.");
+  }
+
+  const { data: existingBudget, error: existingBudgetError } = await supabase
+    .from("user_dowry_category_budgets")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("category_id", categoryData.id)
+    .maybeSingle();
+
+  if (existingBudgetError) {
+    console.log("Dowry budget existing row error:", existingBudgetError);
+    throw new Error(existingBudgetError.message);
+  }
+
+  if (existingBudget) {
+    const { data: updatedBudget, error: updateError } = await supabase
+      .from("user_dowry_category_budgets")
+      .update({
+        budget: safeBudget,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", existingBudget.id)
+      .select("budget")
+      .single();
+
+    if (updateError) {
+      console.log("Dowry budget update supabase error:", updateError);
+      throw new Error(updateError.message);
+    }
+
+    return toSafeNumber(updatedBudget.budget);
+  }
+
+  const { data: insertedBudget, error: insertError } = await supabase
+    .from("user_dowry_category_budgets")
+    .insert({
+      user_id: user.id,
+      category_id: categoryData.id,
+      budget: safeBudget,
+    })
+    .select("budget")
+    .single();
+
+  if (insertError) {
+    console.log("Dowry budget insert supabase error:", insertError);
+    throw new Error(insertError.message);
+  }
+
+  return toSafeNumber(insertedBudget.budget);
 }

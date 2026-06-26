@@ -48,6 +48,10 @@ export type DowryCategoryItem = {
   icon: MaterialIconName;
   completed: number;
   total: number;
+
+  budget: number;
+  expense: number;
+  remaining: number;
 };
 
 export type DowryCategoryRowItem = DowryCategoryItem;
@@ -180,4 +184,20 @@ export type DowryJoinRequestTableRow = {
   requester_display_name: string | null;
   status: DowryJoinRequestStatus;
   created_at: string;
+};
+
+export type UserDowryCategoryBudgetTableRow = {
+  id: string;
+  user_id: string;
+  category_id: string;
+  budget: number | string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type UserDowryItemSummaryRow = {
+  category_id: string;
+  completed: boolean | null;
+  quantity: number | null;
+  price: number | string | null;
 };
