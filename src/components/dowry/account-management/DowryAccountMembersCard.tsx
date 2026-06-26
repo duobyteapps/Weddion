@@ -11,6 +11,9 @@ type Props = {
   onRemoveMember: (member: DowryAccountMember) => void;
 };
 
+const OWNER_COLOR = "#2F80ED";
+const MEMBER_COLOR = "#27AE60";
+
 export function DowryAccountMembersCard({
   members,
   isOwner,
@@ -25,6 +28,7 @@ export function DowryAccountMembersCard({
       {members.map((member, index) => {
         const memberIsOwner = member.role === "owner";
         const isLast = index === members.length - 1;
+        const roleColor = memberIsOwner ? OWNER_COLOR : MEMBER_COLOR;
 
         return (
           <View
@@ -49,22 +53,27 @@ export function DowryAccountMembersCard({
               </AppText>
             </View>
 
-            {isOwner && !memberIsOwner ? (
-              <Pressable
-                onPress={() => onRemoveMember(member)}
-                className="rounded-full bg-white px-3 py-2"
+            <View className="items-end">
+              <View
+                className="rounded-full px-3 py-1"
+                style={{ backgroundColor: `${roleColor}18` }}
               >
-                <AppText variant="captionStrong" className="text-error">
-                  Çıkar
-                </AppText>
-              </Pressable>
-            ) : (
-              <View className="rounded-full bg-primaryLight px-3 py-1">
-                <AppText variant="captionStrong">
+                <AppText variant="captionStrong" style={{ color: roleColor }}>
                   {memberIsOwner ? "Sahip" : "Ortak"}
                 </AppText>
               </View>
-            )}
+
+              {isOwner && !memberIsOwner ? (
+                <Pressable
+                  onPress={() => onRemoveMember(member)}
+                  className="mt-2 rounded-full bg-white px-3 py-2"
+                >
+                  <AppText variant="captionStrong" className="text-error">
+                    Çıkar
+                  </AppText>
+                </Pressable>
+              ) : null}
+            </View>
           </View>
         );
       })}

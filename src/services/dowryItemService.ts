@@ -17,6 +17,7 @@ function mapUserDowryItem(row: UserDowryItemTableRow): UserDowryItem {
     isActive: row.is_active,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    creatorRole: row.creator_role ?? null,
   };
 }
 

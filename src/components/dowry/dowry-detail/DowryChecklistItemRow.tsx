@@ -14,6 +14,13 @@ type Props = {
   onUpdate?: (item: DowryChecklistItem) => void;
 };
 
+const OWNER_COLOR = "#8FAF8B";
+const MEMBER_COLOR = "#C9B37E";
+
+function getCreatorColor(item: DowryChecklistItem) {
+  return item.creatorRole === "member" ? MEMBER_COLOR : OWNER_COLOR;
+}
+
 function formatPrice(price?: number | string | null) {
   if (price === null || price === undefined || price === "") {
     return null;
@@ -40,9 +47,13 @@ export function DowryChecklistItemRow({
   onUpdate,
 }: Props) {
   const formattedPrice = formatPrice(item.price);
+  const creatorColor = getCreatorColor(item);
 
   return (
-    <AppCard noMargin className="mb-2 flex-row items-center">
+    <AppCard
+      noMargin
+      className="relative mb-2 flex-row items-center overflow-hidden"
+    >
       <AppCheckbox checked={item.completed} onPress={() => onToggle?.(item)} />
 
       <View className="ml-3 w-[120px]">
@@ -104,6 +115,11 @@ export function DowryChecklistItemRow({
           color={Colors.error}
         />
       </Pressable>
+      <View
+        pointerEvents="none"
+        className="absolute -bottom-2 -top-2 left-0 w-1"
+        style={{ backgroundColor: creatorColor }}
+      />
     </AppCard>
   );
 }

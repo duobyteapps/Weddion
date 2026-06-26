@@ -20,6 +20,7 @@ export type DowryChecklistItem = {
   quantity?: number;
   price?: number | null;
   completed: boolean;
+  creatorRole?: DowryAccountRole | null;
 };
 
 export type DowryCategoryDetail = {
@@ -89,6 +90,7 @@ export type UserDowryItem = {
   isActive: boolean;
   createdAt: string;
   updatedAt?: string;
+  creatorRole?: DowryAccountRole | null;
 };
 
 export type UserDowryItemTableRow = {
@@ -106,6 +108,7 @@ export type UserDowryItemTableRow = {
   is_active: boolean;
   created_at: string;
   updated_at?: string;
+  creator_role?: DowryAccountRole | null;
 };
 
 export type DowryAccountRole = "owner" | "member";
