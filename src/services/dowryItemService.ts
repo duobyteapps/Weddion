@@ -1,11 +1,11 @@
 import { supabase } from "@/lib/supabase";
-import { getAuthenticatedUser } from "@/services/sessionService";
 import { UserDowryItem, UserDowryItemTableRow } from "@/types/dowry";
 
 function mapUserDowryItem(row: UserDowryItemTableRow): UserDowryItem {
   return {
     id: row.id,
     userId: row.user_id,
+    dowryAccountId: row.dowry_account_id ?? null,
     categoryId: row.category_id,
     categorySlug: row.category_slug,
     title: row.title,
@@ -16,6 +16,7 @@ function mapUserDowryItem(row: UserDowryItemTableRow): UserDowryItem {
     sortOrder: row.sort_order,
     isActive: row.is_active,
     createdAt: row.created_at,
+    updatedAt: row.updated_at,
   };
 }
 
@@ -48,41 +49,13 @@ export async function createUserDowryItemByCategorySlug({
   price?: number | null;
   completed: boolean;
 }) {
-  const user = await getAuthenticatedUser();
-
-  const { data: category, error: categoryError } = await supabase
-    .from("dowry_categories")
-    .select("id")
-    .eq("slug", categorySlug)
-    .eq("is_active", true)
-    .single();
-
-  if (categoryError) {
-    throw new Error(categoryError.message);
-  }
-
-  const { data: lastItem } = await supabase
-    .from("user_dowry_items")
-    .select("sort_order")
-    .eq("category_id", category.id)
-    .eq("user_id", user.id)
-    .order("sort_order", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  const nextSortOrder =
-    typeof lastItem?.sort_order === "number" ? lastItem.sort_order + 1 : 1000;
-
-  const { error } = await supabase.from("user_dowry_items").insert({
-    user_id: user.id,
-    category_id: category.id,
-    title: title.trim(),
-    brand_name: brandName?.trim() || null,
-    quantity,
-    price: price ?? null,
-    completed,
-    sort_order: nextSortOrder,
-    is_active: true,
+  const { error } = await supabase.rpc("create_dowry_item", {
+    p_category_slug: categorySlug,
+    p_title: title.trim(),
+    p_brand_name: brandName?.trim() || null,
+    p_quantity: quantity,
+    p_price: price ?? null,
+    p_completed: completed,
   });
 
   if (error) {
@@ -97,16 +70,10 @@ export async function toggleUserDowryItemCompleted({
   itemId: string;
   completed: boolean;
 }) {
-  const user = await getAuthenticatedUser();
-
-  const { error } = await supabase
-    .from("user_dowry_items")
-    .update({
-      completed,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", itemId)
-    .eq("user_id", user.id);
+  const { error } = await supabase.rpc("toggle_dowry_item_completed", {
+    p_item_id: itemId,
+    p_completed: completed,
+  });
 
   if (error) {
     throw new Error(error.message);
@@ -114,13 +81,9 @@ export async function toggleUserDowryItemCompleted({
 }
 
 export async function deleteUserDowryItem(itemId: string) {
-  const user = await getAuthenticatedUser();
-
-  const { error } = await supabase
-    .from("user_dowry_items")
-    .delete()
-    .eq("id", itemId)
-    .eq("user_id", user.id);
+  const { error } = await supabase.rpc("delete_dowry_item", {
+    p_item_id: itemId,
+  });
 
   if (error) {
     throw new Error(error.message);
@@ -142,20 +105,14 @@ export async function updateUserDowryItem({
   price?: number | null;
   completed: boolean;
 }) {
-  const user = await getAuthenticatedUser();
-
-  const { error } = await supabase
-    .from("user_dowry_items")
-    .update({
-      title: title.trim(),
-      brand_name: brandName?.trim() || null,
-      quantity,
-      price: price ?? null,
-      completed,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", itemId)
-    .eq("user_id", user.id);
+  const { error } = await supabase.rpc("update_dowry_item", {
+    p_item_id: itemId,
+    p_title: title.trim(),
+    p_brand_name: brandName?.trim() || null,
+    p_quantity: quantity,
+    p_price: price ?? null,
+    p_completed: completed,
+  });
 
   if (error) {
     throw new Error(error.message);

@@ -1,18 +1,13 @@
 import { supabase } from "@/lib/supabase";
-import { getAuthenticatedUser } from "@/services/sessionService";
 import {
   DowryCategoryItem,
+  DowryCategoryItemCountRow,
   DowryCategoryTableRow,
   MaterialIconName,
 } from "@/types/dowry";
 
 type DowryCategoryWithDbId = DowryCategoryItem & {
   dbId: string;
-};
-
-type UserDowryItemCountRow = {
-  category_id: string;
-  completed: boolean;
 };
 
 function mapDowryCategory(row: DowryCategoryTableRow): DowryCategoryWithDbId {
@@ -28,8 +23,6 @@ function mapDowryCategory(row: DowryCategoryTableRow): DowryCategoryWithDbId {
 }
 
 export async function getDowryCategories(): Promise<DowryCategoryItem[]> {
-  const user = await getAuthenticatedUser();
-
   const { data: categoryData, error: categoryError } = await supabase
     .from("dowry_categories")
     .select("id, slug, title, icon, sort_order, is_active")
@@ -45,25 +38,20 @@ export async function getDowryCategories(): Promise<DowryCategoryItem[]> {
     mapDowryCategory,
   );
 
-  const categoryIds = categories.map((category) => category.dbId);
-
-  if (categoryIds.length === 0) {
+  if (categories.length === 0) {
     return [];
   }
 
-  const { data: itemData, error: itemError } = await supabase
-    .from("user_dowry_items")
-    .select("category_id, completed")
-    .eq("user_id", user.id)
-    .eq("is_active", true)
-    .in("category_id", categoryIds);
+  const { data: countData, error: countError } = await supabase.rpc(
+    "get_dowry_category_item_counts",
+  );
 
-  if (itemError) {
-    console.log("Dowry item counts supabase error:", itemError);
-    throw new Error(itemError.message);
+  if (countError) {
+    console.log("Dowry item counts supabase error:", countError);
+    throw new Error(countError.message);
   }
 
-  const countsByCategoryId = new Map<
+  const countsByCategorySlug = new Map<
     string,
     {
       total: number;
@@ -71,20 +59,15 @@ export async function getDowryCategories(): Promise<DowryCategoryItem[]> {
     }
   >();
 
-  ((itemData ?? []) as UserDowryItemCountRow[]).forEach((item) => {
-    const current = countsByCategoryId.get(item.category_id) ?? {
-      total: 0,
-      completed: 0,
-    };
-
-    countsByCategoryId.set(item.category_id, {
-      total: current.total + 1,
-      completed: current.completed + (item.completed ? 1 : 0),
+  ((countData ?? []) as DowryCategoryItemCountRow[]).forEach((item) => {
+    countsByCategorySlug.set(item.category_slug, {
+      total: Number(item.total_count ?? 0),
+      completed: Number(item.completed_count ?? 0),
     });
   });
 
   return categories.map((category) => {
-    const counts = countsByCategoryId.get(category.dbId) ?? {
+    const counts = countsByCategorySlug.get(category.slug) ?? {
       total: 0,
       completed: 0,
     };
