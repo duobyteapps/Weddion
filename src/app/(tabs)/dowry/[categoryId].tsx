@@ -45,6 +45,9 @@ const dowryCategoryImageKeys: DowryCategoryImageKey[] = [
   "other",
 ];
 
+const CHECKLIST_SCROLL_ITEM_LIMIT = 5;
+const CHECKLIST_MAX_HEIGHT = 400;
+
 function getCategoryImageKey(slug: string): DowryCategoryImageKey {
   if (dowryCategoryImageKeys.includes(slug as DowryCategoryImageKey)) {
     return slug as DowryCategoryImageKey;
@@ -171,6 +174,9 @@ export default function DowryCategoryDetailScreen() {
 
     return items;
   }, [activeFilter, items]);
+
+  const shouldScrollChecklist =
+    filteredItems.length > CHECKLIST_SCROLL_ITEM_LIMIT;
 
   const fetchCategoryDetail = useCallback(async () => {
     if (!categorySlug) {
@@ -404,6 +410,7 @@ export default function DowryCategoryDetailScreen() {
               </View>
             </View>
           </Pressable>
+
           {isBudgetOpen ? (
             <View className="mt-5">
               <AppInput
@@ -468,9 +475,11 @@ export default function DowryCategoryDetailScreen() {
           />
         ) : (
           <>
-            <View className="mb-6 max-h-[400px]">
+            <View className="mb-6">
               <DowryChecklistCard
                 items={filteredItems}
+                shouldScroll={shouldScrollChecklist}
+                maxListHeight={CHECKLIST_MAX_HEIGHT}
                 onToggleItem={handleToggleItem}
                 onDeleteItem={handleDeleteItem}
                 onUpdateItem={handleUpdateItem}

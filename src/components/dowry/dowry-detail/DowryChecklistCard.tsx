@@ -8,6 +8,8 @@ type Props = {
   onToggleItem?: (item: DowryChecklistItem) => void;
   onDeleteItem?: (item: DowryChecklistItem) => void;
   onUpdateItem?: (item: DowryChecklistItem) => void;
+  shouldScroll?: boolean;
+  maxListHeight?: number;
 };
 
 export function DowryChecklistCard({
@@ -15,26 +17,44 @@ export function DowryChecklistCard({
   onToggleItem,
   onDeleteItem,
   onUpdateItem,
+  shouldScroll = false,
+  maxListHeight = 400,
 }: Props) {
+  if (shouldScroll) {
+    return (
+      <View className="overflow-hidden" style={{ maxHeight: maxListHeight }}>
+        <ScrollView
+          nestedScrollEnabled
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{
+            paddingBottom: 4,
+          }}
+        >
+          {items.map((item) => (
+            <DowryChecklistItemRow
+              key={item.id}
+              item={item}
+              onToggle={onToggleItem}
+              onDelete={onDeleteItem}
+              onUpdate={onUpdateItem}
+            />
+          ))}
+        </ScrollView>
+      </View>
+    );
+  }
+
   return (
-    <View className="h-full overflow-hidden">
-      <ScrollView
-        nestedScrollEnabled
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{
-          paddingBottom: 4,
-        }}
-      >
-        {items.map((item, index) => (
-          <DowryChecklistItemRow
-            key={item.id}
-            item={item}
-            onToggle={onToggleItem}
-            onDelete={onDeleteItem}
-            onUpdate={onUpdateItem}
-          />
-        ))}
-      </ScrollView>
+    <View className="overflow-hidden">
+      {items.map((item) => (
+        <DowryChecklistItemRow
+          key={item.id}
+          item={item}
+          onToggle={onToggleItem}
+          onDelete={onDeleteItem}
+          onUpdate={onUpdateItem}
+        />
+      ))}
     </View>
   );
 }
