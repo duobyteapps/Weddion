@@ -1,17 +1,22 @@
+const APP_VARIANT = process.env.APP_VARIANT;
+const isDev = APP_VARIANT === "development";
+
 export default {
   expo: {
-    name: "Weddion",
+    name: isDev ? "Weddion Dev" : "Weddion",
     slug: "Weddion",
     owner: "duobyteapps",
-    version: "1.0.11",
+    version: "1.0.12",
     orientation: "portrait",
     icon: "./assets/images/icon.png",
-    scheme: "weddion",
+    scheme: isDev ? "weddion-dev" : "weddion",
     userInterfaceStyle: "automatic",
 
     ios: {
       icon: "./assets/images/icon.png",
-      bundleIdentifier: "com.duobyteapps.weddion",
+      bundleIdentifier: isDev
+        ? "com.duobyteapps.weddion.dev"
+        : "com.duobyteapps.weddion",
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
         NSCameraUsageDescription:
@@ -20,7 +25,9 @@ export default {
     },
 
     android: {
-      package: "com.duobyteapps.weddion",
+      package: isDev
+        ? "com.duobyteapps.weddion.dev"
+        : "com.duobyteapps.weddion",
       googleServicesFile:
         process.env.GOOGLE_SERVICES_JSON ?? "./google-services.json",
       adaptiveIcon: {
