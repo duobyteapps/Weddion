@@ -157,3 +157,27 @@ export type DowryAccountMemberTableRow = {
   created_at: string;
   updated_at: string;
 };
+
+export type DowryJoinRequestStatus =
+  | "pending"
+  | "approved"
+  | "rejected"
+  | "cancelled";
+
+export type DowryJoinRequest = {
+  id: string;
+  dowryAccountId: string;
+  requesterUserId: string;
+  requesterDisplayName: string | null;
+  status: DowryJoinRequestStatus;
+  createdAt: string;
+};
+
+export type DowryJoinRequestTableRow = {
+  id: string;
+  dowry_account_id: string;
+  requester_user_id: string;
+  requester_display_name: string | null;
+  status: DowryJoinRequestStatus;
+  created_at: string;
+};

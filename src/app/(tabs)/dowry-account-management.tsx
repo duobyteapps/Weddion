@@ -14,36 +14,64 @@ import { ScreenHeader } from "@/components/common/ScreenHeader";
 import { DowryAccountMembersCard } from "@/components/dowry/account-management/DowryAccountMembersCard";
 import { DowryAccountSummaryCard } from "@/components/dowry/account-management/DowryAccountSummaryCard";
 import { DowryJoinAccountCard } from "@/components/dowry/account-management/DowryJoinAccountCard";
+import { DowryJoinRequestsCard } from "@/components/dowry/account-management/DowryJoinRequestsCard";
 import { useAppAlert } from "@/components/ui/AppAlert";
 import { AppText } from "@/components/ui/AppText";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { Colors } from "@/constants/Colors";
 import {
+  approveDowryAccountJoinRequest,
+  getPendingDowryJoinRequests,
+  rejectDowryAccountJoinRequest,
+  requestDowryAccountJoinByCode,
+} from "@/services/dowryAccountJoinRequestService";
+import {
   getDowryAccountMembers,
   getOrCreateMyDefaultDowryAccount,
-  joinDowryAccountByCode,
   leaveDowryAccount,
   refreshDowryInviteCode,
   removeDowryAccountMember,
 } from "@/services/dowryAccountService";
-import { DowryAccount, DowryAccountMember } from "@/types/dowry";
+import {
+  DowryAccount,
+  DowryAccountMember,
+  DowryJoinRequest,
+} from "@/types/dowry";
 
 export default function DowryAccountManagementScreen() {
   const { showAlert } = useAppAlert();
 
   const [account, setAccount] = useState<DowryAccount | null>(null);
   const [members, setMembers] = useState<DowryAccountMember[]>([]);
+  const [joinRequests, setJoinRequests] = useState<DowryJoinRequest[]>([]);
   const [inviteCode, setInviteCode] = useState("");
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState(false);
   const [refreshingCode, setRefreshingCode] = useState(false);
   const [leaving, setLeaving] = useState(false);
+  const [approvingRequestId, setApprovingRequestId] = useState<string | null>(
+    null,
+  );
+  const [rejectingRequestId, setRejectingRequestId] = useState<string | null>(
+    null,
+  );
 
   const isOwner = account?.role === "owner";
   const activeMemberCount = members.length;
   const isSharedAccount = activeMemberCount > 1;
-  const canUseInviteActions = isOwner && !isSharedAccount;
+  const canUseInviteActions = Boolean(isOwner && !isSharedAccount);
   const isJoinAccountDisabled = !canUseInviteActions;
+
+  async function loadJoinRequests(dowryAccount: DowryAccount | null) {
+    if (!dowryAccount || dowryAccount.role !== "owner") {
+      setJoinRequests([]);
+      return;
+    }
+
+    const pendingRequests = await getPendingDowryJoinRequests(dowryAccount.id);
+
+    setJoinRequests(pendingRequests);
+  }
 
   async function loadDowryAccount() {
     try {
@@ -54,6 +82,8 @@ export default function DowryAccountManagementScreen() {
 
       setAccount(activeAccount);
       setMembers(activeMembers);
+
+      await loadJoinRequests(activeAccount);
     } catch (error) {
       const message =
         error instanceof Error
@@ -77,7 +107,10 @@ export default function DowryAccountManagementScreen() {
     }
 
     const activeMembers = await getDowryAccountMembers(account.id);
+
     setMembers(activeMembers);
+
+    await loadJoinRequests(account);
   }
 
   useFocusEffect(
@@ -126,6 +159,8 @@ export default function DowryAccountManagementScreen() {
           setAccount(updatedAccount);
           setMembers(activeMembers);
 
+          await loadJoinRequests(updatedAccount);
+
           showAlert({
             title: "Davet Kodu Yenilendi",
             message: "Yeni davet kodunu nişanlınla paylaşabilirsin.",
@@ -166,32 +201,105 @@ export default function DowryAccountManagementScreen() {
     try {
       setJoining(true);
 
-      const joinedAccount = await joinDowryAccountByCode(normalizedInviteCode);
-      const activeMembers = await getDowryAccountMembers(joinedAccount.id);
+      await requestDowryAccountJoinByCode(normalizedInviteCode);
 
-      setAccount(joinedAccount);
-      setMembers(activeMembers);
       setInviteCode("");
 
       showAlert({
-        title: "Çeyiz Hesabına Katıldın",
-        message: "Artık ortak çeyiz listesini birlikte yönetebilirsiniz.",
+        title: "Katılma İsteği Gönderildi",
+        message:
+          "Hesap sahibi isteğini onayladığında ortak çeyiz hesabına katılacaksın.",
         type: "success",
       });
     } catch (error) {
       const message =
         error instanceof Error
           ? error.message
-          : "Çeyiz hesabına katılırken bir hata oluştu.";
+          : "Katılma isteği gönderilirken bir hata oluştu.";
 
       showAlert({
-        title: "Katılma Hatası",
+        title: "Katılma İsteği Hatası",
         message,
         type: "error",
       });
     } finally {
       setJoining(false);
     }
+  }
+
+  function handleApproveJoinRequest(request: DowryJoinRequest) {
+    showAlert({
+      title: "Katılma İsteği Onaylansın mı?",
+      message:
+        "Bu kişi ortak çeyiz hesabındaki ürünleri görebilecek ve yönetebilecek.",
+      type: "warning",
+      confirmText: "Onayla",
+      cancelText: "İptal",
+      onConfirm: async () => {
+        try {
+          setApprovingRequestId(request.id);
+
+          await approveDowryAccountJoinRequest(request.id);
+          await refreshDowryAccountSilently();
+
+          showAlert({
+            title: "Katılma İsteği Onaylandı",
+            message: "Kişi ortak çeyiz hesabına eklendi.",
+            type: "success",
+          });
+        } catch (error) {
+          const message =
+            error instanceof Error
+              ? error.message
+              : "Katılma isteği onaylanırken bir hata oluştu.";
+
+          showAlert({
+            title: "Onaylama Hatası",
+            message,
+            type: "error",
+          });
+        } finally {
+          setApprovingRequestId(null);
+        }
+      },
+    });
+  }
+
+  function handleRejectJoinRequest(request: DowryJoinRequest) {
+    showAlert({
+      title: "Katılma İsteği Reddedilsin mi?",
+      message: "Bu kişi ortak çeyiz hesabına eklenmeyecek.",
+      type: "warning",
+      confirmText: "Reddet",
+      cancelText: "İptal",
+      onConfirm: async () => {
+        try {
+          setRejectingRequestId(request.id);
+
+          await rejectDowryAccountJoinRequest(request.id);
+          await refreshDowryAccountSilently();
+
+          showAlert({
+            title: "Katılma İsteği Reddedildi",
+            message: "Kişi ortak çeyiz hesabına eklenmedi.",
+            type: "success",
+          });
+        } catch (error) {
+          const message =
+            error instanceof Error
+              ? error.message
+              : "Katılma isteği reddedilirken bir hata oluştu.";
+
+          showAlert({
+            title: "Reddetme Hatası",
+            message,
+            type: "error",
+          });
+        } finally {
+          setRejectingRequestId(null);
+        }
+      },
+    });
   }
 
   function handleRemoveMember(member: DowryAccountMember) {
@@ -293,6 +401,7 @@ export default function DowryAccountManagementScreen() {
           {loading ? (
             <View className="mt-16 items-center justify-center">
               <ActivityIndicator color={Colors.primary} />
+
               <AppText variant="body" className="mt-3">
                 Çeyiz hesabı hazırlanıyor...
               </AppText>
@@ -309,6 +418,14 @@ export default function DowryAccountManagementScreen() {
                 onShareInviteCode={handleShareInviteCode}
                 onRefreshInviteCode={handleRefreshInviteCode}
                 onLeaveAccount={handleLeaveAccount}
+              />
+
+              <DowryJoinRequestsCard
+                requests={joinRequests}
+                approvingRequestId={approvingRequestId}
+                rejectingRequestId={rejectingRequestId}
+                onApprove={handleApproveJoinRequest}
+                onReject={handleRejectJoinRequest}
               />
 
               <DowryAccountMembersCard
