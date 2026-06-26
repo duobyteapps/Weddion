@@ -57,7 +57,7 @@ export function DowryGeneralStatusCard({
         Genel Durum
       </AppText>
 
-      <View className="flex-row items-center gap-[32px]">
+      <View className="flex-row items-center gap-[48px]">
         <DowryCircularProgress value={progress} />
 
         <View className="gap-5">

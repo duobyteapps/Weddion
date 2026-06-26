@@ -34,7 +34,8 @@ export default function DowryScreen() {
 
   const remaining = budget - expense;
 
-  const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
+  const budgetProgress =
+    budget > 0 ? Math.min(Math.round((expense / budget) * 100), 100) : 0;
 
   const fetchCategories = useCallback(async () => {
     try {
@@ -89,7 +90,7 @@ export default function DowryScreen() {
         ) : (
           <View>
             <DowryGeneralStatusCard
-              progress={progress}
+              progress={budgetProgress}
               budget={budget}
               expense={expense}
               remaining={remaining}

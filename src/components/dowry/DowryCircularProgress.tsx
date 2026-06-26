@@ -44,12 +44,12 @@ export function DowryCircularProgress({ value }: DowryCircularProgressProps) {
       </Svg>
 
       <View className="absolute items-center">
-        <AppText variant="serifTitle" className="text-textDark">
+        <AppText variant="serifSubtitle" className="text-textDark">
           %{safeValue}
         </AppText>
 
         <AppText variant="serifSubtitle" className="text-textDark">
-          Tamamlandı
+          Kullanıldı
         </AppText>
       </View>
     </View>
