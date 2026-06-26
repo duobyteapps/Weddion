@@ -259,8 +259,6 @@ export default function DowryCategoryDetailScreen() {
       setTimeout(() => {
         setIsBudgetSavedMessageVisible(false);
       }, 1800);
-
-      console.log("Çeyiz bütçesi kaydedildi:", savedBudget);
     } catch (error) {
       console.log("Çeyiz bütçesi kaydedilemedi:", error);
     } finally {
