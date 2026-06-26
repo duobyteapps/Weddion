@@ -31,8 +31,11 @@ export function DowryAccountSummaryCard({
   onLeaveAccount,
 }: Props) {
   const isSharedAccount = activeMemberCount > 1;
-  const canShowInviteCode = isOwner && !isSharedAccount;
+  const canUseInviteCode = isOwner && !isSharedAccount;
   const roleLabel = isSharedAccount ? "Ortak" : isOwner ? "Sahip" : "Ortak";
+  const inviteCodeText = canUseInviteCode
+    ? account?.inviteCode
+    : "Zaten ortak çeyiz hesabındasın";
 
   return (
     <AppCard>
@@ -59,99 +62,63 @@ export function DowryAccountSummaryCard({
         </View>
       </View>
 
-      {canShowInviteCode ? (
-        <View>
-          <AppText variant="captionStrong" className="mb-2">
-            Davet kodu
+      <View>
+        <AppText variant="captionStrong" className="mb-2">
+          Davet kodu
+        </AppText>
+
+        <View className="mb-3 flex-row items-center rounded-2xl border border-border bg-backgroundSoft px-4 py-3">
+          <AppText
+            variant="subtitle"
+            className={`flex-1 ${
+              canUseInviteCode
+                ? "text-[22px] tracking-[6px] text-textDark"
+                : "text-[16px] tracking-normal text-textMuted"
+            }`}
+          >
+            {inviteCodeText}
           </AppText>
 
-          <View className="mb-3 flex-row items-center rounded-2xl border border-border bg-backgroundSoft px-4 py-3">
-            <AppText
-              variant="subtitle"
-              className="flex-1 text-[22px] tracking-[6px] text-textDark"
-            >
-              {account?.inviteCode}
-            </AppText>
-
-            <Pressable onPress={onCopyInviteCode}>
-              <AppIconBox
-                icon="copy-outline"
-                color={Colors.primaryDark}
-                className="h-9 w-9 rounded-full bg-white"
-              />
-            </Pressable>
-          </View>
-
-          <View className="mb-4 gap-3">
-            <AppButton
-              title="Davet Kodunu Paylaş"
-              onPress={onShareInviteCode}
+          <Pressable
+            disabled={!canUseInviteCode}
+            onPress={canUseInviteCode ? onCopyInviteCode : undefined}
+          >
+            <AppIconBox
+              icon="copy-outline"
+              color={Colors.primaryDark}
+              className={`h-9 w-9 rounded-full bg-white ${
+                canUseInviteCode ? "" : "opacity-40"
+              }`}
             />
-
-            <AppButton
-              title="Davet Kodunu Yenile"
-              variant="ghost"
-              loading={refreshingCode}
-              onPress={onRefreshInviteCode}
-            />
-          </View>
+          </Pressable>
         </View>
-      ) : (
-        <View>
-          <AppText variant="body">
-            Bu ortak çeyiz hesabını birlikte yönetiyorsunuz. Ürünleri
-            ekleyebilir, düzenleyebilir ve tamamlandı yapabilirsiniz.
-          </AppText>
 
-          {!isOwner ? (
-            <AppButton
-              title="Bu Çeyiz Hesabından Ayrıl"
-              variant="ghost"
-              loading={leaving}
-              className="mt-4"
-              onPress={onLeaveAccount}
-            />
-          ) : null}
-        </View>
-      )}
-
-      <View className="mt-4 rounded-2xl border border-border bg-backgroundSoft px-4 py-3">
-        <View className="flex-row items-center">
-          <AppIconBox
-            icon="list-outline"
-            color={Colors.primaryDark}
-            className="mr-3 h-9 w-9 rounded-full bg-white"
+        <View className="gap-3">
+          <AppButton
+            title="Davet Kodunu Paylaş"
+            disabled={!canUseInviteCode}
+            onPress={onShareInviteCode}
           />
 
-          <View className="flex-1">
-            <AppText variant="captionStrong" className="text-textDark">
-              Ortak çeyiz listesi
-            </AppText>
-
-            <AppText variant="caption" className="mt-1">
-              Eklenen ürünler aynı hesapta birlikte görüntülenir.
-            </AppText>
-          </View>
-        </View>
-
-        <View className="mt-3 flex-row items-center border-t border-borderSoft pt-3">
-          <AppIconBox
-            icon="checkmark-done-outline"
-            color={Colors.primaryDark}
-            className="mr-3 h-9 w-9 rounded-full bg-white"
+          <AppButton
+            title="Davet Kodunu Yenile"
+            variant="ghost"
+            disabled={!canUseInviteCode}
+            loading={refreshingCode}
+            onPress={onRefreshInviteCode}
           />
-
-          <View className="flex-1">
-            <AppText variant="captionStrong" className="text-textDark">
-              Birlikte yönetim
-            </AppText>
-
-            <AppText variant="caption" className="mt-1">
-              Tamamlandı, düzenleme ve silme işlemleri ortak çalışır.
-            </AppText>
-          </View>
         </View>
       </View>
+
+      {!isOwner ? (
+        <AppButton
+          title="Bu Çeyiz Hesabından Ayrıl"
+          variant="ghost"
+          loading={leaving}
+          className="mt-4"
+          onPress={onLeaveAccount}
+        />
+      ) : null}
     </AppCard>
   );
 }

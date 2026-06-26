@@ -1,5 +1,10 @@
-import { router, useLocalSearchParams, type Href } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
+import {
+  router,
+  useFocusEffect,
+  useLocalSearchParams,
+  type Href,
+} from "expo-router";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ScrollView } from "react-native";
 
 import { ScreenHeader } from "@/components/common/ScreenHeader";
@@ -71,13 +76,13 @@ export default function DowryAddProductScreen() {
         params: {
           categoryId: categorySlug,
         },
-      };
+      } as Href;
     }
 
-    return "/(tabs)/dowry/dowry";
+    return "/(tabs)/dowry/dowry" as Href;
   }, [categorySlug]);
 
-  const initialCategoryName = useMemo(() => {
+  const categoryName = useMemo(() => {
     const categoryNameParam = getParamValue(params.categoryName);
 
     if (categoryNameParam) {
@@ -93,17 +98,20 @@ export default function DowryAddProductScreen() {
 
   const [productName, setProductName] = useState("");
   const [brandName, setBrandName] = useState("");
-  const [categoryName] = useState(initialCategoryName);
   const [quantity, setQuantity] = useState(1);
   const [price, setPrice] = useState("");
   const [completed, setCompleted] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (!isEditMode) {
-      return;
-    }
+  function resetForm() {
+    setProductName("");
+    setBrandName("");
+    setQuantity(1);
+    setPrice("");
+    setCompleted(false);
+  }
 
+  function fillFormForEdit() {
     const productNameParam = getParamValue(params.productName);
     const brandNameParam = getParamValue(params.brandName);
     const quantityParam = Number(getParamValue(params.quantity));
@@ -117,14 +125,32 @@ export default function DowryAddProductScreen() {
     );
     setPrice(priceParam);
     setCompleted(completedParam === "true");
+  }
+
+  useEffect(() => {
+    if (isEditMode) {
+      fillFormForEdit();
+      return;
+    }
+
+    resetForm();
   }, [
     isEditMode,
+    itemId,
     params.productName,
     params.brandName,
     params.quantity,
     params.price,
     params.completed,
   ]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!isEditMode) {
+        resetForm();
+      }
+    }, [isEditMode, categorySlug]),
+  );
 
   const handleSave = async () => {
     if (!productName.trim()) {
@@ -159,6 +185,8 @@ export default function DowryAddProductScreen() {
           price: parsedPrice,
           completed,
         });
+
+        resetForm();
       }
 
       router.replace(categoryDetailHref);
@@ -176,11 +204,16 @@ export default function DowryAddProductScreen() {
     <ScreenContainer>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerClassName="pb-10"
+        contentContainerClassName="pb-24"
       >
         <ScreenHeader
-          title={isEditMode ? "Ürünü Güncelle" : "Yeni Ürün Ekle"}
-          fallbackTo={categoryDetailHref}
+          title={isEditMode ? "Ürünü Düzenle" : "Ürün Ekle"}
+          description={
+            isEditMode
+              ? "Çeyiz ürününü güncelle."
+              : "Çeyiz listene yeni bir ürün ekle."
+          }
+          backTo={categoryDetailHref}
         />
 
         <DowryAddProductHeader />

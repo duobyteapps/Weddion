@@ -40,8 +40,10 @@ export default function DowryAccountManagementScreen() {
   const [leaving, setLeaving] = useState(false);
 
   const isOwner = account?.role === "owner";
-  const activeMemberCount = account?.memberCount ?? members.length;
-  const canJoinAnotherDowryAccount = isOwner && activeMemberCount <= 1;
+  const activeMemberCount = members.length;
+  const isSharedAccount = activeMemberCount > 1;
+  const canUseInviteActions = isOwner && !isSharedAccount;
+  const isJoinAccountDisabled = !canUseInviteActions;
 
   async function loadDowryAccount() {
     try {
@@ -68,6 +70,16 @@ export default function DowryAccountManagementScreen() {
     }
   }
 
+  async function refreshDowryAccountSilently() {
+    if (!account) {
+      await loadDowryAccount();
+      return;
+    }
+
+    const activeMembers = await getDowryAccountMembers(account.id);
+    setMembers(activeMembers);
+  }
+
   useFocusEffect(
     useCallback(() => {
       loadDowryAccount();
@@ -75,7 +87,7 @@ export default function DowryAccountManagementScreen() {
   );
 
   async function handleCopyInviteCode() {
-    if (!account?.inviteCode) return;
+    if (!account?.inviteCode || !canUseInviteActions) return;
 
     await Clipboard.setStringAsync(account.inviteCode);
 
@@ -87,7 +99,7 @@ export default function DowryAccountManagementScreen() {
   }
 
   async function handleShareInviteCode() {
-    if (!account?.inviteCode) return;
+    if (!account?.inviteCode || !canUseInviteActions) return;
 
     await Share.share({
       message: `Weddion ortak çeyiz hesabına katılmak için davet kodum: ${account.inviteCode}`,
@@ -95,7 +107,7 @@ export default function DowryAccountManagementScreen() {
   }
 
   async function handleRefreshInviteCode() {
-    if (!account) return;
+    if (!account || !canUseInviteActions) return;
 
     showAlert({
       title: "Davet Kodu Yenilensin mi?",
@@ -138,6 +150,8 @@ export default function DowryAccountManagementScreen() {
   }
 
   async function handleJoinDowryAccount() {
+    if (isJoinAccountDisabled) return;
+
     const normalizedInviteCode = inviteCode.trim().toUpperCase();
 
     if (normalizedInviteCode.length < 4) {
@@ -197,8 +211,7 @@ export default function DowryAccountManagementScreen() {
             memberUserId: member.userId,
           });
 
-          const activeMembers = await getDowryAccountMembers(account.id);
-          setMembers(activeMembers);
+          await refreshDowryAccountSilently();
 
           showAlert({
             title: "Ortak Çıkarıldı",
@@ -304,14 +317,13 @@ export default function DowryAccountManagementScreen() {
                 onRemoveMember={handleRemoveMember}
               />
 
-              {canJoinAnotherDowryAccount ? (
-                <DowryJoinAccountCard
-                  inviteCode={inviteCode}
-                  joining={joining}
-                  onInviteCodeChange={setInviteCode}
-                  onJoin={handleJoinDowryAccount}
-                />
-              ) : null}
+              <DowryJoinAccountCard
+                inviteCode={inviteCode}
+                joining={joining}
+                disabled={isJoinAccountDisabled}
+                onInviteCodeChange={setInviteCode}
+                onJoin={handleJoinDowryAccount}
+              />
             </View>
           )}
         </ScrollView>

@@ -8,6 +8,7 @@ import { Colors } from "@/constants/Colors";
 type Props = {
   inviteCode: string;
   joining: boolean;
+  disabled?: boolean;
   onInviteCodeChange: (value: string) => void;
   onJoin: () => void;
 };
@@ -15,9 +16,12 @@ type Props = {
 export function DowryJoinAccountCard({
   inviteCode,
   joining,
+  disabled = false,
   onInviteCodeChange,
   onJoin,
 }: Props) {
+  const inputValue = disabled ? "Zaten ortak çeyiz hesabındasın" : inviteCode;
+
   return (
     <AppCard>
       <AppText variant="subtitle" className="mb-2 text-textDark">
@@ -30,17 +34,26 @@ export function DowryJoinAccountCard({
       </AppText>
 
       <TextInput
-        value={inviteCode}
-        onChangeText={(value) => onInviteCodeChange(value.toUpperCase())}
+        value={inputValue}
+        editable={!disabled}
+        pointerEvents={disabled ? "none" : "auto"}
+        onChangeText={(value) => {
+          if (!disabled) {
+            onInviteCodeChange(value.toUpperCase());
+          }
+        }}
         placeholder="Davet kodu"
         placeholderTextColor={Colors.textMuted}
         autoCapitalize="characters"
-        className="mb-3 rounded-2xl border border-border bg-white px-4 py-3 font-manropeSemiBold text-[16px] tracking-[4px] text-textDark"
+        className={`mb-3 rounded-2xl border border-border bg-white px-4 py-3 font-manropeSemiBold text-[16px] text-textDark ${
+          disabled ? "tracking-normal opacity-60" : "tracking-[4px]"
+        }`}
       />
 
       <AppButton
         title="Çeyiz Hesabına Katıl"
         loading={joining}
+        disabled={disabled}
         onPress={onJoin}
       />
     </AppCard>

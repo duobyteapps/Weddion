@@ -3,6 +3,7 @@ import { useCallback, useState } from "react";
 import { ActivityIndicator, ScrollView, View } from "react-native";
 
 import { ScreenHeader } from "@/components/common/ScreenHeader";
+import { DowryAccountManagementCard } from "@/components/dowry/DowryAccountManagementCard";
 import { DowryCategoryStatusCard } from "@/components/dowry/DowryCategoryStatusCard";
 import { DowryGeneralStatusCard } from "@/components/dowry/DowryGeneralStatusCard";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
@@ -27,7 +28,6 @@ export default function DowryScreen() {
       setIsLoading(true);
 
       const data = await getDowryCategories();
-
       setCategories(data);
     } catch (error) {
       console.log("Çeyiz kategorileri getirilemedi:", error);
@@ -52,30 +52,44 @@ export default function DowryScreen() {
     });
   }
 
+  function handlePressDowryAccountManagement() {
+    router.push("/(tabs)/dowry-account-management");
+  }
+
   return (
-    <ScreenContainer className="flex-1 bg-background">
+    <ScreenContainer>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerClassName="pb-10"
+        contentContainerClassName="pb-24"
       >
-        <ScreenHeader title="Çeyiz Defterim" fallbackTo="/home" />
-
-        <DowryGeneralStatusCard
-          progress={progress}
-          total={total}
-          completed={completed}
-          missing={missing}
+        <ScreenHeader
+          title="Çeyiz Defterim"
+          description="Çeyiz listenizi kategori kategori takip edin."
+          backTo="/(tabs)/home"
         />
 
         {isLoading ? (
-          <View className="mt-6 items-center justify-center">
+          <View className="mt-16 items-center justify-center">
             <ActivityIndicator color={Colors.primary} />
           </View>
         ) : (
-          <DowryCategoryStatusCard
-            categories={categories}
-            onPressCategory={handlePressCategory}
-          />
+          <View>
+            <DowryGeneralStatusCard
+              total={total}
+              completed={completed}
+              missing={missing}
+              progress={progress}
+            />
+
+            <DowryCategoryStatusCard
+              categories={categories}
+              onPressCategory={handlePressCategory}
+            />
+
+            <DowryAccountManagementCard
+              onPress={handlePressDowryAccountManagement}
+            />
+          </View>
         )}
       </ScrollView>
     </ScreenContainer>
