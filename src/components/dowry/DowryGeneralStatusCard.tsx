@@ -1,6 +1,7 @@
 import { View } from "react-native";
 
 import { Colors } from "@/constants/Colors";
+
 import { AppCard } from "../ui/AppCard";
 import { AppText } from "../ui/AppText";
 import { DowryCircularProgress } from "./DowryCircularProgress";
@@ -8,41 +9,45 @@ import { DowryGeneralInfoRow } from "./DowryGeneralInfoRow";
 
 type DowryGeneralStatusCardProps = {
   progress: number;
-  total: number;
-  completed: number;
-  missing: number;
+  budget: number;
+  expense: number;
+  remaining: number;
 };
+
+function formatMoney(value: number) {
+  return `₺${Math.round(value).toLocaleString("tr-TR")}`;
+}
 
 export function DowryGeneralStatusCard({
   progress,
-  total,
-  completed,
-  missing,
+  budget,
+  expense,
+  remaining,
 }: DowryGeneralStatusCardProps) {
   const generalInfoItems = [
     {
-      id: "total",
-      icon: "gift-outline" as const,
-      label: "Toplam Ürün",
-      value: total,
+      id: "budget",
+      icon: "wallet-outline" as const,
+      label: "Bütçe",
+      value: formatMoney(budget),
       iconColor: Colors.primary,
       iconBackground: Colors.primarySoft,
     },
     {
-      id: "completed",
-      icon: "check-circle-outline" as const,
-      label: "Tamamlanan",
-      value: completed,
+      id: "expense",
+      icon: "cash-minus" as const,
+      label: "Gider",
+      value: formatMoney(expense),
+      iconColor: Colors.error,
+      iconBackground: "#FDECEC",
+    },
+    {
+      id: "remaining",
+      icon: "cash-check" as const,
+      label: "Kalan Para",
+      value: formatMoney(remaining),
       iconColor: Colors.success,
       iconBackground: "#EAF8F1",
-    },
-    {
-      id: "missing",
-      icon: "cart-outline" as const,
-      label: "Eksik",
-      value: missing,
-      iconColor: Colors.primary,
-      iconBackground: Colors.primarySoft,
     },
   ];
 
@@ -55,7 +60,7 @@ export function DowryGeneralStatusCard({
       <View className="flex-row items-center gap-[32px]">
         <DowryCircularProgress value={progress} />
 
-        <View className="gap-3">
+        <View className="gap-5">
           {generalInfoItems.map((item) => (
             <DowryGeneralInfoRow
               key={item.id}

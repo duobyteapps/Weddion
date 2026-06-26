@@ -8,7 +8,7 @@ type MaterialIconName = keyof typeof MaterialCommunityIcons.glyphMap;
 type DowryGeneralInfoRowProps = {
   icon: MaterialIconName;
   label: string;
-  value: number;
+  value: number | string;
   iconColor?: string;
   iconBackground?: string;
 };
