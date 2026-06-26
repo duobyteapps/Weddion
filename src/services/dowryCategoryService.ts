@@ -178,71 +178,17 @@ export async function upsertDowryCategoryBudget({
   categorySlug: string;
   budget: number;
 }) {
-  const user = await getAuthenticatedUser();
-
   const safeBudget = Number.isFinite(budget) && budget > 0 ? budget : 0;
 
-  const { data: categoryData, error: categoryError } = await supabase
-    .from("dowry_categories")
-    .select("id")
-    .eq("slug", categorySlug)
-    .eq("is_active", true)
-    .maybeSingle();
+  const { data, error } = await supabase.rpc("upsert_dowry_category_budget", {
+    p_category_slug: categorySlug,
+    p_budget: safeBudget,
+  });
 
-  if (categoryError) {
-    console.log("Dowry budget category supabase error:", categoryError);
-    throw new Error(categoryError.message);
+  if (error) {
+    console.log("Dowry budget rpc save error:", error);
+    throw new Error(error.message);
   }
 
-  if (!categoryData) {
-    throw new Error("Bütçe kaydedilecek çeyiz kategorisi bulunamadı.");
-  }
-
-  const { data: existingBudget, error: existingBudgetError } = await supabase
-    .from("user_dowry_category_budgets")
-    .select("id")
-    .eq("user_id", user.id)
-    .eq("category_id", categoryData.id)
-    .maybeSingle();
-
-  if (existingBudgetError) {
-    console.log("Dowry budget existing row error:", existingBudgetError);
-    throw new Error(existingBudgetError.message);
-  }
-
-  if (existingBudget) {
-    const { data: updatedBudget, error: updateError } = await supabase
-      .from("user_dowry_category_budgets")
-      .update({
-        budget: safeBudget,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", existingBudget.id)
-      .select("budget")
-      .single();
-
-    if (updateError) {
-      console.log("Dowry budget update supabase error:", updateError);
-      throw new Error(updateError.message);
-    }
-
-    return toSafeNumber(updatedBudget.budget);
-  }
-
-  const { data: insertedBudget, error: insertError } = await supabase
-    .from("user_dowry_category_budgets")
-    .insert({
-      user_id: user.id,
-      category_id: categoryData.id,
-      budget: safeBudget,
-    })
-    .select("budget")
-    .single();
-
-  if (insertError) {
-    console.log("Dowry budget insert supabase error:", insertError);
-    throw new Error(insertError.message);
-  }
-
-  return toSafeNumber(insertedBudget.budget);
+  return toSafeNumber(data);
 }
