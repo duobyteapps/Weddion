@@ -136,6 +136,9 @@ export type DowryAccountMember = {
   id: string;
   dowryAccountId: string;
   userId: string;
+  firstName: string | null;
+  lastName: string | null;
+  displayName: string | null;
   role: DowryAccountRole;
   status: DowryAccountStatus;
   createdAt: string;
@@ -146,6 +149,9 @@ export type DowryAccountMemberTableRow = {
   id: string;
   dowry_account_id: string;
   user_id: string;
+  first_name: string | null;
+  last_name: string | null;
+  display_name: string | null;
   role: DowryAccountRole;
   status: DowryAccountStatus;
   created_at: string;

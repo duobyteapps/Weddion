@@ -21,6 +21,11 @@ export const accountMenuItems: ProfileMenuItem[] = [
     route: "/(tabs)/change-password",
   },
   {
+    label: "Çeyiz Hesabı Yönetimi",
+    icon: "heart-outline",
+    route: "/(tabs)/dowry-account-management",
+  },
+  {
     label: "Bildirim Ayarları",
     icon: "notifications-outline",
     route: "/(tabs)/notification-settings",
