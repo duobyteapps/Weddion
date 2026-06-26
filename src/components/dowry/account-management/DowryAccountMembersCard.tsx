@@ -11,8 +11,8 @@ type Props = {
   onRemoveMember: (member: DowryAccountMember) => void;
 };
 
-const OWNER_COLOR = "#2F80ED";
-const MEMBER_COLOR = "#27AE60";
+const OWNER_COLOR = "#8FAF8B";
+const MEMBER_COLOR = "#C9B37E";
 
 export function DowryAccountMembersCard({
   members,

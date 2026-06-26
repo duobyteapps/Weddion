@@ -64,6 +64,7 @@ function mapDowryItemToChecklistItem(item: UserDowryItem): DowryChecklistItem {
     quantity: item.quantity,
     price: item.price,
     completed: item.completed,
+    creatorRole: item.creatorRole,
   };
 }
 
