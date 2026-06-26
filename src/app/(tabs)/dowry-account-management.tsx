@@ -5,17 +5,16 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   ScrollView,
   Share,
-  TextInput,
   View,
 } from "react-native";
 
 import { ScreenHeader } from "@/components/common/ScreenHeader";
+import { DowryAccountMembersCard } from "@/components/dowry/account-management/DowryAccountMembersCard";
+import { DowryAccountSummaryCard } from "@/components/dowry/account-management/DowryAccountSummaryCard";
+import { DowryJoinAccountCard } from "@/components/dowry/account-management/DowryJoinAccountCard";
 import { useAppAlert } from "@/components/ui/AppAlert";
-import { AppButton } from "@/components/ui/AppButton";
-import { AppCard } from "@/components/ui/AppCard";
 import { AppText } from "@/components/ui/AppText";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { Colors } from "@/constants/Colors";
@@ -28,7 +27,6 @@ import {
   removeDowryAccountMember,
 } from "@/services/dowryAccountService";
 import { DowryAccount, DowryAccountMember } from "@/types/dowry";
-import { Ionicons } from "@expo/vector-icons";
 
 export default function DowryAccountManagementScreen() {
   const { showAlert } = useAppAlert();
@@ -288,173 +286,31 @@ export default function DowryAccountManagementScreen() {
             </View>
           ) : (
             <View>
-              <AppCard>
-                <View className="mb-4 flex-row items-center">
-                  <View className="mr-3 h-11 w-11 items-center justify-center rounded-full bg-primaryLight">
-                    <Ionicons
-                      name="heart-outline"
-                      size={22}
-                      color={Colors.primaryDark}
-                    />
-                  </View>
+              <DowryAccountSummaryCard
+                account={account}
+                isOwner={isOwner}
+                activeMemberCount={activeMemberCount}
+                refreshingCode={refreshingCode}
+                leaving={leaving}
+                onCopyInviteCode={handleCopyInviteCode}
+                onShareInviteCode={handleShareInviteCode}
+                onRefreshInviteCode={handleRefreshInviteCode}
+                onLeaveAccount={handleLeaveAccount}
+              />
 
-                  <View className="flex-1">
-                    <AppText variant="subtitle" className="text-textDark">
-                      {account?.title ?? "Çeyiz Listem"}
-                    </AppText>
-                    <AppText variant="body" className="mt-1">
-                      {activeMemberCount} kişi yönetiyor
-                    </AppText>
-                  </View>
-
-                  <View className="rounded-full bg-primaryLight px-3 py-1">
-                    <AppText variant="captionStrong">
-                      {isOwner ? "Sahip" : "Ortak"}
-                    </AppText>
-                  </View>
-                </View>
-
-                {isOwner ? (
-                  <View>
-                    <AppText variant="captionStrong" className="mb-2">
-                      Davet kodu
-                    </AppText>
-
-                    <View className="mb-3 flex-row items-center rounded-2xl border border-border bg-backgroundSoft px-4 py-3">
-                      <AppText
-                        variant="subtitle"
-                        className="flex-1 text-[22px] tracking-[6px] text-textDark"
-                      >
-                        {account?.inviteCode}
-                      </AppText>
-
-                      <Pressable
-                        onPress={handleCopyInviteCode}
-                        className="h-9 w-9 items-center justify-center rounded-full bg-white"
-                      >
-                        <Ionicons
-                          name="copy-outline"
-                          size={18}
-                          color={Colors.primaryDark}
-                        />
-                      </Pressable>
-                    </View>
-
-                    <View className="gap-3">
-                      <AppButton
-                        title="Davet Kodunu Paylaş"
-                        onPress={handleShareInviteCode}
-                      />
-
-                      <AppButton
-                        title="Davet Kodunu Yenile"
-                        variant="ghost"
-                        loading={refreshingCode}
-                        onPress={handleRefreshInviteCode}
-                      />
-                    </View>
-                  </View>
-                ) : (
-                  <View>
-                    <AppText variant="body">
-                      Bu ortak çeyiz hesabına üye olarak katıldın. Ürünleri
-                      ekleyebilir, düzenleyebilir ve tamamlandı yapabilirsin.
-                    </AppText>
-
-                    <AppButton
-                      title="Bu Çeyiz Hesabından Ayrıl"
-                      variant="ghost"
-                      loading={leaving}
-                      className="mt-4"
-                      onPress={handleLeaveAccount}
-                    />
-                  </View>
-                )}
-              </AppCard>
-
-              <AppCard>
-                <AppText variant="subtitle" className="mb-4 text-textDark">
-                  Çeyiz Ortakları
-                </AppText>
-
-                {members.map((member, index) => {
-                  const memberIsOwner = member.role === "owner";
-                  const isLast = index === members.length - 1;
-
-                  return (
-                    <View
-                      key={member.id}
-                      className={`flex-row items-center ${
-                        isLast ? "pb-0" : "border-b border-borderSoft pb-3"
-                      } ${index === 0 ? "" : "pt-3"}`}
-                    >
-                      <View className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-primaryLight">
-                        <Ionicons
-                          name={memberIsOwner ? "person" : "people-outline"}
-                          size={19}
-                          color={Colors.primaryDark}
-                        />
-                      </View>
-
-                      <View className="flex-1">
-                        <AppText variant="captionStrong">
-                          {memberIsOwner ? "Hesap Sahibi" : "Çeyiz Ortağı"}
-                        </AppText>
-                        <AppText variant="caption" className="mt-1">
-                          {member.displayName ?? "İsim bilgisi yok"}
-                        </AppText>
-                      </View>
-
-                      {isOwner && !memberIsOwner ? (
-                        <Pressable
-                          onPress={() => handleRemoveMember(member)}
-                          className="rounded-full bg-white px-3 py-2"
-                        >
-                          <AppText
-                            variant="captionStrong"
-                            className="text-error"
-                          >
-                            Çıkar
-                          </AppText>
-                        </Pressable>
-                      ) : (
-                        <View className="rounded-full bg-primaryLight px-3 py-1">
-                          <AppText variant="captionStrong">
-                            {memberIsOwner ? "Sahip" : "Ortak"}
-                          </AppText>
-                        </View>
-                      )}
-                    </View>
-                  );
-                })}
-              </AppCard>
+              <DowryAccountMembersCard
+                members={members}
+                isOwner={isOwner}
+                onRemoveMember={handleRemoveMember}
+              />
 
               {canJoinAnotherDowryAccount ? (
-                <AppCard>
-                  <AppText variant="subtitle" className="mb-2 text-textDark">
-                    Davet Kodu ile Katıl
-                  </AppText>
-
-                  <AppText variant="body" className="mb-4">
-                    Nişanlının sana verdiği davet kodunu girerek aynı çeyiz
-                    hesabına katılabilirsin.
-                  </AppText>
-
-                  <TextInput
-                    value={inviteCode}
-                    onChangeText={(value) => setInviteCode(value.toUpperCase())}
-                    placeholder="Davet kodu"
-                    placeholderTextColor={Colors.textMuted}
-                    autoCapitalize="characters"
-                    className="mb-3 rounded-2xl border border-border bg-white px-4 py-3 font-manropeSemiBold text-[16px] tracking-[4px] text-textDark"
-                  />
-
-                  <AppButton
-                    title="Çeyiz Hesabına Katıl"
-                    loading={joining}
-                    onPress={handleJoinDowryAccount}
-                  />
-                </AppCard>
+                <DowryJoinAccountCard
+                  inviteCode={inviteCode}
+                  joining={joining}
+                  onInviteCodeChange={setInviteCode}
+                  onJoin={handleJoinDowryAccount}
+                />
               ) : null}
             </View>
           )}

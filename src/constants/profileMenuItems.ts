@@ -22,7 +22,7 @@ export const accountMenuItems: ProfileMenuItem[] = [
   },
   {
     label: "Çeyiz Hesabı Yönetimi",
-    icon: "heart-outline",
+    icon: "gift",
     route: "/(tabs)/dowry-account-management",
   },
   {
