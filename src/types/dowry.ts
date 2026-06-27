@@ -87,7 +87,6 @@ export type UserDowryItem = {
   quantity: number;
   price: number | null;
   completed: boolean;
-  sortOrder: number;
   isActive: boolean;
   createdAt: string;
   updatedAt?: string;
@@ -105,7 +104,6 @@ export type UserDowryItemTableRow = {
   quantity: number;
   price: number | null;
   completed: boolean;
-  sort_order: number;
   is_active: boolean;
   created_at: string;
   updated_at?: string;

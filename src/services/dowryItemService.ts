@@ -13,12 +13,20 @@ function mapUserDowryItem(row: UserDowryItemTableRow): UserDowryItem {
     quantity: row.quantity,
     price: row.price,
     completed: row.completed,
-    sortOrder: row.sort_order,
     isActive: row.is_active,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     creatorRole: row.creator_role ?? null,
   };
+}
+
+function sortNewestFirst(items: UserDowryItem[]) {
+  return [...items].sort((a, b) => {
+    const dateA = new Date(a.createdAt).getTime();
+    const dateB = new Date(b.createdAt).getTime();
+
+    return dateB - dateA;
+  });
 }
 
 export async function getUserDowryItems(
@@ -32,7 +40,9 @@ export async function getUserDowryItems(
     throw new Error(error.message);
   }
 
-  return ((data ?? []) as UserDowryItemTableRow[]).map(mapUserDowryItem);
+  return sortNewestFirst(
+    ((data ?? []) as UserDowryItemTableRow[]).map(mapUserDowryItem),
+  );
 }
 
 export async function createUserDowryItemByCategorySlug({
