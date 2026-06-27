@@ -158,7 +158,10 @@ export function InvitationPreviewCard({ imageUrl, formData }: Props) {
           {description}
         </AppText>
 
-        <AppText variant="invitationVenue" className="mt-6 text-center">
+        <AppText
+          variant="invitationVenue"
+          className="mt-6 text-center !text-[14px] leading-4"
+        >
           {venueName}
         </AppText>
 
