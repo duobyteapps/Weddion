@@ -9,6 +9,7 @@ import {
   Pressable,
   ScrollView,
   Share,
+  TextInput,
   View,
 } from "react-native";
 
@@ -17,7 +18,6 @@ import { useAppAlert } from "@/components/ui/AppAlert";
 import { AppButton } from "@/components/ui/AppButton";
 import { AppCard } from "@/components/ui/AppCard";
 import { AppIconBox } from "@/components/ui/AppIconBox";
-import { AppInput } from "@/components/ui/AppInput";
 import { AppText } from "@/components/ui/AppText";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { Colors } from "@/constants/Colors";
@@ -616,19 +616,16 @@ export default function GalleryAccountManagementScreen() {
         title: "Hesap Sahibi",
         displayName: "Galeri sahibi",
       },
-      partner
-        ? {
-            id: "partner",
-            role: "partner",
-            title: "Galeri Ortağı",
-            displayName: "Aktif galeri ortağı",
-          }
-        : {
-            id: "empty-partner",
-            role: "empty",
-            title: "Galeri Ortağı",
-            displayName: "Henüz galeri ortağı yok.",
-          },
+      ...(partner
+        ? [
+            {
+              id: "partner",
+              role: "partner",
+              title: "Galeri Ortağı",
+              displayName: "Aktif galeri ortağı",
+            },
+          ]
+        : []),
     ];
 
     return (
@@ -640,14 +637,8 @@ export default function GalleryAccountManagementScreen() {
         {members.map((member, index) => {
           const memberIsOwner = member.role === "owner";
           const memberIsPartner = member.role === "partner";
-          const memberIsEmpty = member.role === "empty";
           const isLast = index === members.length - 1;
-
-          const roleColor = memberIsOwner
-            ? OWNER_COLOR
-            : memberIsPartner
-              ? MEMBER_COLOR
-              : "#9B8FA3";
+          const roleColor = memberIsOwner ? OWNER_COLOR : MEMBER_COLOR;
 
           return (
             <View
@@ -671,25 +662,44 @@ export default function GalleryAccountManagementScreen() {
               </View>
 
               <View className="items-end">
-                <View
-                  className="rounded-full px-3 py-1"
-                  style={{ backgroundColor: `${roleColor}18` }}
-                >
-                  <AppText variant="captionStrong" style={{ color: roleColor }}>
-                    {memberIsOwner ? "Sahip" : memberIsEmpty ? "Boş" : "Ortak"}
-                  </AppText>
-                </View>
+                {memberIsOwner ? (
+                  <View
+                    className="rounded-full px-3 py-1"
+                    style={{ backgroundColor: `${roleColor}18` }}
+                  >
+                    <AppText
+                      variant="captionStrong"
+                      style={{ color: roleColor }}
+                    >
+                      Sahip
+                    </AppText>
+                  </View>
+                ) : null}
 
                 {isOwner && memberIsPartner ? (
                   <Pressable
                     onPress={handleRemovePartner}
                     disabled={removingPartner}
-                    className="mt-2 rounded-full bg-white px-3 py-2"
+                    className="rounded-full bg-white px-3 py-2"
                   >
                     <AppText variant="captionStrong" className="text-error">
                       {removingPartner ? "Çıkarılıyor..." : "Çıkar"}
                     </AppText>
                   </Pressable>
+                ) : null}
+
+                {!isOwner && memberIsPartner ? (
+                  <View
+                    className="rounded-full px-3 py-1"
+                    style={{ backgroundColor: `${roleColor}18` }}
+                  >
+                    <AppText
+                      variant="captionStrong"
+                      style={{ color: roleColor }}
+                    >
+                      Ortak
+                    </AppText>
+                  </View>
                 ) : null}
               </View>
             </View>
@@ -779,41 +789,44 @@ export default function GalleryAccountManagementScreen() {
       return null;
     }
 
+    const disabled = hasPartner || isPartner;
+    const inputValue = disabled ? "Zaten ortak galeri hesabındasın" : joinCode;
+
     return (
       <AppCard className="mt-5">
-        <AppText variant="title" className="mb-3 text-textDark">
+        <AppText variant="subtitle" className="mb-2 text-textDark">
           Davet Kodu ile Katıl
         </AppText>
 
-        <AppText className="mb-5 text-textMuted">
+        <AppText variant="body" className="mb-4">
           Sana verilen davet kodunu girerek aynı galeriye katılabilirsin.
         </AppText>
 
-        <View className="gap-4">
-          <AppInput
-            label="Adın"
-            value={displayName}
-            onChangeText={setDisplayName}
-            placeholder="Örn. Nisa"
-            autoCapitalize="words"
-          />
+        <TextInput
+          value={inputValue}
+          editable={!disabled}
+          pointerEvents={disabled ? "none" : "auto"}
+          onChangeText={(value) => {
+            if (!disabled) {
+              setJoinCode(value.toUpperCase());
+            }
+          }}
+          placeholder="Davet kodu"
+          placeholderTextColor={Colors.textMuted}
+          autoCapitalize="characters"
+          autoCorrect={false}
+          maxLength={12}
+          className={`mb-3 rounded-2xl border border-border bg-white px-4 py-3 font-manropeSemiBold text-[16px] text-textDark ${
+            disabled ? "tracking-normal opacity-60" : "tracking-[4px]"
+          }`}
+        />
 
-          <AppInput
-            label="Davet kodu"
-            value={joinCode}
-            onChangeText={(value) => setJoinCode(value.toUpperCase())}
-            placeholder="Davet kodu"
-            autoCapitalize="characters"
-            autoCorrect={false}
-            maxLength={12}
-          />
-
-          <AppButton
-            title="Galeri Hesabına Katıl"
-            loading={joining}
-            onPress={handleJoinGallery}
-          />
-        </View>
+        <AppButton
+          title="Galeri Hesabına Katıl"
+          loading={joining}
+          disabled={disabled}
+          onPress={handleJoinGallery}
+        />
       </AppCard>
     );
   }
