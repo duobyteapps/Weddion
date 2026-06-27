@@ -126,3 +126,54 @@ export type UpdateUserInvitationPayload = {
   status?: UserInvitationStatus;
   capturedImageUri?: string | null;
 };
+
+export type GalleryAccessRole = "owner" | "partner";
+
+export type GalleryAccessibleInvitation = UserInvitation & {
+  access_role: GalleryAccessRole;
+  owner_user_id: string;
+  gallery_partner_invite_code: string | null;
+  gallery_partner_invite_enabled: boolean;
+};
+
+export type GalleryPartner = {
+  id: string;
+  invitationId: string;
+  partnerUserId: string;
+  role: "partner";
+  status: "active" | "removed" | "left";
+  createdAt: string;
+};
+
+export type GalleryPartnerRequestStatus =
+  | "pending"
+  | "approved"
+  | "rejected"
+  | "cancelled";
+
+export type GalleryPartnerRequest = {
+  id: string;
+  invitationId: string;
+  requesterUserId: string;
+  requesterDisplayName: string | null;
+  status: GalleryPartnerRequestStatus;
+  createdAt: string;
+};
+
+export type GalleryPartnerTableRow = {
+  id: string;
+  invitation_id: string;
+  partner_user_id: string;
+  role: "partner";
+  status: "active" | "removed" | "left";
+  created_at: string;
+};
+
+export type GalleryPartnerRequestTableRow = {
+  id: string;
+  invitation_id: string;
+  requester_user_id: string;
+  requester_display_name: string | null;
+  status: GalleryPartnerRequestStatus;
+  created_at: string;
+};
