@@ -134,12 +134,17 @@ export type GalleryAccessibleInvitation = UserInvitation & {
   owner_user_id: string;
   gallery_partner_invite_code: string | null;
   gallery_partner_invite_enabled: boolean;
+
+  owner_display_name?: string | null;
+  partner_user_id?: string | null;
+  partner_display_name?: string | null;
 };
 
 export type GalleryPartner = {
   id: string;
   invitationId: string;
   partnerUserId: string;
+  displayName?: string | null;
   role: "partner";
   status: "active" | "removed" | "left";
   createdAt: string;
@@ -164,6 +169,7 @@ export type GalleryPartnerTableRow = {
   id: string;
   invitation_id: string;
   partner_user_id: string;
+  partner_display_name?: string | null;
   role: "partner";
   status: "active" | "removed" | "left";
   created_at: string;

@@ -11,11 +11,18 @@ function normalizeGalleryPartnerCode(code: string) {
   return code.trim().toUpperCase();
 }
 
+function normalizeDisplayName(value?: string | null) {
+  const displayName = value?.trim();
+
+  return displayName && displayName.length > 0 ? displayName : null;
+}
+
 function mapGalleryPartner(row: GalleryPartnerTableRow): GalleryPartner {
   return {
     id: row.id,
     invitationId: row.invitation_id,
     partnerUserId: row.partner_user_id,
+    displayName: normalizeDisplayName(row.partner_display_name),
     role: row.role,
     status: row.status,
     createdAt: row.created_at,
@@ -29,9 +36,20 @@ function mapGalleryPartnerRequest(
     id: row.id,
     invitationId: row.invitation_id,
     requesterUserId: row.requester_user_id,
-    requesterDisplayName: row.requester_display_name ?? null,
+    requesterDisplayName: normalizeDisplayName(row.requester_display_name),
     status: row.status,
     createdAt: row.created_at,
+  };
+}
+
+function mapGalleryAccessibleInvitation(
+  row: GalleryAccessibleInvitation,
+): GalleryAccessibleInvitation {
+  return {
+    ...row,
+    owner_display_name: normalizeDisplayName(row.owner_display_name),
+    partner_user_id: row.partner_user_id ?? null,
+    partner_display_name: normalizeDisplayName(row.partner_display_name),
   };
 }
 
@@ -52,7 +70,7 @@ export async function requestGalleryPartnerAccessByCode({
     "request_gallery_partner_access_by_code",
     {
       target_code: normalizedCode,
-      display_name: displayName?.trim() || null,
+      display_name: normalizeDisplayName(displayName),
     },
   );
 
@@ -175,5 +193,7 @@ export async function getMyGalleryAccessibleInvitations(): Promise<
     throw new Error(error.message);
   }
 
-  return (data ?? []) as GalleryAccessibleInvitation[];
+  return ((data ?? []) as GalleryAccessibleInvitation[]).map(
+    mapGalleryAccessibleInvitation,
+  );
 }

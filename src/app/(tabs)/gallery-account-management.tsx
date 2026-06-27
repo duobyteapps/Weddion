@@ -42,12 +42,17 @@ type GalleryAccessibleInvitation = UserInvitation & {
   access_role?: GalleryAccessRole;
   gallery_partner_invite_code?: string | null;
   gallery_partner_invite_enabled?: boolean | null;
+
+  owner_display_name?: string | null;
+  partner_user_id?: string | null;
+  partner_display_name?: string | null;
 };
 
 type GalleryPartner = {
   id: string;
   invitationId: string;
   partnerUserId: string;
+  displayName?: string | null;
   role: "partner";
   status: "active" | "removed" | "left";
   createdAt: string;
@@ -604,6 +609,14 @@ export default function GalleryAccountManagementScreen() {
   const OWNER_COLOR = "#8FAF8B";
   const MEMBER_COLOR = "#C9B37E";
 
+  function getMemberDisplayName(...values: Array<string | null | undefined>) {
+    const displayName = values
+      .map((value) => value?.trim())
+      .find((value) => Boolean(value));
+
+    return displayName ?? "İsim bilgisi yok";
+  }
+
   function renderMembersCard() {
     if (!selectedInvitation) {
       return null;
@@ -614,15 +627,23 @@ export default function GalleryAccountManagementScreen() {
         id: "owner",
         role: "owner",
         title: "Hesap Sahibi",
-        displayName: "Galeri sahibi",
+        displayName: getMemberDisplayName(
+          selectedInvitation.owner_display_name,
+        ),
       },
-      ...(partner
+      ...(partner || selectedInvitation.partner_user_id
         ? [
             {
-              id: "partner",
+              id:
+                selectedInvitation.partner_user_id ??
+                partner?.partnerUserId ??
+                "partner",
               role: "partner",
               title: "Galeri Ortağı",
-              displayName: "Aktif galeri ortağı",
+              displayName: getMemberDisplayName(
+                selectedInvitation.partner_display_name,
+                partner?.displayName,
+              ),
             },
           ]
         : []),
@@ -662,44 +683,25 @@ export default function GalleryAccountManagementScreen() {
               </View>
 
               <View className="items-end">
-                {memberIsOwner ? (
-                  <View
-                    className="rounded-full px-3 py-1"
-                    style={{ backgroundColor: `${roleColor}18` }}
-                  >
-                    <AppText
-                      variant="captionStrong"
-                      style={{ color: roleColor }}
-                    >
-                      Sahip
-                    </AppText>
-                  </View>
-                ) : null}
+                <View
+                  className="rounded-full px-3 py-1"
+                  style={{ backgroundColor: `${roleColor}18` }}
+                >
+                  <AppText variant="captionStrong" style={{ color: roleColor }}>
+                    {memberIsOwner ? "Sahip" : "Ortak"}
+                  </AppText>
+                </View>
 
                 {isOwner && memberIsPartner ? (
                   <Pressable
                     onPress={handleRemovePartner}
                     disabled={removingPartner}
-                    className="rounded-full bg-white px-3 py-2"
+                    className="mt-2 rounded-full bg-white px-3 py-2"
                   >
                     <AppText variant="captionStrong" className="text-error">
                       {removingPartner ? "Çıkarılıyor..." : "Çıkar"}
                     </AppText>
                   </Pressable>
-                ) : null}
-
-                {!isOwner && memberIsPartner ? (
-                  <View
-                    className="rounded-full px-3 py-1"
-                    style={{ backgroundColor: `${roleColor}18` }}
-                  >
-                    <AppText
-                      variant="captionStrong"
-                      style={{ color: roleColor }}
-                    >
-                      Ortak
-                    </AppText>
-                  </View>
                 ) : null}
               </View>
             </View>
