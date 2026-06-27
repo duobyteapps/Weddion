@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useState } from "react";
@@ -5,6 +6,7 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   ScrollView,
   Share,
   View,
@@ -14,9 +16,11 @@ import { ScreenHeader } from "@/components/common/ScreenHeader";
 import { useAppAlert } from "@/components/ui/AppAlert";
 import { AppButton } from "@/components/ui/AppButton";
 import { AppCard } from "@/components/ui/AppCard";
+import { AppIconBox } from "@/components/ui/AppIconBox";
 import { AppInput } from "@/components/ui/AppInput";
 import { AppText } from "@/components/ui/AppText";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
+import { Colors } from "@/constants/Colors";
 import {
   approveGalleryPartnerRequest,
   getGalleryPartner,
@@ -57,27 +61,6 @@ type GalleryPartnerRequest = {
   status: "pending" | "approved" | "rejected" | "cancelled";
   createdAt: string;
 };
-
-function formatGalleryTitle(invitation?: GalleryAccessibleInvitation | null) {
-  if (!invitation) {
-    return "Galeri Hesabı";
-  }
-
-  const invitationName = invitation.invitation_name?.trim();
-
-  if (invitationName) {
-    return invitationName;
-  }
-
-  const brideName = invitation.bride_name?.trim();
-  const groomName = invitation.groom_name?.trim();
-
-  if (brideName && groomName) {
-    return `${brideName} & ${groomName}`;
-  }
-
-  return brideName || groomName || "İsimsiz Galeri";
-}
 
 function getAccessRoleLabel(role?: string | null) {
   if (role === "owner") {
@@ -520,152 +503,198 @@ export default function GalleryAccountManagementScreen() {
       return null;
     }
 
+    const isSharedGallery = hasPartner;
+    const canUseInviteCode = isOwner && !isSharedGallery;
+
+    const roleLabel = isSharedGallery ? "Ortak" : isOwner ? "Sahip" : "Ortak";
+
+    const inviteCodeText = canUseInviteCode
+      ? (selectedInvitation.gallery_partner_invite_code ?? "Kod yok")
+      : "Zaten ortak galeri hesabındasın";
+
     return (
       <AppCard className="mt-5">
-        <View className="gap-4">
-          <View className="flex-row items-start justify-between gap-3">
-            <View className="flex-1">
-              <AppText variant="title" className="text-textDark">
-                Galerim
-              </AppText>
+        <View className="mb-4 flex-row items-center">
+          <AppIconBox
+            icon="images-outline"
+            color={Colors.primaryDark}
+            size={22}
+            className="mr-3 h-11 w-11 bg-primaryLight"
+          />
 
-              <AppText className="mt-1 text-textMuted">
-                {activeMemberCount} kişi yönetiyor
-              </AppText>
-            </View>
+          <View className="flex-1">
+            <AppText variant="subtitle" className="text-textDark">
+              Galerim
+            </AppText>
 
-            <View className="rounded-full bg-primary/10 px-4 py-2">
-              <AppText variant="captionStrong" className="text-primary">
-                {getAccessRoleLabel(selectedInvitation.access_role)}
-              </AppText>
-            </View>
+            <AppText variant="body" className="mt-1">
+              {activeMemberCount} kişi yönetiyor
+            </AppText>
+          </View>
+
+          <View className="rounded-full bg-primaryLight px-3 py-1">
+            <AppText variant="captionStrong">{roleLabel}</AppText>
+          </View>
+        </View>
+
+        <View>
+          <AppText variant="captionStrong" className="mb-2">
+            Davet kodu
+          </AppText>
+
+          <View className="mb-3 flex-row items-center rounded-2xl border border-border bg-backgroundSoft px-4 py-3">
+            <AppText
+              variant="subtitle"
+              numberOfLines={1}
+              className={`flex-1 ${
+                canUseInviteCode
+                  ? "text-[22px] tracking-[6px] text-textDark"
+                  : "text-[16px] tracking-normal text-textMuted"
+              }`}
+            >
+              {inviteCodeText}
+            </AppText>
+
+            <Pressable
+              disabled={!canUseInviteCode}
+              onPress={canUseInviteCode ? handleCopyInviteCode : undefined}
+            >
+              <AppIconBox
+                icon="copy-outline"
+                color={Colors.primaryDark}
+                className={`h-9 w-9 rounded-full bg-white ${
+                  canUseInviteCode ? "" : "opacity-40"
+                }`}
+              />
+            </Pressable>
           </View>
 
           {isOwner ? (
-            <>
-              <View>
-                <AppText variant="captionStrong" className="text-primary">
-                  Davet kodu
-                </AppText>
-
-                <View className="mt-2 rounded-2xl border border-border bg-backgroundSoft p-4">
-                  <AppText variant="title" className="text-textDark">
-                    {hasPartner
-                      ? "Zaten ortak galerindesin"
-                      : (selectedInvitation.gallery_partner_invite_code ??
-                        "Kod yok")}
-                  </AppText>
-                </View>
-              </View>
-
-              <AppButton
-                title="Davet Kodunu Kopyala"
-                variant="secondary"
-                disabled={!canUseInviteActions}
-                onPress={handleCopyInviteCode}
-              />
-
+            <View className="gap-3">
               <AppButton
                 title="Davet Kodunu Paylaş"
-                disabled={!canUseInviteActions}
+                disabled={!canUseInviteCode}
                 onPress={handleShareInviteCode}
               />
 
               <AppButton
                 title="Davet Kodunu Yenile"
                 variant="ghost"
-                disabled={!canUseInviteActions}
+                disabled={!canUseInviteCode}
                 loading={refreshingCode}
                 onPress={handleRefreshInviteCode}
               />
-            </>
-          ) : null}
-
-          {isPartner ? (
-            <AppButton
-              title="Bu Galeriden Ayrıl"
-              variant="ghost"
-              loading={leaving}
-              onPress={handleLeaveGallery}
-            />
+            </View>
           ) : null}
         </View>
+
+        {isPartner ? (
+          <AppButton
+            title="Bu Galeriden Ayrıl"
+            variant="ghost"
+            loading={leaving}
+            className="mt-4"
+            onPress={handleLeaveGallery}
+          />
+        ) : null}
       </AppCard>
     );
   }
+
+  const OWNER_COLOR = "#8FAF8B";
+  const MEMBER_COLOR = "#C9B37E";
 
   function renderMembersCard() {
     if (!selectedInvitation) {
       return null;
     }
 
+    const members = [
+      {
+        id: "owner",
+        role: "owner",
+        title: "Hesap Sahibi",
+        displayName: "Galeri sahibi",
+      },
+      partner
+        ? {
+            id: "partner",
+            role: "partner",
+            title: "Galeri Ortağı",
+            displayName: "Aktif galeri ortağı",
+          }
+        : {
+            id: "empty-partner",
+            role: "empty",
+            title: "Galeri Ortağı",
+            displayName: "Henüz galeri ortağı yok.",
+          },
+    ];
+
     return (
       <AppCard className="mt-5">
-        <View className="gap-4">
-          <AppText variant="title" className="text-textDark">
-            Galeri Ortakları
-          </AppText>
+        <AppText variant="subtitle" className="mb-4 text-textDark">
+          Galeri Ortakları
+        </AppText>
 
-          <View className="rounded-2xl border border-border bg-backgroundSoft p-4">
-            <View className="flex-row items-center justify-between gap-3">
-              <View>
-                <AppText variant="captionStrong" className="text-primary">
-                  Galeri Sahibi
+        {members.map((member, index) => {
+          const memberIsOwner = member.role === "owner";
+          const memberIsPartner = member.role === "partner";
+          const memberIsEmpty = member.role === "empty";
+          const isLast = index === members.length - 1;
+
+          const roleColor = memberIsOwner
+            ? OWNER_COLOR
+            : memberIsPartner
+              ? MEMBER_COLOR
+              : "#9B8FA3";
+
+          return (
+            <View
+              key={member.id}
+              className={`flex-row items-center ${
+                isLast ? "pb-0" : "border-b border-borderSoft pb-3"
+              } ${index === 0 ? "" : "pt-3"}`}
+            >
+              <AppIconBox
+                icon={memberIsOwner ? "person" : "people-outline"}
+                size={19}
+                className="mr-3 h-10 w-10 bg-primaryLight"
+              />
+
+              <View className="flex-1">
+                <AppText variant="captionStrong">{member.title}</AppText>
+
+                <AppText variant="caption" className="mt-1">
+                  {member.displayName}
                 </AppText>
-
-                <AppText className="mt-1 text-textMuted">Hesap sahibi</AppText>
               </View>
 
-              <View className="rounded-full bg-background px-4 py-2">
-                <AppText variant="captionStrong" className="text-green-700">
-                  Sahip
-                </AppText>
-              </View>
-            </View>
-          </View>
-
-          {partner ? (
-            <View className="rounded-2xl border border-border bg-backgroundSoft p-4">
-              <View className="flex-row items-center justify-between gap-3">
-                <View>
-                  <AppText variant="captionStrong" className="text-primary">
-                    Galeri Ortağı
-                  </AppText>
-
-                  <AppText className="mt-1 text-textMuted">
-                    Aktif galeri ortağı
+              <View className="items-end">
+                <View
+                  className="rounded-full px-3 py-1"
+                  style={{ backgroundColor: `${roleColor}18` }}
+                >
+                  <AppText variant="captionStrong" style={{ color: roleColor }}>
+                    {memberIsOwner ? "Sahip" : memberIsEmpty ? "Boş" : "Ortak"}
                   </AppText>
                 </View>
 
-                <View className="rounded-full bg-background px-4 py-2">
-                  <AppText variant="captionStrong" className="text-amber-700">
-                    Ortak
-                  </AppText>
-                </View>
+                {isOwner && memberIsPartner ? (
+                  <Pressable
+                    onPress={handleRemovePartner}
+                    disabled={removingPartner}
+                    className="mt-2 rounded-full bg-white px-3 py-2"
+                  >
+                    <AppText variant="captionStrong" className="text-error">
+                      {removingPartner ? "Çıkarılıyor..." : "Çıkar"}
+                    </AppText>
+                  </Pressable>
+                ) : null}
               </View>
-
-              {isOwner ? (
-                <AppButton
-                  title="Partneri Kaldır"
-                  variant="ghost"
-                  className="mt-3"
-                  loading={removingPartner}
-                  onPress={handleRemovePartner}
-                />
-              ) : null}
             </View>
-          ) : (
-            <View className="rounded-2xl border border-border bg-backgroundSoft p-4">
-              <AppText variant="captionStrong" className="text-primary">
-                Galeri Ortağı
-              </AppText>
-
-              <AppText className="mt-1 text-textMuted">
-                Henüz galeri ortağı yok.
-              </AppText>
-            </View>
-          )}
-        </View>
+          );
+        })}
       </AppCard>
     );
   }
@@ -677,50 +706,70 @@ export default function GalleryAccountManagementScreen() {
 
     return (
       <AppCard className="mt-5">
-        <View className="gap-4">
-          <AppText variant="title" className="text-textDark">
-            Bekleyen Katılma İstekleri
-          </AppText>
+        <AppText variant="title" className="mb-5 text-textDark">
+          Bekleyen Katılma İstekleri
+        </AppText>
 
-          {joinRequests.map((request) => {
-            const requesterName =
-              request.requesterDisplayName?.trim() || "Bir kullanıcı";
+        {joinRequests.map((request, index) => {
+          const requesterName =
+            request.requesterDisplayName?.trim() || "Bir kullanıcı";
 
-            return (
-              <View
-                key={request.id}
-                className="rounded-2xl border border-border bg-backgroundSoft p-4"
-              >
-                <AppText variant="captionStrong" className="text-textDark">
-                  {requesterName}
-                </AppText>
+          const isLast = index === joinRequests.length - 1;
 
-                <AppText className="mt-1 text-textMuted">
-                  Galeriye ortak olarak erişmek istiyor.
-                </AppText>
+          return (
+            <View
+              key={request.id}
+              className={`${isLast ? "" : "mb-5 border-b border-border pb-5"}`}
+            >
+              <View className="mb-4 flex-row items-center">
+                <View className="mr-4 h-12 w-12 items-center justify-center rounded-2xl bg-primary/10">
+                  <Ionicons
+                    name="person-add-outline"
+                    size={22}
+                    color={Colors.primary}
+                  />
+                </View>
 
-                <View className="mt-3 flex-row gap-2">
-                  <View className="flex-1">
-                    <AppButton
-                      title="Reddet"
-                      variant="ghost"
-                      loading={rejectingRequestId === request.id}
-                      onPress={() => handleRejectJoinRequest(request)}
-                    />
-                  </View>
+                <View className="flex-1">
+                  <AppText variant="captionStrong" className="text-primary">
+                    {requesterName}
+                  </AppText>
 
-                  <View className="flex-1">
-                    <AppButton
-                      title="Onayla"
-                      loading={approvingRequestId === request.id}
-                      onPress={() => handleApproveJoinRequest(request)}
-                    />
-                  </View>
+                  <AppText className="mt-1 text-textMuted">
+                    Galeriye ortak olarak erişmek istiyor.
+                  </AppText>
                 </View>
               </View>
-            );
-          })}
-        </View>
+
+              <View className="flex-row gap-3">
+                <View className="flex-1">
+                  <AppButton
+                    title="Reddet"
+                    variant="ghost"
+                    loading={rejectingRequestId === request.id}
+                    disabled={
+                      approvingRequestId === request.id ||
+                      rejectingRequestId === request.id
+                    }
+                    onPress={() => handleRejectJoinRequest(request)}
+                  />
+                </View>
+
+                <View className="flex-1">
+                  <AppButton
+                    title="Onayla"
+                    loading={approvingRequestId === request.id}
+                    disabled={
+                      approvingRequestId === request.id ||
+                      rejectingRequestId === request.id
+                    }
+                    onPress={() => handleApproveJoinRequest(request)}
+                  />
+                </View>
+              </View>
+            </View>
+          );
+        })}
       </AppCard>
     );
   }
@@ -732,17 +781,15 @@ export default function GalleryAccountManagementScreen() {
 
     return (
       <AppCard className="mt-5">
+        <AppText variant="title" className="mb-3 text-textDark">
+          Davet Kodu ile Katıl
+        </AppText>
+
+        <AppText className="mb-5 text-textMuted">
+          Sana verilen davet kodunu girerek aynı galeriye katılabilirsin.
+        </AppText>
+
         <View className="gap-4">
-          <View>
-            <AppText variant="title" className="text-textDark">
-              Davet Kodu ile Katıl
-            </AppText>
-
-            <AppText className="mt-1 text-textMuted">
-              Sana verilen davet kodunu girerek aynı galeriye katılabilirsin.
-            </AppText>
-          </View>
-
           <AppInput
             label="Adın"
             value={displayName}
@@ -762,7 +809,7 @@ export default function GalleryAccountManagementScreen() {
           />
 
           <AppButton
-            title="Galeriye Katıl"
+            title="Galeri Hesabına Katıl"
             loading={joining}
             onPress={handleJoinGallery}
           />
@@ -791,7 +838,7 @@ export default function GalleryAccountManagementScreen() {
         >
           {loading ? (
             <View className="mt-10 items-center justify-center">
-              <ActivityIndicator />
+              <ActivityIndicator color={Colors.primary} />
 
               <AppText className="mt-3 text-textMuted">
                 Galeri hesabı hazırlanıyor...
