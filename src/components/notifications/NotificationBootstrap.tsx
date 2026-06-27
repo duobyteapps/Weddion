@@ -38,7 +38,6 @@ export function NotificationBootstrap({ enabled }: Props) {
         await updateCurrentUserSystemNotificationStatus(true);
       } catch (error) {
         initializedRef.current = false;
-        console.log("Bildirim izni başlatılamadı:", error);
       }
     }
 

@@ -135,9 +135,6 @@ export async function deleteCurrentUserAccount(): Promise<void> {
     },
   });
 
-  console.log("delete-account response:", data);
-  console.log("delete-account error:", error);
-
   if (error) {
     throw new Error(error.message);
   }

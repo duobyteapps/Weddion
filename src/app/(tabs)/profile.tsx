@@ -114,7 +114,9 @@ export default function ProfileScreen() {
         "Profiliniz ve size ait tüm bilgiler kalıcı olarak silinecek. Bu işlem geri alınamaz.",
       type: "warning",
       confirmText: "Evet, Sil",
+      confirmLoadingText: "Siliniyor...",
       cancelText: "İptal",
+      keepOpenOnConfirm: true,
       onConfirm: async () => {
         try {
           await deleteCurrentUserAccount();
@@ -131,6 +133,8 @@ export default function ProfileScreen() {
             message,
             type: "error",
           });
+
+          throw error;
         }
       },
     });

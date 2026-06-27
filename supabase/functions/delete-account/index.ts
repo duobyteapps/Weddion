@@ -2,7 +2,7 @@
 
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { DeleteObjectsCommand, S3Client } from "npm:@aws-sdk/client-s3@3.668.0";
+import { AwsClient } from "https://esm.sh/aws4fetch@1.0.20";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -16,6 +16,8 @@ const allowedR2Prefixes = [
   "user-invitations/",
   "guest-photos/",
 ];
+
+const R2_DELETE_TIMEOUT_MS = 15000;
 
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -37,19 +39,23 @@ function getRequiredEnv(name: string) {
   return value;
 }
 
-function getR2Client() {
-  const accountId = getRequiredEnv("R2_ACCOUNT_ID");
+function getR2AwsClient() {
   const accessKeyId = getRequiredEnv("R2_ACCESS_KEY_ID");
   const secretAccessKey = getRequiredEnv("R2_SECRET_ACCESS_KEY");
 
-  return new S3Client({
+  return new AwsClient({
+    accessKeyId,
+    secretAccessKey,
+    service: "s3",
     region: "auto",
-    endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
-    credentials: {
-      accessKeyId,
-      secretAccessKey,
-    },
   });
+}
+
+function encodeR2KeyForUrl(key: string) {
+  return key
+    .split("/")
+    .map((part) => encodeURIComponent(part))
+    .join("/");
 }
 
 function normalizeR2Key(value: string) {
@@ -111,27 +117,72 @@ function collectR2KeysFromRows(rows: unknown[] | null, output: Set<string>) {
   }
 }
 
+async function deleteSingleR2Object(key: string) {
+  const accountId = getRequiredEnv("R2_ACCOUNT_ID");
+  const bucketName = getRequiredEnv("R2_BUCKET_NAME");
+  const r2 = getR2AwsClient();
+
+  const encodedBucketName = encodeURIComponent(bucketName);
+  const encodedKey = encodeR2KeyForUrl(key);
+
+  const objectUrl = `https://${accountId}.r2.cloudflarestorage.com/${encodedBucketName}/${encodedKey}`;
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => {
+    controller.abort();
+  }, R2_DELETE_TIMEOUT_MS);
+
+  try {
+    console.log("R2 delete request started:", key);
+
+    const response = await r2.fetch(objectUrl, {
+      method: "DELETE",
+      signal: controller.signal,
+    });
+
+    const isSuccess =
+      response.status === 200 ||
+      response.status === 202 ||
+      response.status === 204 ||
+      response.status === 404;
+
+    if (!isSuccess) {
+      const responseText = await response.text().catch(() => "");
+
+      throw new Error(
+        `R2 obje silinemedi. Status: ${response.status}. Key: ${key}. Response: ${responseText}`,
+      );
+    }
+
+    console.log("R2 delete request finished:", {
+      key,
+      status: response.status,
+    });
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new Error(`R2 silme işlemi zaman aşımına uğradı. Key: ${key}`);
+    }
+
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 async function deleteR2Objects(keys: string[]) {
   if (keys.length === 0) {
+    console.log("R2 delete skipped. No keys.");
     return;
   }
 
-  const bucketName = getRequiredEnv("R2_BUCKET_NAME");
-  const r2 = getR2Client();
+  console.log("R2 delete started. Key count:", keys.length);
+  console.log("R2 delete keys:", keys);
 
-  for (let index = 0; index < keys.length; index += 1000) {
-    const chunk = keys.slice(index, index + 1000);
-
-    await r2.send(
-      new DeleteObjectsCommand({
-        Bucket: bucketName,
-        Delete: {
-          Objects: chunk.map((key) => ({ Key: key })),
-          Quiet: true,
-        },
-      }),
-    );
+  for (const key of keys) {
+    await deleteSingleR2Object(key);
   }
+
+  console.log("R2 delete finished.");
 }
 
 serve(async (req: Request) => {
@@ -195,7 +246,8 @@ serve(async (req: Request) => {
 
     const r2Keys = new Set<string>();
 
-    // 1. Profil fotoğrafı varsa R2 path'ini topla
+    console.log("delete-account started:", user.id);
+
     const { data: profileRows, error: profileError } = await adminClient
       .from("profiles")
       .select("*")
@@ -207,7 +259,6 @@ serve(async (req: Request) => {
 
     collectR2KeysFromRows(profileRows, r2Keys);
 
-    // 2. Kullanıcının davetiyelerini oku
     const { data: invitationRows, error: invitationError } = await adminClient
       .from("user_invitations")
       .select("*")
@@ -217,14 +268,12 @@ serve(async (req: Request) => {
       throw invitationError;
     }
 
-    // Davetiye tablosundaki user-invitations/... path'lerini topla
     collectR2KeysFromRows(invitationRows, r2Keys);
 
     const invitationIds = (invitationRows ?? [])
       .map((invitation) => invitation.id)
       .filter((id): id is string => typeof id === "string");
 
-    // 3. Davetiyelere bağlı galeri/misafir fotoğraflarını oku
     if (invitationIds.length > 0) {
       const { data: guestPhotoRows, error: guestPhotoError } = await adminClient
         .from("invitation_guest_photos")
@@ -235,24 +284,31 @@ serve(async (req: Request) => {
         throw guestPhotoError;
       }
 
-      // invitation_guest_photos.storage_path içindeki guest-photos/... path'lerini topla
       collectR2KeysFromRows(guestPhotoRows, r2Keys);
     }
 
     const r2KeyList = [...r2Keys];
 
-    // 4. Önce Cloudflare R2 dosyalarını sil
+    console.log("delete-account invitation count:", invitationIds.length);
+    console.log("delete-account R2 key count:", r2KeyList.length);
+    console.log("delete-account R2 keys:", r2KeyList);
+
+    // Önce Cloudflare R2 dosyaları silinir.
+    // R2 silinemezse hesap silinmez. Böylece Cloudflare'da sahipsiz veri bırakmayız.
     await deleteR2Objects(r2KeyList);
 
-    // 5. En son Auth user silinir.
-    // Supabase tarafındaki ON DELETE CASCADE ilişkileri diğer kayıtları otomatik temizler.
+    // R2 başarılıysa Auth user silinir.
+    // Supabase tarafındaki ON DELETE CASCADE ilişkileri bağlı DB kayıtlarını temizler.
     const { error: deleteUserError } = await adminClient.auth.admin.deleteUser(
       user.id,
     );
 
     if (deleteUserError) {
+      console.log("delete-account auth delete error:", deleteUserError);
       throw deleteUserError;
     }
+
+    console.log("delete-account auth user deleted:", user.id);
 
     return jsonResponse({
       success: true,

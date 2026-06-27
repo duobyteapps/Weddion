@@ -18,7 +18,9 @@ type AlertOptions = {
   type?: AlertType;
   confirmText?: string;
   cancelText?: string;
-  onConfirm?: () => void;
+  confirmLoadingText?: string;
+  keepOpenOnConfirm?: boolean;
+  onConfirm?: () => void | Promise<void>;
   onCancel?: () => void;
 };
 
@@ -50,8 +52,18 @@ const alertStyles: Record<
 
 export function AppAlertProvider({ children }: { children: ReactNode }) {
   const [alert, setAlert] = useState<AlertOptions | null>(null);
+  const [confirmLoading, setConfirmLoading] = useState(false);
+
+  const showAlert = (options: AlertOptions) => {
+    setConfirmLoading(false);
+    setAlert(options);
+  };
 
   const closeAlert = (action?: "confirm" | "cancel") => {
+    if (confirmLoading) {
+      return;
+    }
+
     const callback = action === "confirm" ? alert?.onConfirm : alert?.onCancel;
 
     setAlert(null);
@@ -61,12 +73,40 @@ export function AppAlertProvider({ children }: { children: ReactNode }) {
     }, 150);
   };
 
+  const handleConfirm = async () => {
+    if (!alert?.onConfirm) {
+      setAlert(null);
+      return;
+    }
+
+    if (!alert.keepOpenOnConfirm) {
+      closeAlert("confirm");
+      return;
+    }
+
+    try {
+      setConfirmLoading(true);
+      await alert.onConfirm();
+      setAlert(null);
+    } finally {
+      setConfirmLoading(false);
+    }
+  };
+
+  const handleCancel = () => {
+    if (confirmLoading) {
+      return;
+    }
+
+    closeAlert("cancel");
+  };
+
   const type = alert?.type ?? "info";
   const style = alertStyles[type];
   const hasCancelButton = !!alert?.cancelText || !!alert?.onCancel;
 
   return (
-    <AlertContext.Provider value={{ showAlert: setAlert }}>
+    <AlertContext.Provider value={{ showAlert }}>
       {children}
 
       <Modal
@@ -74,7 +114,7 @@ export function AppAlertProvider({ children }: { children: ReactNode }) {
         transparent
         animationType="fade"
         statusBarTranslucent
-        onRequestClose={() => closeAlert("cancel")}
+        onRequestClose={handleCancel}
       >
         <View style={styles.overlay}>
           <View style={styles.card}>
@@ -91,7 +131,9 @@ export function AppAlertProvider({ children }: { children: ReactNode }) {
             </AppText>
 
             <AppText variant="body" className="mb-8 text-center text-textMuted">
-              {alert?.message}
+              {confirmLoading
+                ? (alert?.confirmLoadingText ?? "İşlem yapılıyor...")
+                : alert?.message}
             </AppText>
 
             {hasCancelButton ? (
@@ -100,21 +142,34 @@ export function AppAlertProvider({ children }: { children: ReactNode }) {
                   <AppButton
                     title={alert?.cancelText ?? "İptal"}
                     variant="ghost"
-                    onPress={() => closeAlert("cancel")}
+                    disabled={confirmLoading}
+                    onPress={handleCancel}
                   />
                 </View>
 
                 <View style={styles.buttonWrapper}>
                   <AppButton
-                    title={alert?.confirmText ?? "Tamam"}
-                    onPress={() => closeAlert("confirm")}
+                    title={
+                      confirmLoading
+                        ? (alert?.confirmLoadingText ?? "İşlem yapılıyor...")
+                        : (alert?.confirmText ?? "Tamam")
+                    }
+                    loading={confirmLoading}
+                    disabled={confirmLoading}
+                    onPress={handleConfirm}
                   />
                 </View>
               </View>
             ) : (
               <AppButton
-                title={alert?.confirmText ?? "Tamam"}
-                onPress={() => closeAlert("confirm")}
+                title={
+                  confirmLoading
+                    ? (alert?.confirmLoadingText ?? "İşlem yapılıyor...")
+                    : (alert?.confirmText ?? "Tamam")
+                }
+                loading={confirmLoading}
+                disabled={confirmLoading}
+                onPress={handleConfirm}
               />
             )}
           </View>
