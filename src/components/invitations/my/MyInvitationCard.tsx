@@ -100,7 +100,7 @@ export function MyInvitationCard({
         <Pressable
           onPress={handleOpenGallery}
           disabled={!onOpenGalleryPress}
-          className="h-[126px] w-[126px] overflow-hidden rounded-2xl bg-primaryLight/30"
+          className="h-[168px] w-[126px] overflow-hidden rounded-xl bg-primaryLight/30"
         >
           {imageUri ? (
             <Image
@@ -129,103 +129,107 @@ export function MyInvitationCard({
           )}
         </Pressable>
 
-        <View className="flex-1">
-          <View className="flex-row items-start justify-between gap-2">
-            <Pressable
-              onPress={handleOpenGallery}
-              disabled={!onOpenGalleryPress}
-              className="flex-1"
-            >
-              <AppText
-                variant="subtitle"
-                numberOfLines={1}
-                ellipsizeMode="tail"
-                className="!text-[12px]"
+        <View className="h-[168px] flex-1 justify-between">
+          <View>
+            <View className="flex-row items-start justify-between gap-2">
+              <Pressable
+                onPress={handleOpenGallery}
+                disabled={!onOpenGalleryPress}
+                className="flex-1"
               >
-                {truncateText(title, 25)}
-              </AppText>
-            </Pressable>
+                <AppText
+                  variant="subtitle"
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                  className="!text-[12px]"
+                >
+                  {truncateText(title, 25)}
+                </AppText>
+              </Pressable>
 
-            <Pressable
-              onPress={() => onDeletePress(invitation)}
-              hitSlop={8}
-              className="h-8 w-8 items-center justify-center rounded-full border border-red-100 bg-red-50"
-            >
-              <Feather name="trash-2" size={14} color="#D85C5C" />
-            </Pressable>
-          </View>
-
-          <View className="mt-3 gap-2">
-            <View className="flex-row items-center">
-              <View className="mr-2 h-5 w-5 items-center justify-center rounded-full bg-primaryLight/60">
-                <Feather name="calendar" size={11} color="#A875D1" />
-              </View>
-
-              <AppText
-                variant="caption"
-                numberOfLines={1}
-                className="flex-1 !text-[9px]"
+              <Pressable
+                onPress={() => onDeletePress(invitation)}
+                hitSlop={8}
+                className="h-8 w-8 items-center justify-center rounded-full border border-red-100 bg-red-50"
               >
-                {invitation.event_date || "Tarih eklenmedi"}
-              </AppText>
+                <Feather name="trash-2" size={14} color="#D85C5C" />
+              </Pressable>
             </View>
 
-            <View className="flex-row items-center">
-              <View className="mr-2 h-5 w-5 items-center justify-center rounded-full bg-primaryLight/60">
-                <Feather name="map-pin" size={11} color="#A875D1" />
+            <View className="mt-3 gap-2">
+              <View className="flex-row items-center">
+                <View className="mr-2 h-5 w-5 items-center justify-center rounded-full bg-primaryLight/60">
+                  <Feather name="calendar" size={11} color="#A875D1" />
+                </View>
+
+                <AppText
+                  variant="caption"
+                  numberOfLines={1}
+                  className="flex-1 !text-[9px]"
+                >
+                  {invitation.event_date || "Tarih eklenmedi"}
+                </AppText>
               </View>
 
-              <AppText
-                variant="caption"
-                numberOfLines={1}
-                className="flex-1 !text-[9px]"
-              >
-                {venue}
-              </AppText>
+              <View className="flex-row items-center">
+                <View className="mr-2 h-5 w-5 items-center justify-center rounded-full bg-primaryLight/60">
+                  <Feather name="map-pin" size={11} color="#A875D1" />
+                </View>
+
+                <AppText
+                  variant="caption"
+                  numberOfLines={1}
+                  className="flex-1 !text-[9px]"
+                >
+                  {venue}
+                </AppText>
+              </View>
             </View>
           </View>
 
-          <View className="mt-4 flex-row gap-3">
-            <Pressable
-              onPress={() => onEditPress(invitation)}
-              className="h-9 flex-1 flex-row items-center justify-center gap-2 rounded-xl border border-borderSoft bg-white"
-            >
-              <Feather name="edit-3" size={13} color="#A875D1" />
-
-              <AppText
-                variant="body"
-                className="ml-1.5 !text-[10px] text-textMuted"
+          <View>
+            <View className="flex-row gap-3">
+              <Pressable
+                onPress={() => onEditPress(invitation)}
+                className="h-9 flex-1 flex-row items-center justify-center gap-2 rounded-xl border border-borderSoft bg-white"
               >
-                Düzenle
-              </AppText>
-            </Pressable>
+                <Feather name="edit-3" size={13} color="#A875D1" />
+
+                <AppText
+                  variant="body"
+                  className="ml-1.5 !text-[10px] text-textMuted"
+                >
+                  Düzenle
+                </AppText>
+              </Pressable>
+
+              <Pressable
+                onPress={() => onSharePress(invitation)}
+                className="h-9 flex-1 flex-row items-center justify-center gap-2 rounded-xl bg-primary"
+              >
+                <Feather name="share-2" size={13} color="#FFFFFF" />
+
+                <AppText
+                  variant="body"
+                  className="ml-1.5 !text-[10px] text-white"
+                >
+                  Paylaş
+                </AppText>
+              </Pressable>
+            </View>
 
             <Pressable
-              onPress={() => onSharePress(invitation)}
-              className="h-9 flex-1 flex-row items-center justify-center gap-2 rounded-xl bg-primary"
+              onPress={handleOpenGalleryAccountManagement}
+              disabled={!onOpenGalleryAccountManagementPress}
+              className="mt-3 h-9 flex-row items-center justify-center gap-2 rounded-xl border border-borderSoft bg-backgroundSoft"
             >
-              <Feather name="share-2" size={13} color="#FFFFFF" />
+              <Feather name="users" size={15} color="#8E849B" />
 
-              <AppText
-                variant="body"
-                className="ml-1.5 !text-[10px] text-white"
-              >
-                Paylaş
+              <AppText variant="captionStrong" className="text-textMuted">
+                Galeri Yönetimi
               </AppText>
             </Pressable>
           </View>
-
-          <Pressable
-            onPress={handleOpenGalleryAccountManagement}
-            disabled={!onOpenGalleryAccountManagementPress}
-            className="mt-3 h-10 flex-row items-center justify-center gap-2 rounded-xl border border-borderSoft bg-backgroundSoft"
-          >
-            <Feather name="users" size={15} color="#8E849B" />
-
-            <AppText variant="captionStrong" className="text-textMuted">
-              Galeri Yönetimi
-            </AppText>
-          </Pressable>
         </View>
       </View>
     </AppCard>

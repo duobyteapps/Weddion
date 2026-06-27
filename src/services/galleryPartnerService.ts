@@ -17,6 +17,80 @@ function normalizeDisplayName(value?: string | null) {
   return displayName && displayName.length > 0 ? displayName : null;
 }
 
+function getDisplayNameFromUserMetadata(user: {
+  email?: string | null;
+  user_metadata?: {
+    full_name?: unknown;
+    name?: unknown;
+    display_name?: unknown;
+    first_name?: unknown;
+    last_name?: unknown;
+  };
+}) {
+  const metadata = user.user_metadata;
+
+  const fullName =
+    typeof metadata?.full_name === "string"
+      ? normalizeDisplayName(metadata.full_name)
+      : null;
+
+  if (fullName) {
+    return fullName;
+  }
+
+  const name =
+    typeof metadata?.name === "string"
+      ? normalizeDisplayName(metadata.name)
+      : null;
+
+  if (name) {
+    return name;
+  }
+
+  const displayName =
+    typeof metadata?.display_name === "string"
+      ? normalizeDisplayName(metadata.display_name)
+      : null;
+
+  if (displayName) {
+    return displayName;
+  }
+
+  const firstName =
+    typeof metadata?.first_name === "string"
+      ? normalizeDisplayName(metadata.first_name)
+      : null;
+
+  const lastName =
+    typeof metadata?.last_name === "string"
+      ? normalizeDisplayName(metadata.last_name)
+      : null;
+
+  const joinedName = normalizeDisplayName(
+    [firstName, lastName].filter(Boolean).join(" "),
+  );
+
+  if (joinedName) {
+    return joinedName;
+  }
+
+  return normalizeDisplayName(user.email);
+}
+
+async function getCurrentUserDisplayName() {
+  const { data, error } = await supabase.auth.getUser();
+
+  if (error) {
+    return null;
+  }
+
+  if (!data.user) {
+    return null;
+  }
+
+  return getDisplayNameFromUserMetadata(data.user);
+}
+
 function mapGalleryPartner(row: GalleryPartnerTableRow): GalleryPartner {
   return {
     id: row.id,
@@ -66,11 +140,14 @@ export async function requestGalleryPartnerAccessByCode({
     throw new Error("Geçerli bir galeri ortak kodu girin.");
   }
 
+  const resolvedDisplayName =
+    normalizeDisplayName(displayName) ?? (await getCurrentUserDisplayName());
+
   const { data, error } = await supabase.rpc(
     "request_gallery_partner_access_by_code",
     {
       target_code: normalizedCode,
-      display_name: normalizeDisplayName(displayName),
+      display_name: resolvedDisplayName,
     },
   );
 

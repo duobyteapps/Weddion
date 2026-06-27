@@ -28,24 +28,6 @@ export function DowryJoinRequestsCard({
 
   return (
     <AppCard>
-      <View className="mb-4 flex-row items-center">
-        <AppIconBox
-          icon="person-add-outline"
-          color={Colors.primaryDark}
-          className="mr-3 h-10 w-10 bg-primaryLight"
-        />
-
-        <View className="flex-1">
-          <AppText variant="subtitle" className="text-textDark">
-            Katılma İstekleri
-          </AppText>
-
-          <AppText variant="caption" className="mt-1">
-            Çeyiz hesabına katılmak isteyen kişileri onaylayın.
-          </AppText>
-        </View>
-      </View>
-
       {requests.map((request, index) => {
         const isLast = index === requests.length - 1;
         const isApproving = approvingRequestId === request.id;
@@ -61,13 +43,13 @@ export function DowryJoinRequestsCard({
           >
             <View className="mb-3 flex-row items-center">
               <AppIconBox
-                icon="person-outline"
+                icon="person-add-outline"
                 color={Colors.primaryDark}
-                className="mr-3 h-9 w-9 rounded-full bg-backgroundSoft"
+                className="mr-3 h-10 w-10 bg-primaryLight"
               />
 
               <View className="flex-1">
-                <AppText variant="captionStrong" className="text-textDark">
+                <AppText variant="subtitle" className="text-textDark">
                   {request.requesterDisplayName ?? "İsim bilgisi yok"}
                 </AppText>
 

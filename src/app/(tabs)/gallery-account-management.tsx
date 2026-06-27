@@ -466,7 +466,7 @@ export default function GalleryAccountManagementScreen() {
       <ScreenHeader
         title="Galeri Hesabı Yönetimi"
         description="Galeri ortağınızı birlikte yönetin."
-        onBackPress={() => router.back()}
+        backTo="/(tabs)/my-invitations"
       />
 
       <KeyboardAvoidingView
@@ -504,14 +504,6 @@ export default function GalleryAccountManagementScreen() {
                 onLeaveGallery={handleLeaveGallery}
               />
 
-              <GalleryPartnerMembersCard
-                selectedInvitation={selectedInvitation}
-                partner={partner}
-                isOwner={isOwner}
-                removingPartner={removingPartner}
-                onRemovePartner={handleRemovePartner}
-              />
-
               <GalleryPartnerRequestsCard
                 isOwner={isOwner}
                 hasPartner={hasPartner}
@@ -520,6 +512,14 @@ export default function GalleryAccountManagementScreen() {
                 rejectingRequestId={rejectingRequestId}
                 onApproveJoinRequest={handleApproveJoinRequest}
                 onRejectJoinRequest={handleRejectJoinRequest}
+              />
+
+              <GalleryPartnerMembersCard
+                selectedInvitation={selectedInvitation}
+                partner={partner}
+                isOwner={isOwner}
+                removingPartner={removingPartner}
+                onRemovePartner={handleRemovePartner}
               />
 
               <GalleryJoinGalleryCard
