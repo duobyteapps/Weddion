@@ -390,7 +390,7 @@ export default function DowryAccountManagementScreen() {
       >
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerClassName="pb-24"
+          contentContainerClassName="pb-10"
         >
           <ScreenHeader
             title="Çeyiz Hesabı Yönetimi"

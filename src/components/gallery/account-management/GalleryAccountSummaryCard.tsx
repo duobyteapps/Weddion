@@ -50,7 +50,7 @@ export function GalleryAccountSummaryCard({
     : "Zaten ortak galeri hesabındasın";
 
   return (
-    <AppCard className="mt-5">
+    <AppCard>
       <View className="mb-4 flex-row items-center">
         <AppIconBox
           icon="images-outline"

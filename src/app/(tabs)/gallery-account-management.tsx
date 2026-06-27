@@ -462,23 +462,21 @@ export default function GalleryAccountManagementScreen() {
   }
 
   return (
-    <ScreenContainer className="flex-1 bg-background">
-      <ScreenHeader
-        title="Galeri Hesabı Yönetimi"
-        description="Galeri ortağınızı birlikte yönetin."
-        backTo="/(tabs)/my-invitations"
-      />
-
+    <ScreenContainer>
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
         className="flex-1"
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <ScrollView
-          className="flex-1"
-          contentContainerClassName="pb-10"
-          keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
+          contentContainerClassName="pb-10"
         >
+          <ScreenHeader
+            title="Galeri Hesabı Yönetimi"
+            description="Galeri ortağınızı birlikte yönetin."
+            backTo="/(tabs)/my-invitations"
+          />
+
           {loading ? (
             <View className="mt-10 items-center justify-center">
               <ActivityIndicator color={Colors.primary} />

@@ -9,7 +9,7 @@ type EmptyMyInvitations = {
 
 export function EmptyMyInvitations({ onCreatePress }: EmptyMyInvitations) {
   return (
-    <AppCard className="mt-6 min-h-[520px] items-center justify-center px-6 py-10">
+    <AppCard className="mt-6 min-h-[480px] items-center justify-center px-6 py-10">
       <Image
         source={require("@/assets/images/illustration/empty-invitation.png")}
         className="h-[210px] w-[260px]"

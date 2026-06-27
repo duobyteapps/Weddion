@@ -64,7 +64,7 @@ export function GalleryPartnerMembersCard({
   ];
 
   return (
-    <AppCard className="mt-5">
+    <AppCard>
       <AppText variant="subtitle" className="mb-4 text-textDark">
         Galeri Ortakları
       </AppText>

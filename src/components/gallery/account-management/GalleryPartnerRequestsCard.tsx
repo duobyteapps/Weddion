@@ -31,7 +31,7 @@ export function GalleryPartnerRequestsCard({
   }
 
   return (
-    <AppCard className="mt-5">
+    <AppCard>
       {joinRequests.map((request, index) => {
         const isLast = index === joinRequests.length - 1;
         const isApproving = approvingRequestId === request.id;

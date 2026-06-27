@@ -32,7 +32,7 @@ export function GalleryJoinGalleryCard({
   const inputValue = disabled ? "Zaten ortak galeri hesabındasın" : joinCode;
 
   return (
-    <AppCard className="mt-5">
+    <AppCard>
       <AppText variant="subtitle" className="mb-2 text-textDark">
         Davet Kodu ile Katıl
       </AppText>
