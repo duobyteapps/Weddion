@@ -39,6 +39,7 @@ const dowryCategoryImageKeys: DowryCategoryImageKey[] = [
   "living-room",
   "bedroom",
   "kitchen",
+  "white-goods",
   "bathroom",
   "home-decoration",
   "technology",

@@ -20,6 +20,7 @@ const categoryLabels: Record<string, string> = {
   kitchen: "Mutfak",
   bedroom: "Yatak Odası",
   bathroom: "Banyo",
+  "white-goods": "white-goods",
   "living-room": "Oturma Odası",
   "home-decoration": "Ev Dekorasyon",
   technology: "Teknolojik Aletler",

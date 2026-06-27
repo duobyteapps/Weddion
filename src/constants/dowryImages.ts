@@ -13,6 +13,7 @@ export const dowryCategoryImages: Record<
   "living-room": require("../../assets/images/illustration/dowry/living-room.png"),
   bedroom: require("../../assets/images/illustration/dowry/bedroom.png"),
   kitchen: require("../../assets/images/illustration/dowry/kitchen.png"),
+  "white-goods": require("../../assets/images/illustration/dowry/white-goods.png"),
   bathroom: require("../../assets/images/illustration/dowry/bathroom.png"),
   "home-decoration": require("../../assets/images/illustration/dowry/home-decoration.png"),
   technology: require("../../assets/images/illustration/dowry/technology.png"),
