@@ -9,22 +9,22 @@ type Props = {
   onPress: () => void;
 };
 
-export function CreateInvitationListCard({ onPress }: Props) {
+export function JoinGalleryListCard({ onPress }: Props) {
   return (
     <Pressable onPress={onPress}>
       <AppCard noMargin noPadding className="mb-6 py-4">
         <View className="flex-row items-center gap-4">
           <View className="h-11 w-11 items-center justify-center rounded-full bg-primarySoft">
-            <Ionicons name="add" size={24} color={Colors.primary} />
+            <Ionicons name="people-outline" size={23} color={Colors.primary} />
           </View>
 
           <View className="flex-1">
             <AppText variant="captionStrong" className="mb-1">
-              Yeni Davetiye Oluştur
+              Galeriye Katıl
             </AppText>
 
             <AppText variant="caption" className="!text-[10px]">
-              Yeni bir davetiye tasarlamaya başlayın.
+              Sana verilen galeri davet kodu ile ortak galeriye katıl.
             </AppText>
           </View>
 

@@ -1,7 +1,7 @@
 import { View } from "react-native";
 
-import { CreateInvitationListCard } from "@/components/invitations/my/CreateInvitationListCard";
 import { EmptyMyInvitations } from "@/components/invitations/my/EmptyMyInvitations";
+import { JoinGalleryListCard } from "@/components/invitations/my/JoinGalleryListCard";
 import { MyInvitationCard } from "@/components/invitations/my/MyInvitationCard";
 import { UserInvitation } from "@/types/invitation";
 
@@ -11,6 +11,8 @@ type Props = {
   onSharePress: (invitation: UserInvitation) => void;
   onDeletePress: (invitation: UserInvitation) => void;
   onOpenGalleryPress?: (invitation: UserInvitation) => void;
+  onOpenGalleryAccountManagementPress?: (invitation: UserInvitation) => void;
+  onJoinGalleryPress: () => void;
   onCreatePress: () => void;
   onMenuPress?: (invitation: UserInvitation) => void;
 };
@@ -21,6 +23,8 @@ export function MyInvitationsList({
   onSharePress,
   onDeletePress,
   onOpenGalleryPress,
+  onOpenGalleryAccountManagementPress,
+  onJoinGalleryPress,
   onCreatePress,
   onMenuPress,
 }: Props) {
@@ -28,8 +32,10 @@ export function MyInvitationsList({
 
   if (!hasInvitations) {
     return (
-      <View className="mb-6">
+      <View className="mb-6 gap-4">
         <EmptyMyInvitations onCreatePress={onCreatePress} />
+
+        <JoinGalleryListCard onPress={onJoinGalleryPress} />
       </View>
     );
   }
@@ -44,11 +50,14 @@ export function MyInvitationsList({
           onSharePress={onSharePress}
           onDeletePress={onDeletePress}
           onOpenGalleryPress={onOpenGalleryPress}
+          onOpenGalleryAccountManagementPress={
+            onOpenGalleryAccountManagementPress
+          }
           onMenuPress={onMenuPress}
         />
       ))}
 
-      <CreateInvitationListCard onPress={onCreatePress} />
+      <JoinGalleryListCard onPress={onJoinGalleryPress} />
     </View>
   );
 }

@@ -1,7 +1,5 @@
 import { router, useFocusEffect } from "expo-router";
-
 import { useCallback, useRef, useState } from "react";
-
 import {
   ActivityIndicator,
   RefreshControl,
@@ -15,14 +13,12 @@ import { MyInvitationsList } from "@/components/invitations/my/MyInvitationsList
 import { useAppAlert } from "@/components/ui/AppAlert";
 import { AppText } from "@/components/ui/AppText";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
-
 import { MAX_USER_INVITATION_COUNT } from "@/constants/invitationLimits";
 import {
   deleteUserInvitation,
   getCurrentUserInvitationCount,
   getCurrentUserInvitations,
 } from "@/services/invitationService";
-
 import { SESSION_EXPIRED_MESSAGE } from "@/services/sessionService";
 import { UserInvitation } from "@/types/invitation";
 
@@ -219,6 +215,19 @@ export default function MyInvitationsScreen() {
     });
   }
 
+  function handleOpenGalleryAccountManagement(invitation: UserInvitation) {
+    router.push({
+      pathname: "/gallery-account-management",
+      params: {
+        invitationId: invitation.id,
+      },
+    });
+  }
+
+  function handleJoinGallery() {
+    router.push("/gallery-account-management");
+  }
+
   async function deleteInvitation(invitation: UserInvitation) {
     try {
       await deleteUserInvitation(invitation.id);
@@ -312,6 +321,10 @@ export default function MyInvitationsScreen() {
           onSharePress={handleShareInvitation}
           onDeletePress={handleDeleteInvitation}
           onOpenGalleryPress={handleOpenGallery}
+          onOpenGalleryAccountManagementPress={
+            handleOpenGalleryAccountManagement
+          }
+          onJoinGalleryPress={handleJoinGallery}
           onMenuPress={handleMenuPress}
           onCreatePress={handleCreateInvitation}
         />

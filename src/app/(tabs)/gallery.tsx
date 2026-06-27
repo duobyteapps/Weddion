@@ -20,9 +20,6 @@ import { GalleryLoadMoreButton } from "@/components/gallery/GalleryLoadMoreButto
 import { GalleryPhotoGrid } from "@/components/gallery/GalleryPhotoGrid";
 import { GalleryQrInfoCard } from "@/components/gallery/GalleryQrInfoCard";
 import { useAppAlert } from "@/components/ui/AppAlert";
-import { AppButton } from "@/components/ui/AppButton";
-import { AppCard } from "@/components/ui/AppCard";
-import { AppText } from "@/components/ui/AppText";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { usePaginatedData } from "@/hooks/usePaginatedData";
 import { supabase } from "@/lib/supabase";
@@ -316,20 +313,6 @@ export default function GalleryScreen() {
 
   const handleCreateInvitation = () => {
     router.push("/invitation-select");
-  };
-
-  const handleOpenGalleryAccountManagement = () => {
-    if (selectedInvitation) {
-      router.push({
-        pathname: "/gallery-account-management",
-        params: {
-          invitationId: selectedInvitation.id,
-        },
-      });
-      return;
-    }
-
-    router.push("/gallery-account-management");
   };
 
   const handlePressQrCode = () => {
@@ -710,31 +693,6 @@ export default function GalleryScreen() {
     router.replace("/home");
   };
 
-  function renderGalleryAccountManagementCard() {
-    return (
-      <AppCard className="mt-5">
-        <View className="gap-3">
-          <View>
-            <AppText variant="subtitle" className="text-textDark">
-              Galeri Hesabı Yönetimi
-            </AppText>
-
-            <AppText className="mt-1 text-textMuted">
-              Galeri ortağını, davet kodunu ve katılma isteklerini buradan
-              yönetebilirsin.
-            </AppText>
-          </View>
-
-          <AppButton
-            title="Galeri Hesabını Yönet"
-            variant="secondary"
-            onPress={handleOpenGalleryAccountManagement}
-          />
-        </View>
-      </AppCard>
-    );
-  }
-
   return (
     <ScreenContainer className="flex-1 bg-background">
       <ScrollView
@@ -752,30 +710,7 @@ export default function GalleryScreen() {
             <ActivityIndicator />
           </View>
         ) : !hasInvitation ? (
-          <>
-            <AppCard className="mt-5">
-              <View className="gap-3">
-                <View>
-                  <AppText variant="subtitle" className="text-textDark">
-                    Galeri Hesabı Yönetimi
-                  </AppText>
-
-                  <AppText className="mt-1 text-textMuted">
-                    Davetiyen yoksa sana verilen galeri ortak koduyla bir
-                    galeriye katılma isteği gönderebilirsin.
-                  </AppText>
-                </View>
-
-                <AppButton
-                  title="Galeri Hesabını Yönet"
-                  variant="secondary"
-                  onPress={handleOpenGalleryAccountManagement}
-                />
-              </View>
-            </AppCard>
-
-            <EmptyGalleryNoInvitation onCreatePress={handleCreateInvitation} />
-          </>
+          <EmptyGalleryNoInvitation onCreatePress={handleCreateInvitation} />
         ) : (
           <>
             <GalleryEventSummaryCard
@@ -785,8 +720,6 @@ export default function GalleryScreen() {
             />
 
             <GalleryQrInfoCard onPressQrCode={handlePressQrCode} />
-
-            {renderGalleryAccountManagementCard()}
 
             {loadingPhotos ? (
               <View className="mt-10 items-center justify-center">

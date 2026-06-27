@@ -11,6 +11,7 @@ type Props = {
   onSharePress: (invitation: UserInvitation) => void;
   onDeletePress: (invitation: UserInvitation) => void;
   onOpenGalleryPress?: (invitation: UserInvitation) => void;
+  onOpenGalleryAccountManagementPress?: (invitation: UserInvitation) => void;
   onMenuPress?: (invitation: UserInvitation) => void;
 };
 
@@ -79,6 +80,7 @@ export function MyInvitationCard({
   onSharePress,
   onDeletePress,
   onOpenGalleryPress,
+  onOpenGalleryAccountManagementPress,
 }: Props) {
   const imageUri = normalizeImageUri(invitation.invitation_image_url);
   const title = formatInvitationTitle(invitation);
@@ -86,6 +88,10 @@ export function MyInvitationCard({
 
   const handleOpenGallery = () => {
     onOpenGalleryPress?.(invitation);
+  };
+
+  const handleOpenGalleryAccountManagement = () => {
+    onOpenGalleryAccountManagementPress?.(invitation);
   };
 
   return (
@@ -208,6 +214,18 @@ export function MyInvitationCard({
               </AppText>
             </Pressable>
           </View>
+
+          <Pressable
+            onPress={handleOpenGalleryAccountManagement}
+            disabled={!onOpenGalleryAccountManagementPress}
+            className="mt-3 h-10 flex-row items-center justify-center gap-2 rounded-xl border border-borderSoft bg-backgroundSoft"
+          >
+            <Feather name="users" size={15} color="#8E849B" />
+
+            <AppText variant="captionStrong" className="text-textMuted">
+              Galeri Yönetimi
+            </AppText>
+          </Pressable>
         </View>
       </View>
     </AppCard>
