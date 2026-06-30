@@ -19,6 +19,10 @@ export default {
         : "com.duobyteapps.weddion",
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
+
+        CFBundleDevelopmentRegion: "tr",
+        CFBundleLocalizations: ["tr"],
+
         NSCameraUsageDescription:
           "Weddion, davetiye QR kodlarını tarayarak misafirlerin davetiyeye erişmesi ve fotoğraf yükleme ekranına yönlendirilmesi için kamera erişimini kullanır.",
       },
