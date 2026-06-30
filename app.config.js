@@ -6,7 +6,7 @@ export default {
     name: isDev ? "Weddion Dev" : "Weddion",
     slug: "Weddion",
     owner: "duobyteapps",
-    version: "1.0.12",
+    version: "1.0.13",
     orientation: "portrait",
     icon: "./assets/images/icon.png",
     scheme: isDev ? "weddion-dev" : "weddion",
