@@ -3,6 +3,7 @@ import { InvitationEditFormSection } from "@/components/invitations/create/Invit
 import { InvitationEditSteps } from "@/components/invitations/create/InvitationEditSteps";
 import { InvitationPreviewCard } from "@/components/invitations/create/InvitationPreviewCard";
 import { useAppAlert } from "@/components/ui/AppAlert";
+import AppKeyboardAvoidingView from "@/components/ui/AppKeyboardAvoidingView";
 import { AppText } from "@/components/ui/AppText";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { useAppNavigation } from "@/hooks/useAppNavigation";
@@ -425,31 +426,33 @@ export default function InvitationFlowEditScreen() {
 
   return (
     <ScreenContainer className="flex-1 bg-background">
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-        contentContainerClassName="pb-24"
-      >
-        <ScreenHeader
-          title="Davetiyeni Düzenle"
-          description="Bilgileri doldur, davetiyeni önizle."
-        />
+      <AppKeyboardAvoidingView style={{ flex: 1 }}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          contentContainerClassName="pb-24"
+        >
+          <ScreenHeader
+            title="Davetiyeni Düzenle"
+            description="Bilgileri doldur, davetiyeni önizle."
+          />
 
-        <InvitationEditSteps activeStep={1} />
+          <InvitationEditSteps activeStep={1} />
 
-        <InvitationPreviewCard
-          imageUrl={editablePreviewImageUrl}
-          formData={formData}
-        />
+          <InvitationPreviewCard
+            imageUrl={editablePreviewImageUrl}
+            formData={formData}
+          />
 
-        <InvitationEditFormSection
-          formData={formData}
-          eventTypes={eventTypes}
-          eventTypesLoading={eventTypesLoading}
-          onChangeField={handleChangeField}
-          onSave={handleSave}
-        />
-      </ScrollView>
+          <InvitationEditFormSection
+            formData={formData}
+            eventTypes={eventTypes}
+            eventTypesLoading={eventTypesLoading}
+            onChangeField={handleChangeField}
+            onSave={handleSave}
+          />
+        </ScrollView>
+      </AppKeyboardAvoidingView>
     </ScreenContainer>
   );
 }

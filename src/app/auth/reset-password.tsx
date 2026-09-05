@@ -9,6 +9,7 @@ import { AppBackButton } from "@/components/ui/AppBackButton";
 import { AppButton } from "@/components/ui/AppButton";
 import { AppCard } from "@/components/ui/AppCard";
 import { AppInput } from "@/components/ui/AppInput";
+import AppKeyboardAvoidingView from "@/components/ui/AppKeyboardAvoidingView";
 import { AppText } from "@/components/ui/AppText";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { supabase } from "@/lib/supabase";
@@ -126,66 +127,68 @@ export default function ResetPasswordScreen() {
 
   return (
     <ScreenContainer className="bg-background">
-      <View className="relative flex-1 px-1 pb-8 pt-4">
-        <Image
-          source={require("../../../assets/images/backgrounds/wedding-floral.png")}
-          className="absolute -right-8 top-0 h-44 w-44 opacity-80"
-          resizeMode="contain"
-        />
+      <AppKeyboardAvoidingView style={{ flex: 1 }}>
+        <View className="relative flex-1 px-1 pb-8 pt-4">
+          <Image
+            source={require("../../../assets/images/backgrounds/wedding-floral.png")}
+            className="absolute -right-8 top-0 h-44 w-44 opacity-80"
+            resizeMode="contain"
+          />
 
-        <AppBackButton onPress={() => router.back()} />
+          <AppBackButton onPress={() => router.back()} />
 
-        <AuthHeader />
+          <AuthHeader />
 
-        <AppCard className="mt-7">
-          <View className="items-center">
-            <AppText variant="subtitle" className="text-text">
-              Yeni Şifre Oluştur
-            </AppText>
-
-            <AppText
-              variant="caption"
-              className="mt-1 text-center text-textMuted"
-            >
-              Hesabın için yeni ve güvenli bir şifre belirle
-            </AppText>
-          </View>
-
-          <View className="mt-6 gap-4">
-            <AppInput
-              label="Yeni Şifre"
-              placeholder="Yeni şifreniz"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-            />
-
-            <AppInput
-              label="Yeni Şifre Tekrar"
-              placeholder="Yeni şifrenizi tekrar girin"
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              secureTextEntry
-            />
-
-            <AppButton
-              title={loading ? "Güncelleniyor..." : "Şifreyi Güncelle"}
-              className="mt-1"
-              onPress={handleUpdatePassword}
-            />
-
-            <View className="flex-row items-center justify-center gap-1 pt-2">
-              <AppText variant="caption" className="text-textLight">
-                Şifren güncellendiyse
+          <AppCard className="mt-7">
+            <View className="items-center">
+              <AppText variant="subtitle" className="text-text">
+                Yeni Şifre Oluştur
               </AppText>
 
-              <Pressable onPress={() => router.push("/auth/login")}>
-                <AppText variant="captionStrong">Giriş yap</AppText>
-              </Pressable>
+              <AppText
+                variant="caption"
+                className="mt-1 text-center text-textMuted"
+              >
+                Hesabın için yeni ve güvenli bir şifre belirle
+              </AppText>
             </View>
-          </View>
-        </AppCard>
-      </View>
+
+            <View className="mt-6 gap-4">
+              <AppInput
+                label="Yeni Şifre"
+                placeholder="Yeni şifreniz"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+              />
+
+              <AppInput
+                label="Yeni Şifre Tekrar"
+                placeholder="Yeni şifrenizi tekrar girin"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                secureTextEntry
+              />
+
+              <AppButton
+                title={loading ? "Güncelleniyor..." : "Şifreyi Güncelle"}
+                className="mt-1"
+                onPress={handleUpdatePassword}
+              />
+
+              <View className="flex-row items-center justify-center gap-1 pt-2">
+                <AppText variant="caption" className="text-textLight">
+                  Şifren güncellendiyse
+                </AppText>
+
+                <Pressable onPress={() => router.push("/auth/login")}>
+                  <AppText variant="captionStrong">Giriş yap</AppText>
+                </Pressable>
+              </View>
+            </View>
+          </AppCard>
+        </View>
+      </AppKeyboardAvoidingView>
     </ScreenContainer>
   );
 }

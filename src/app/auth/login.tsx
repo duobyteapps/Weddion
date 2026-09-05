@@ -8,6 +8,7 @@ import { AppBackButton } from "@/components/ui/AppBackButton";
 import { AppButton } from "@/components/ui/AppButton";
 import { AppCard } from "@/components/ui/AppCard";
 import { AppInput } from "@/components/ui/AppInput";
+import AppKeyboardAvoidingView from "@/components/ui/AppKeyboardAvoidingView";
 import { AppText } from "@/components/ui/AppText";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { loginUser } from "@/services/authService";
@@ -61,76 +62,78 @@ export default function LoginScreen() {
 
   return (
     <ScreenContainer className="bg-background">
-      <View className="relative flex-1 px-1 pb-8 pt-4">
-        <Image
-          source={require("../../../assets/images/backgrounds/wedding-floral.png")}
-          className="absolute -right-8 top-0 h-44 w-44 opacity-80"
-          resizeMode="contain"
-        />
+      <AppKeyboardAvoidingView style={{ flex: 1 }}>
+        <View className="relative flex-1 px-1 pb-8 pt-4">
+          <Image
+            source={require("../../../assets/images/backgrounds/wedding-floral.png")}
+            className="absolute -right-8 top-0 h-44 w-44 opacity-80"
+            resizeMode="contain"
+          />
 
-        <AppBackButton onPress={() => router.replace("/")} />
+          <AppBackButton onPress={() => router.replace("/")} />
 
-        <AuthHeader />
+          <AuthHeader />
 
-        <AppCard className="mt-7">
-          <View className="items-center">
-            <AppText variant="subtitle" className="text-text">
-              Giriş Yap
-            </AppText>
-
-            <AppText
-              variant="caption"
-              className="mt-1 text-center text-textMuted"
-            >
-              Hesabına giriş yap
-            </AppText>
-          </View>
-
-          <View className="mt-6 gap-4">
-            <AppInput
-              label="E-posta"
-              placeholder="E-posta adresiniz"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-
-            <AppInput
-              label="Şifre"
-              placeholder="Şifrenizi girin"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-            />
-
-            <Pressable
-              onPress={() => router.push("/auth/forgot-password")}
-              className="self-end"
-            >
-              <AppText variant="captionStrong">Şifremi unuttum</AppText>
-            </Pressable>
-
-            <AppButton
-              title="Giriş Yap"
-              className="mt-1"
-              loading={isLoading}
-              disabled={isLoading}
-              onPress={handleLogin}
-            />
-
-            <View className="flex-row items-center justify-center gap-1 pt-2">
-              <AppText variant="caption" className="text-textLight">
-                Hesabın yok mu?
+          <AppCard className="mt-7">
+            <View className="items-center">
+              <AppText variant="subtitle" className="text-text">
+                Giriş Yap
               </AppText>
 
-              <Pressable onPress={() => router.push("/auth/register")}>
-                <AppText variant="captionStrong">Kayıt ol</AppText>
-              </Pressable>
+              <AppText
+                variant="caption"
+                className="mt-1 text-center text-textMuted"
+              >
+                Hesabına giriş yap
+              </AppText>
             </View>
-          </View>
-        </AppCard>
-      </View>
+
+            <View className="mt-6 gap-4">
+              <AppInput
+                label="E-posta"
+                placeholder="E-posta adresiniz"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+
+              <AppInput
+                label="Şifre"
+                placeholder="Şifrenizi girin"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+              />
+
+              <Pressable
+                onPress={() => router.push("/auth/forgot-password")}
+                className="self-end"
+              >
+                <AppText variant="captionStrong">Şifremi unuttum</AppText>
+              </Pressable>
+
+              <AppButton
+                title="Giriş Yap"
+                className="mt-1"
+                loading={isLoading}
+                disabled={isLoading}
+                onPress={handleLogin}
+              />
+
+              <View className="flex-row items-center justify-center gap-1 pt-2">
+                <AppText variant="caption" className="text-textLight">
+                  Hesabın yok mu?
+                </AppText>
+
+                <Pressable onPress={() => router.push("/auth/register")}>
+                  <AppText variant="captionStrong">Kayıt ol</AppText>
+                </Pressable>
+              </View>
+            </View>
+          </AppCard>
+        </View>
+      </AppKeyboardAvoidingView>
     </ScreenContainer>
   );
 }

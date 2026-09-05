@@ -10,6 +10,7 @@ import { ScrollView } from "react-native";
 import { ScreenHeader } from "@/components/common/ScreenHeader";
 import { DowryAddProductFormCard } from "@/components/dowry/add-product/DowryAddProductFormCard";
 import { DowryAddProductHeader } from "@/components/dowry/add-product/DowryAddProductHeader";
+import AppKeyboardAvoidingView from "@/components/ui/AppKeyboardAvoidingView";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import {
   createUserDowryItemByCategorySlug,
@@ -203,37 +204,40 @@ export default function DowryAddProductScreen() {
 
   return (
     <ScreenContainer>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerClassName="pb-24"
-      >
-        <ScreenHeader
-          title={isEditMode ? "Ürünü Düzenle" : "Ürün Ekle"}
-          description={
-            isEditMode
-              ? "Çeyiz ürününü güncelle."
-              : "Çeyiz listene yeni bir ürün ekle."
-          }
-          backTo={categoryDetailHref}
-        />
+      <AppKeyboardAvoidingView style={{ flex: 1 }}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          contentContainerClassName="pb-24"
+        >
+          <ScreenHeader
+            title={isEditMode ? "Ürünü Düzenle" : "Ürün Ekle"}
+            description={
+              isEditMode
+                ? "Çeyiz ürününü güncelle."
+                : "Çeyiz listene yeni bir ürün ekle."
+            }
+            backTo={categoryDetailHref}
+          />
 
-        <DowryAddProductHeader />
+          <DowryAddProductHeader />
 
-        <DowryAddProductFormCard
-          productName={productName}
-          brandName={brandName}
-          quantity={quantity}
-          price={price}
-          completed={completed}
-          loading={loading}
-          onChangeProductName={setProductName}
-          onChangeBrandName={setBrandName}
-          onChangeQuantity={setQuantity}
-          onChangePrice={setPrice}
-          onChangeCompleted={setCompleted}
-          onSave={handleSave}
-        />
-      </ScrollView>
+          <DowryAddProductFormCard
+            productName={productName}
+            brandName={brandName}
+            quantity={quantity}
+            price={price}
+            completed={completed}
+            loading={loading}
+            onChangeProductName={setProductName}
+            onChangeBrandName={setBrandName}
+            onChangeQuantity={setQuantity}
+            onChangePrice={setPrice}
+            onChangeCompleted={setCompleted}
+            onSave={handleSave}
+          />
+        </ScrollView>
+      </AppKeyboardAvoidingView>
     </ScreenContainer>
   );
 }

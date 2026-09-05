@@ -1,14 +1,7 @@
 import * as Clipboard from "expo-clipboard";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Share,
-  View,
-} from "react-native";
+import { ActivityIndicator, ScrollView, Share, View } from "react-native";
 
 import { ScreenHeader } from "@/components/common/ScreenHeader";
 import { DowryAccountMembersCard } from "@/components/dowry/account-management/DowryAccountMembersCard";
@@ -16,6 +9,7 @@ import { DowryAccountSummaryCard } from "@/components/dowry/account-management/D
 import { DowryJoinAccountCard } from "@/components/dowry/account-management/DowryJoinAccountCard";
 import { DowryJoinRequestsCard } from "@/components/dowry/account-management/DowryJoinRequestsCard";
 import { useAppAlert } from "@/components/ui/AppAlert";
+import AppKeyboardAvoidingView from "@/components/ui/AppKeyboardAvoidingView";
 import { AppText } from "@/components/ui/AppText";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { Colors } from "@/constants/Colors";
@@ -384,12 +378,10 @@ export default function DowryAccountManagementScreen() {
 
   return (
     <ScreenContainer>
-      <KeyboardAvoidingView
-        className="flex-1"
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
+      <AppKeyboardAvoidingView style={{ flex: 1 }}>
         <ScrollView
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
           contentContainerClassName="pb-10"
         >
           <ScreenHeader
@@ -444,7 +436,7 @@ export default function DowryAccountManagementScreen() {
             </View>
           )}
         </ScrollView>
-      </KeyboardAvoidingView>
+      </AppKeyboardAvoidingView>
     </ScreenContainer>
   );
 }
