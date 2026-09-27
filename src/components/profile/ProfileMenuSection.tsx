@@ -22,40 +22,86 @@ type Props = {
   items: MenuItem[];
 };
 
-const PLAY_STORE_PACKAGE_NAME = "com.duobyteapps.weddion";
+const ANDROID_PACKAGE_NAME = "com.duobyteapps.weddion";
 
-const PLAY_STORE_APP_URL = `market://details?id=${PLAY_STORE_PACKAGE_NAME}`;
+const PLAY_STORE_APP_URL = `market://details?id=${ANDROID_PACKAGE_NAME}`;
 
-const PLAY_STORE_WEB_URL = `https://play.google.com/store/apps/details?id=${PLAY_STORE_PACKAGE_NAME}`;
+const PLAY_STORE_WEB_URL = `https://play.google.com/store/apps/details?id=${ANDROID_PACKAGE_NAME}`;
+
+/*
+ * Buraya App Store Connect'teki
+ * Weddion Apple App ID'sini yazacağız.
+ *
+ * Örnek:
+ * 1234567890
+ */
+const APP_STORE_APP_ID = "6782302375";
+
+const APP_STORE_APP_URL = `itms-apps://itunes.apple.com/app/id${APP_STORE_APP_ID}?action=write-review`;
+
+const APP_STORE_WEB_URL = `https://apps.apple.com/app/id${APP_STORE_APP_ID}?action=write-review`;
 
 export function ProfileMenuSection({ title, items }: Props) {
-  async function openExternalUrl(url: string) {
+  async function openRateApp() {
     try {
-      if (url.startsWith("market://")) {
-        if (Platform.OS === "android") {
-          const canOpenMarket = await Linking.canOpenURL(url);
+      if (Platform.OS === "ios") {
+        const canOpenAppStore = await Linking.canOpenURL(APP_STORE_APP_URL);
 
-          if (canOpenMarket) {
-            await Linking.openURL(url);
-            return;
-          }
+        if (canOpenAppStore) {
+          await Linking.openURL(APP_STORE_APP_URL);
+
+          return;
         }
 
-        await Linking.openURL(PLAY_STORE_WEB_URL);
+        await Linking.openURL(APP_STORE_WEB_URL);
+
         return;
       }
 
+      if (Platform.OS === "android") {
+        const canOpenPlayStore = await Linking.canOpenURL(PLAY_STORE_APP_URL);
+
+        if (canOpenPlayStore) {
+          await Linking.openURL(PLAY_STORE_APP_URL);
+
+          return;
+        }
+
+        await Linking.openURL(PLAY_STORE_WEB_URL);
+      }
+    } catch (error) {
+      console.log("Mağaza açılamadı:", error);
+
+      if (Platform.OS === "ios") {
+        await Linking.openURL(APP_STORE_WEB_URL);
+
+        return;
+      }
+
+      await Linking.openURL(PLAY_STORE_WEB_URL);
+    }
+  }
+
+  async function openExternalUrl(url: string) {
+    try {
       await Linking.openURL(url);
     } catch (error) {
       console.log("Bağlantı açılamadı:", error);
-
-      await Linking.openURL(PLAY_STORE_WEB_URL);
     }
   }
 
   function handlePress(item: MenuItem) {
     if (item.onPress) {
       item.onPress();
+      return;
+    }
+
+    /*
+     * Uygulamayı değerlendir için
+     * platforma özel mağazayı aç.
+     */
+    if (item.label === "Uygulamayı Değerlendir") {
+      openRateApp();
       return;
     }
 
@@ -78,6 +124,7 @@ export function ProfileMenuSection({ title, items }: Props) {
       <AppCard>
         {items.map((item, index) => {
           const isLast = index === items.length - 1;
+
           const color = item.danger ? "#D24B5B" : Colors.primary;
 
           return (

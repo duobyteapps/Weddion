@@ -46,7 +46,6 @@ export const otherMenuItems: ProfileMenuItem[] = [
   {
     label: "Uygulamayı Değerlendir",
     icon: "star-outline",
-    url: "market://details?id=com.duobyteapps.weddion",
   },
   {
     label: "Profilimi ve Bilgilerimi Sil",
