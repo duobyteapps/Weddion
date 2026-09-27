@@ -99,6 +99,7 @@ export default {
 
     extra: {
       router: {},
+      appScheme: isDev ? "weddion-dev" : "weddion",
       eas: {
         projectId: "9400f0c8-95d4-4970-bb3a-4d6ba6979978",
       },

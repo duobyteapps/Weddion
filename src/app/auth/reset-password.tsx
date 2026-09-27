@@ -1,7 +1,7 @@
 import * as Linking from "expo-linking";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
-import { Image, Pressable, View } from "react-native";
+import { useCallback, useEffect, useState } from "react";
+import { ActivityIndicator, Image, Pressable, View } from "react-native";
 
 import { AuthHeader } from "@/components/auth/AuthHeader";
 import { useAppAlert } from "@/components/ui/AppAlert";
@@ -14,60 +14,199 @@ import { AppText } from "@/components/ui/AppText";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { supabase } from "@/lib/supabase";
 
+function getUrlParam(url: string, paramName: string) {
+  try {
+    const parsedUrl = new URL(url);
+
+    /*
+     * PKCE formatı:
+     *
+     * weddion://auth/reset-password?code=...
+     */
+    const queryValue = parsedUrl.searchParams.get(paramName);
+
+    if (queryValue) {
+      return queryValue;
+    }
+
+    /*
+     * Eski implicit format:
+     *
+     * weddion://auth/reset-password
+     * #access_token=...
+     * &refresh_token=...
+     */
+    const hash = parsedUrl.hash.replace(/^#/, "");
+
+    if (!hash) {
+      return null;
+    }
+
+    const hashParams = new URLSearchParams(hash);
+
+    return hashParams.get(paramName);
+  } catch {
+    return null;
+  }
+}
+
 export default function ResetPasswordScreen() {
   const router = useRouter();
   const { showAlert } = useAppAlert();
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+
   const [loading, setLoading] = useState(false);
+  const [sessionLoading, setSessionLoading] = useState(true);
+
   const [sessionReady, setSessionReady] = useState(false);
 
-  useEffect(() => {
-    async function handlePasswordResetLink() {
-      const url = await Linking.getInitialURL();
+  const prepareRecoverySession = useCallback(
+    async (url: string | null) => {
+      try {
+        setSessionLoading(true);
+        setSessionReady(false);
 
-      if (!url) {
-        setSessionReady(true);
-        return;
-      }
+        if (!url) {
+          throw new Error("Şifre sıfırlama bağlantısı bulunamadı.");
+        }
 
-      const normalizedUrl = url.replace("#", "?");
-      const parsedUrl = new URL(normalizedUrl);
+        /*
+         * Yeni Supabase PKCE recovery formatı.
+         */
+        const code = getUrlParam(url, "code");
 
-      const accessToken = parsedUrl.searchParams.get("access_token");
-      const refreshToken = parsedUrl.searchParams.get("refresh_token");
+        if (code) {
+          const { error } = await supabase.auth.exchangeCodeForSession(code);
 
-      if (!accessToken || !refreshToken) {
-        setSessionReady(true);
-        return;
-      }
+          if (error) {
+            throw error;
+          }
 
-      const { error } = await supabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: refreshToken,
-      });
+          const {
+            data: { session },
+            error: sessionError,
+          } = await supabase.auth.getSession();
 
-      if (error) {
+          if (sessionError) {
+            throw sessionError;
+          }
+
+          if (!session) {
+            throw new Error("Şifre sıfırlama oturumu oluşturulamadı.");
+          }
+
+          setSessionReady(true);
+          return;
+        }
+
+        /*
+         * Eski implicit recovery formatı.
+         */
+        const accessToken = getUrlParam(url, "access_token");
+
+        const refreshToken = getUrlParam(url, "refresh_token");
+
+        const type = getUrlParam(url, "type");
+
+        if (accessToken && refreshToken && (!type || type === "recovery")) {
+          const { error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+
+          if (error) {
+            throw error;
+          }
+
+          const {
+            data: { session },
+            error: sessionError,
+          } = await supabase.auth.getSession();
+
+          if (sessionError) {
+            throw sessionError;
+          }
+
+          if (!session) {
+            throw new Error("Şifre sıfırlama oturumu oluşturulamadı.");
+          }
+
+          setSessionReady(true);
+          return;
+        }
+
+        throw new Error(
+          "Şifre sıfırlama bağlantısı geçersiz veya süresi dolmuş.",
+        );
+      } catch (error) {
+        setSessionReady(false);
+
         showAlert({
           title: "Bağlantı Geçersiz",
-          message: "Şifre sıfırlama bağlantısı geçersiz veya süresi dolmuş.",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Şifre sıfırlama bağlantısı geçersiz veya süresi dolmuş.",
           type: "error",
+          confirmText: "Tamam",
         });
+      } finally {
+        setSessionLoading(false);
+      }
+    },
+    [showAlert],
+  );
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function initializeRecovery() {
+      const initialUrl = await Linking.getInitialURL();
+
+      if (!mounted) {
+        return;
       }
 
-      setSessionReady(true);
+      await prepareRecoverySession(initialUrl);
     }
 
-    handlePasswordResetLink();
-  }, [showAlert]);
+    initializeRecovery();
+
+    /*
+     * Uygulama zaten açıksa getInitialURL()
+     * yeterli değildir.
+     *
+     * Maildeki linke basılınca bu event çalışır.
+     */
+    const subscription = Linking.addEventListener("url", ({ url }) => {
+      prepareRecoverySession(url);
+    });
+
+    return () => {
+      mounted = false;
+      subscription.remove();
+    };
+  }, [prepareRecoverySession]);
 
   async function handleUpdatePassword() {
-    if (!sessionReady) {
+    if (sessionLoading) {
       showAlert({
         title: "Hazırlanıyor",
         message: "Şifre sıfırlama bağlantısı hazırlanıyor.",
         type: "info",
+        confirmText: "Tamam",
+      });
+      return;
+    }
+
+    if (!sessionReady) {
+      showAlert({
+        title: "Bağlantı Geçersiz",
+        message: "Geçerli bir şifre sıfırlama bağlantısı ile tekrar deneyin.",
+        type: "error",
+        confirmText: "Tamam",
       });
       return;
     }
@@ -77,15 +216,33 @@ export default function ResetPasswordScreen() {
         title: "Eksik Bilgi",
         message: "Lütfen tüm alanları doldurun.",
         type: "warning",
+        confirmText: "Tamam",
       });
       return;
     }
 
-    if (password.length < 6) {
+    if (password.length < 8) {
       showAlert({
         title: "Şifre Çok Kısa",
-        message: "Şifre en az 6 karakter olmalı.",
+        message: "Şifre en az 8 karakter olmalı.",
         type: "warning",
+        confirmText: "Tamam",
+      });
+      return;
+    }
+
+    const hasLowercase = /[a-z]/.test(password);
+    const hasUppercase = /[A-Z]/.test(password);
+    const hasNumber = /\d/.test(password);
+    const hasSpecialCharacter = /[^A-Za-z0-9]/.test(password);
+
+    if (!hasLowercase || !hasUppercase || !hasNumber || !hasSpecialCharacter) {
+      showAlert({
+        title: "Şifre Yeterince Güçlü Değil",
+        message:
+          "Şifreniz en az bir büyük harf, bir küçük harf, bir sayı ve bir özel karakter içermelidir.",
+        type: "warning",
+        confirmText: "Tamam",
       });
       return;
     }
@@ -95,34 +252,65 @@ export default function ResetPasswordScreen() {
         title: "Şifreler Eşleşmiyor",
         message: "Lütfen iki alana da aynı şifreyi girin.",
         type: "warning",
+        confirmText: "Tamam",
       });
       return;
     }
 
-    setLoading(true);
+    try {
+      setLoading(true);
 
-    const { error } = await supabase.auth.updateUser({
-      password,
-    });
+      /*
+       * Recovery session oluşturulduktan sonra
+       * şifreyi güncelliyoruz.
+       */
+      const { error } = await supabase.auth.updateUser({
+        password,
+      });
 
-    setLoading(false);
+      if (error) {
+        throw error;
+      }
 
-    if (error) {
+      /*
+       * Recovery session açık kalmasın.
+       *
+       * Kullanıcı yeni şifresiyle tekrar giriş yapacak.
+       */
+      const { error: signOutError } = await supabase.auth.signOut();
+
+      if (signOutError) {
+        console.log(
+          "Şifre değiştikten sonra session kapatılamadı:",
+          signOutError,
+        );
+      }
+
+      setPassword("");
+      setConfirmPassword("");
+      setSessionReady(false);
+
+      showAlert({
+        title: "Şifre Güncellendi",
+        message:
+          "Yeni şifren başarıyla kaydedildi. Yeni şifrenle giriş yapabilirsin.",
+        type: "success",
+        confirmText: "Giriş Yap",
+        onConfirm: () => router.replace("/auth/login"),
+      });
+    } catch (error) {
       showAlert({
         title: "Şifre Güncellenemedi",
-        message: error.message,
+        message:
+          error instanceof Error
+            ? error.message
+            : "Şifre güncellenirken bir sorun oluştu.",
         type: "error",
+        confirmText: "Tamam",
       });
-      return;
+    } finally {
+      setLoading(false);
     }
-
-    showAlert({
-      title: "Şifre Güncellendi",
-      message: "Yeni şifren başarıyla kaydedildi.",
-      type: "success",
-      confirmText: "Giriş Yap",
-      onConfirm: () => router.replace("/auth/login"),
-    });
   }
 
   return (
@@ -135,7 +323,7 @@ export default function ResetPasswordScreen() {
             resizeMode="contain"
           />
 
-          <AppBackButton onPress={() => router.back()} />
+          <AppBackButton onPress={() => router.replace("/auth/login")} />
 
           <AuthHeader />
 
@@ -153,39 +341,63 @@ export default function ResetPasswordScreen() {
               </AppText>
             </View>
 
-            <View className="mt-6 gap-4">
-              <AppInput
-                label="Yeni Şifre"
-                placeholder="Yeni şifreniz"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-              />
+            {sessionLoading ? (
+              <View className="mt-8 items-center gap-3 py-6">
+                <ActivityIndicator color="#A875D1" />
 
-              <AppInput
-                label="Yeni Şifre Tekrar"
-                placeholder="Yeni şifrenizi tekrar girin"
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                secureTextEntry
-              />
+                <AppText
+                  variant="caption"
+                  className="text-center text-textMuted"
+                >
+                  Şifre sıfırlama bağlantısı hazırlanıyor...
+                </AppText>
+              </View>
+            ) : (
+              <View className="mt-6 gap-4">
+                <AppInput
+                  label="Yeni Şifre"
+                  placeholder="Yeni şifreniz"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry
+                  editable={sessionReady && !loading}
+                />
 
-              <AppButton
-                title={loading ? "Güncelleniyor..." : "Şifreyi Güncelle"}
-                className="mt-1"
-                onPress={handleUpdatePassword}
-              />
+                <AppInput
+                  label="Yeni Şifre Tekrar"
+                  placeholder="Yeni şifrenizi tekrar girin"
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  secureTextEntry
+                  editable={sessionReady && !loading}
+                />
 
-              <View className="flex-row items-center justify-center gap-1 pt-2">
-                <AppText variant="caption" className="text-textLight">
-                  Şifren güncellendiyse
+                <AppText variant="caption" className="text-textMuted">
+                  En az 8 karakter, bir büyük harf, bir küçük harf, bir sayı ve
+                  bir özel karakter kullan.
                 </AppText>
 
-                <Pressable onPress={() => router.push("/auth/login")}>
-                  <AppText variant="captionStrong">Giriş yap</AppText>
-                </Pressable>
+                <AppButton
+                  title={loading ? "Güncelleniyor..." : "Şifreyi Güncelle"}
+                  className="mt-1"
+                  onPress={handleUpdatePassword}
+                  disabled={loading || sessionLoading || !sessionReady}
+                />
+
+                <View className="flex-row items-center justify-center gap-1 pt-2">
+                  <AppText variant="caption" className="text-textLight">
+                    Şifren güncellendiyse
+                  </AppText>
+
+                  <Pressable
+                    onPress={() => router.replace("/auth/login")}
+                    disabled={loading}
+                  >
+                    <AppText variant="captionStrong">Giriş yap</AppText>
+                  </Pressable>
+                </View>
               </View>
-            </View>
+            )}
           </AppCard>
         </View>
       </AppKeyboardAvoidingView>

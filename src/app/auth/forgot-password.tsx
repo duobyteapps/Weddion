@@ -1,3 +1,4 @@
+import Constants from "expo-constants";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Image, Pressable, View } from "react-native";
@@ -20,8 +21,14 @@ export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const appScheme = Constants.expoConfig?.extra?.appScheme ?? "weddion";
+
+  const redirectTo = `${appScheme}://auth/reset-password`;
+
   async function handleSendResetLink() {
-    if (!email.trim()) {
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!normalizedEmail) {
       showAlert({
         title: "E-posta Gerekli",
         message: "Lütfen e-posta adresinizi girin.",
@@ -30,28 +37,39 @@ export default function ForgotPasswordScreen() {
       return;
     }
 
-    setLoading(true);
+    try {
+      setLoading(true);
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: "weddion://auth/reset-password",
-    });
+      const { error } = await supabase.auth.resetPasswordForEmail(
+        normalizedEmail,
+        {
+          redirectTo,
+        },
+      );
 
-    setLoading(false);
+      if (error) {
+        throw error;
+      }
 
-    if (error) {
+      showAlert({
+        title: "Bağlantı Gönderildi",
+        message: "Şifre sıfırlama bağlantısı e-posta adresine gönderildi.",
+        type: "success",
+        confirmText: "Tamam",
+      });
+    } catch (error) {
       showAlert({
         title: "Bağlantı Gönderilemedi",
-        message: error.message,
+        message:
+          error instanceof Error
+            ? error.message
+            : "Şifre sıfırlama bağlantısı gönderilemedi.",
         type: "error",
+        confirmText: "Tamam",
       });
-      return;
+    } finally {
+      setLoading(false);
     }
-
-    showAlert({
-      title: "Bağlantı Gönderildi",
-      message: "Şifre sıfırlama bağlantısı e-posta adresine gönderildi.",
-      type: "success",
-    });
   }
 
   return (
@@ -99,6 +117,7 @@ export default function ForgotPasswordScreen() {
                 }
                 className="mt-1"
                 onPress={handleSendResetLink}
+                disabled={loading}
               />
 
               <View className="flex-row items-center justify-center gap-1 pt-2">
@@ -106,7 +125,10 @@ export default function ForgotPasswordScreen() {
                   Şifreni hatırladın mı?
                 </AppText>
 
-                <Pressable onPress={() => router.push("/auth/login")}>
+                <Pressable
+                  onPress={() => router.push("/auth/login")}
+                  disabled={loading}
+                >
                   <AppText variant="captionStrong">Giriş yap</AppText>
                 </Pressable>
               </View>
