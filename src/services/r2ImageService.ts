@@ -247,42 +247,64 @@ export async function uploadGuestPhotoSecurely({
   imageUri,
   contentType,
 }: UploadGuestPhotoSecurelyParams) {
-  const formData = new FormData();
+  const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
+  const supabasePublishableKey =
+    process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
-  formData.append("file", {
-    uri: imageUri,
-    name: `guest-photo-${Date.now()}.jpg`,
-    type: contentType,
-  } as any);
+  if (!supabaseUrl || !supabasePublishableKey) {
+    throw new Error("Supabase env değişkenleri eksik.");
+  }
 
-  const { data, error } =
-    await supabase.functions.invoke<SecureGuestPhotoUploadResponse>(
-      "guest-photo-upload",
-      {
-        body: formData,
-        headers: {
-          "x-invitation-id": invitationId,
-          "x-upload-code": guestUploadCode.trim().toUpperCase(),
-        },
+  const session = await getAuthenticatedSession();
+
+  const uploadResponse = await FileSystem.uploadAsync(
+    `${supabaseUrl}/functions/v1/guest-photo-upload`,
+    imageUri,
+    {
+      httpMethod: "POST",
+      uploadType: FileSystem.FileSystemUploadType.MULTIPART,
+      fieldName: "file",
+      mimeType: contentType,
+      headers: {
+        apikey: supabasePublishableKey,
+        Authorization: `Bearer ${session.access_token}`,
+        "x-invitation-id": invitationId,
+        "x-upload-code": guestUploadCode.trim().toUpperCase(),
       },
+    },
+  );
+
+  let responseData: SecureGuestPhotoUploadResponse | null = null;
+
+  try {
+    responseData = JSON.parse(
+      uploadResponse.body,
+    ) as SecureGuestPhotoUploadResponse;
+  } catch {
+    throw new Error(
+      `Fotoğraf yükleme yanıtı okunamadı. HTTP ${uploadResponse.status}`,
     );
-
-  if (error) {
-    const message = await getFunctionErrorMessage(error);
-
-    throw new Error(message);
   }
 
-  if (!data?.success) {
-    throw new Error(data?.message ?? "Fotoğraf güvenli şekilde yüklenemedi.");
+  if (uploadResponse.status < 200 || uploadResponse.status >= 300) {
+    throw new Error(
+      responseData?.message ??
+        `Fotoğraf yüklenemedi. HTTP ${uploadResponse.status}`,
+    );
   }
 
-  if (!data.photo || !data.key) {
+  if (!responseData?.success) {
+    throw new Error(
+      responseData?.message ?? "Fotoğraf güvenli şekilde yüklenemedi.",
+    );
+  }
+
+  if (!responseData.photo || !responseData.key) {
     throw new Error("Fotoğraf yükleme sonucu alınamadı.");
   }
 
   return {
-    key: data.key,
-    photo: data.photo,
+    key: responseData.key,
+    photo: responseData.photo,
   };
 }
