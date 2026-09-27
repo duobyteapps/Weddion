@@ -275,6 +275,10 @@ export async function deleteUserInvitation(
 
   await deleteGuestPhotosForInvitation(invitationId);
 
+  if (invitation?.invitation_image_path) {
+    await deleteR2Object(invitation.invitation_image_path, true);
+  }
+
   const { error: deleteError } = await supabase
     .from("user_invitations")
     .delete()
@@ -283,10 +287,6 @@ export async function deleteUserInvitation(
 
   if (deleteError) {
     throw new Error(deleteError.message);
-  }
-
-  if (invitation?.invitation_image_path) {
-    await deleteR2Object(invitation.invitation_image_path, true);
   }
 }
 
