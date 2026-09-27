@@ -1,16 +1,11 @@
 import { useState } from "react";
-import {
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  View,
-} from "react-native";
+import { Image, ScrollView, View } from "react-native";
 
 import { ChangePasswordCard } from "@/components/profile/change-password/ChangePasswordCard";
 import { ChangePasswordHeader } from "@/components/profile/change-password/ChangePasswordHeader";
 import { SecurityInfoCard } from "@/components/profile/change-password/SecurityInfoCard";
 import { useAppAlert } from "@/components/ui/AppAlert";
+import AppKeyboardAvoidingView from "@/components/ui/AppKeyboardAvoidingView";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { supabase } from "@/lib/supabase";
 
@@ -110,12 +105,10 @@ export default function ChangePasswordScreen() {
 
   return (
     <ScreenContainer className="flex-1 bg-background">
-      <KeyboardAvoidingView
-        className="flex-1"
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
+      <AppKeyboardAvoidingView style={{ flex: 1 }}>
         <ScrollView
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
           contentContainerClassName="pb-24"
         >
           <ChangePasswordHeader />
@@ -143,7 +136,7 @@ export default function ChangePasswordScreen() {
 
           <SecurityInfoCard />
         </ScrollView>
-      </KeyboardAvoidingView>
+      </AppKeyboardAvoidingView>
     </ScreenContainer>
   );
 }

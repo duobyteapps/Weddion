@@ -7,6 +7,7 @@ import { PersonalInfoHeader } from "@/components/profile/personal-info/PersonalI
 import { ProfilePhotoSection } from "@/components/profile/personal-info/ProfilePhotoSection";
 import { useAppAlert } from "@/components/ui/AppAlert";
 import { AppButton } from "@/components/ui/AppButton";
+import AppKeyboardAvoidingView from "@/components/ui/AppKeyboardAvoidingView";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import {
   getCurrentUserProfile,
@@ -124,43 +125,46 @@ export default function PersonalInfoScreen() {
 
   return (
     <ScreenContainer>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerClassName="pb-28"
-      >
-        <PersonalInfoHeader />
+      <AppKeyboardAvoidingView style={{ flex: 1 }}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          contentContainerClassName="pb-28"
+        >
+          <PersonalInfoHeader />
 
-        <ProfilePhotoSection
-          avatarUrl={avatarUrl}
-          avatarPath={avatarPath}
-          firstName={firstName}
-          lastName={lastName}
-          phone={phone}
-          onChangeProfilePhoto={(photo) => {
-            setAvatarUrl(photo.avatarUrl);
-            setAvatarPath(photo.avatarPath);
-          }}
-        />
-
-        <PersonalInfoCard
-          firstName={firstName}
-          lastName={lastName}
-          email={email}
-          phone={phone}
-          onChangeFirstName={setFirstName}
-          onChangeLastName={setLastName}
-          onChangePhone={setPhone}
-        />
-
-        <View className="mt-6">
-          <AppButton
-            title={saving ? "Kaydediliyor..." : "Bilgileri Kaydet"}
-            onPress={handleSave}
-            disabled={saving}
-            loading={saving}
+          <ProfilePhotoSection
+            avatarUrl={avatarUrl}
+            avatarPath={avatarPath}
+            firstName={firstName}
+            lastName={lastName}
+            phone={phone}
+            onChangeProfilePhoto={(photo) => {
+              setAvatarUrl(photo.avatarUrl);
+              setAvatarPath(photo.avatarPath);
+            }}
           />
-        </View>
-      </ScrollView>
+
+          <PersonalInfoCard
+            firstName={firstName}
+            lastName={lastName}
+            email={email}
+            phone={phone}
+            onChangeFirstName={setFirstName}
+            onChangeLastName={setLastName}
+            onChangePhone={setPhone}
+          />
+
+          <View className="mt-6">
+            <AppButton
+              title={saving ? "Kaydediliyor..." : "Bilgileri Kaydet"}
+              onPress={handleSave}
+              disabled={saving}
+              loading={saving}
+            />
+          </View>
+        </ScrollView>
+      </AppKeyboardAvoidingView>
     </ScreenContainer>
   );
 }
