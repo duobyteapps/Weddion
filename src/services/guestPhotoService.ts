@@ -1,15 +1,19 @@
 import { supabase } from "@/lib/supabase";
+
 import {
   deleteR2Object,
   getR2SignedUrl,
-  uploadImageToR2,
+  uploadGuestPhotoSecurely,
 } from "@/services/r2ImageService";
+
 import { getAuthenticatedUser } from "@/services/sessionService";
+
 import type {
   GuestInvitationAccess,
   InvitationGuestPhoto,
   InvitationGuestPhotoStatus,
 } from "@/types/invitation";
+
 import { compressImageForUpload } from "@/utils/imageCompression";
 
 type UploadGuestPhotoParams = {
@@ -53,6 +57,7 @@ const getCurrentIsoDate = () => new Date().toISOString();
 
 const getFileExtensionFromUri = (uri: string) => {
   const cleanUri = uri.split("?")[0] ?? uri;
+
   const extension = cleanUri.split(".").pop()?.toLowerCase();
 
   if (!extension || extension.length > 5) {
@@ -66,39 +71,21 @@ const getContentTypeFromExtension = (extension: string) => {
   switch (extension.toLowerCase()) {
     case "png":
       return "image/png";
+
     case "webp":
       return "image/webp";
+
     case "heic":
       return "image/heic";
+
     case "heif":
       return "image/heif";
+
     case "jpg":
     case "jpeg":
     default:
       return "image/jpeg";
   }
-};
-
-const buildGuestPhotoPath = (
-  invitationId: string,
-  guestUploadCode: string,
-  imageUri: string,
-  forceJpeg = false,
-) => {
-  const extension = forceJpeg ? "jpg" : getFileExtensionFromUri(imageUri);
-
-  const fileName = `${Date.now()}-${Math.random()
-    .toString(36)
-    .slice(2, 10)}.${extension}`;
-
-  return {
-    storagePath: `guest-photos/${invitationId}/${normalizeGuestUploadCode(
-      guestUploadCode,
-    )}/${fileName}`,
-    contentType: forceJpeg
-      ? "image/jpeg"
-      : getContentTypeFromExtension(extension),
-  };
 };
 
 export const getInvitationByGuestCode = async (code: string) => {
@@ -157,7 +144,7 @@ export const uploadGuestPhotos = async ({
   imageUris,
 }: UploadGuestPhotosParams) => {
   const normalizedCode = normalizeGuestUploadCode(guestUploadCode);
-  const uploadedStoragePaths: string[] = [];
+
   const createdPhotos: UploadedGuestPhotoRecord[] = [];
 
   if (imageUris.length === 0) {
@@ -166,53 +153,56 @@ export const uploadGuestPhotos = async ({
 
   try {
     for (const imageUri of imageUris) {
+      /*
+       * Mobil tarafındaki ilk güvenlik/optimizasyon katmanı.
+       *
+       * Fotoğraf önce 3 MB veya altına indiriliyor.
+       */
       const compressedImage = await compressImageForUpload(imageUri);
 
-      const { storagePath, contentType } = buildGuestPhotoPath(
-        invitationId,
-        normalizedCode,
-        compressedImage.uri,
-        compressedImage.wasCompressed,
-      );
+      /*
+       * Fotoğraf sıkıştırıldıysa ImageManipulator
+       * sonucu JPEG olduğu için content-type da
+       * image/jpeg olmalı.
+       */
+      const contentType = compressedImage.wasCompressed
+        ? "image/jpeg"
+        : getContentTypeFromExtension(
+            getFileExtensionFromUri(compressedImage.uri),
+          );
 
-      await uploadImageToR2({
+      /*
+       * ESKİ:
+       *
+       * r2-object
+       * -> presigned URL
+       * -> doğrudan R2 upload
+       * -> upload_guest_photo_record
+       *
+       *
+       * YENİ:
+       *
+       * guest-photo-upload
+       * -> gerçek dosya boyutu kontrolü
+       * -> dosya tipi kontrolü
+       * -> R2 upload
+       * -> DB kaydı
+       */
+      const uploadResult = await uploadGuestPhotoSecurely({
+        invitationId,
+        guestUploadCode: normalizedCode,
         imageUri: compressedImage.uri,
-        key: storagePath,
         contentType,
       });
 
-      uploadedStoragePaths.push(storagePath);
-
-      const { data: createdPhoto, error: uploadRecordError } =
-        await supabase.rpc("upload_guest_photo_record", {
-          target_invitation_id: invitationId,
-          target_upload_code: normalizedCode,
-          target_storage_path: storagePath,
-        });
-
-      if (uploadRecordError) {
-        console.log("Guest photo record RPC failed:", uploadRecordError);
-
-        try {
-          await deleteR2Object(storagePath);
-        } catch (deleteError) {
-          console.log("R2 guest photo rollback delete failed:", deleteError);
-        }
-
-        if (uploadRecordError.message.includes("GUEST_PHOTO_LIMIT_REACHED")) {
-          throw new Error(
-            "Fotoğraf yükleme limiti doldu. Bu hesap için en fazla 100 fotoğraf yüklenebilir.",
-          );
-        }
-
-        throw new Error(uploadRecordError.message);
-      }
-
-      if (createdPhoto) {
-        createdPhotos.push(createdPhoto as UploadedGuestPhotoRecord);
-      }
+      createdPhotos.push(uploadResult.photo as UploadedGuestPhotoRecord);
     }
 
+    /*
+     * Birden fazla fotoğraf yüklense bile
+     * mevcut sistemde olduğu gibi tek bildirim
+     * oluşturuyoruz.
+     */
     if (createdPhotos.length > 0) {
       const { error: notificationError } = await supabase.rpc(
         "create_guest_photo_upload_notification",
@@ -231,10 +221,6 @@ export const uploadGuestPhotos = async ({
 
     return true;
   } catch (error) {
-    await Promise.allSettled(
-      uploadedStoragePaths.map((storagePath) => deleteR2Object(storagePath)),
-    );
-
     console.log("Guest photo upload failed:", error);
 
     throw new Error(
@@ -249,13 +235,16 @@ export const getGuestPhotosByInvitation = async ({
   pageSize = GUEST_PHOTO_PAGE_SIZE,
 }: GetGuestPhotosByInvitationParams): Promise<InvitationGuestPhoto[]> => {
   const from = page * pageSize;
+
   const to = from + pageSize - 1;
 
   const { data, error } = await supabase
     .from("invitation_guest_photos")
     .select("*")
     .eq("invitation_id", invitationId)
-    .order("created_at", { ascending: false })
+    .order("created_at", {
+      ascending: false,
+    })
     .range(from, to);
 
   if (error) {
@@ -298,7 +287,9 @@ export const updateGuestPhotoStatus = async ({
 
   const { data, error } = await supabase
     .from("invitation_guest_photos")
-    .update({ status })
+    .update({
+      status,
+    })
     .eq("id", photoId)
     .select("*")
     .single();
@@ -350,7 +341,10 @@ export async function getCurrentUserGuestPhotoCount(): Promise<number> {
 
   const { count, error } = await supabase
     .from("invitation_guest_photos")
-    .select("id", { count: "exact", head: true })
+    .select("id", {
+      count: "exact",
+      head: true,
+    })
     .in("invitation_id", invitationIds)
     .gt("expires_at", getCurrentIsoDate());
 

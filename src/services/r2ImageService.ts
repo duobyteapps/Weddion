@@ -33,6 +33,21 @@ type R2FunctionParams = {
   requireAuth?: boolean;
 };
 
+type UploadGuestPhotoSecurelyParams = {
+  invitationId: string;
+  guestUploadCode: string;
+  imageUri: string;
+  contentType: string;
+};
+
+type SecureGuestPhotoUploadResponse = {
+  success: boolean;
+  key?: string;
+  photo?: unknown;
+  code?: string;
+  message?: string;
+};
+
 function isDirectUrl(value: string) {
   return (
     value.startsWith("http://") ||
@@ -105,6 +120,7 @@ async function callR2ObjectFunction({
 
   if (error) {
     const message = await getFunctionErrorMessage(error);
+
     throw new Error(message);
   }
 
@@ -113,6 +129,22 @@ async function callR2ObjectFunction({
   }
 
   return data;
+}
+
+async function readImageAsBytes(imageUri: string) {
+  const fileBase64 = await FileSystem.readAsStringAsync(imageUri, {
+    encoding: FileSystem.EncodingType.Base64,
+  });
+
+  const binary = globalThis.atob(fileBase64);
+
+  const bytes = new Uint8Array(binary.length);
+
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+
+  return bytes;
 }
 
 export async function getR2UploadUrl({
@@ -178,16 +210,7 @@ export async function uploadImageToR2({
     requireAuth,
   });
 
-  const fileBase64 = await FileSystem.readAsStringAsync(imageUri, {
-    encoding: FileSystem.EncodingType.Base64,
-  });
-
-  const binary = globalThis.atob(fileBase64);
-  const bytes = new Uint8Array(binary.length);
-
-  for (let index = 0; index < binary.length; index += 1) {
-    bytes[index] = binary.charCodeAt(index);
-  }
+  const bytes = await readImageAsBytes(imageUri);
 
   const uploadResponse = await fetch(uploadUrl, {
     method: "PUT",
@@ -215,5 +238,46 @@ export async function uploadImageToR2({
 
   return {
     key,
+  };
+}
+
+export async function uploadGuestPhotoSecurely({
+  invitationId,
+  guestUploadCode,
+  imageUri,
+  contentType,
+}: UploadGuestPhotoSecurelyParams) {
+  const bytes = await readImageAsBytes(imageUri);
+
+  const { data, error } =
+    await supabase.functions.invoke<SecureGuestPhotoUploadResponse>(
+      "guest-photo-upload",
+      {
+        body: bytes.buffer,
+        headers: {
+          "Content-Type": contentType,
+          "x-invitation-id": invitationId,
+          "x-upload-code": guestUploadCode.trim().toUpperCase(),
+        },
+      },
+    );
+
+  if (error) {
+    const message = await getFunctionErrorMessage(error);
+
+    throw new Error(message);
+  }
+
+  if (!data?.success) {
+    throw new Error(data?.message ?? "Fotoğraf güvenli şekilde yüklenemedi.");
+  }
+
+  if (!data.photo || !data.key) {
+    throw new Error("Fotoğraf yükleme sonucu alınamadı.");
+  }
+
+  return {
+    key: data.key,
+    photo: data.photo,
   };
 }
