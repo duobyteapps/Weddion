@@ -247,15 +247,20 @@ export async function uploadGuestPhotoSecurely({
   imageUri,
   contentType,
 }: UploadGuestPhotoSecurelyParams) {
-  const bytes = await readImageAsBytes(imageUri);
+  const formData = new FormData();
+
+  formData.append("file", {
+    uri: imageUri,
+    name: `guest-photo-${Date.now()}.jpg`,
+    type: contentType,
+  } as any);
 
   const { data, error } =
     await supabase.functions.invoke<SecureGuestPhotoUploadResponse>(
       "guest-photo-upload",
       {
-        body: bytes.buffer,
+        body: formData,
         headers: {
-          "Content-Type": contentType,
           "x-invitation-id": invitationId,
           "x-upload-code": guestUploadCode.trim().toUpperCase(),
         },
