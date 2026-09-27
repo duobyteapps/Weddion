@@ -2,6 +2,7 @@ import { supabase } from "@/lib/supabase";
 
 import {
   deleteR2Object,
+  finalizeGuestPhotoUpload,
   getR2SignedUrl,
   uploadGuestPhotoSecurely,
 } from "@/services/r2ImageService";
@@ -170,7 +171,7 @@ export const uploadGuestPhotos = async ({
           );
 
       /*
-       * Yeni güvenli akış:
+       * Güvenli akış:
        *
        * 1. create-upload
        * 2. doğrudan R2 binary upload
@@ -190,23 +191,23 @@ export const uploadGuestPhotos = async ({
     }
 
     /*
-     * Birden fazla fotoğraf için mevcut sistemde
-     * olduğu gibi tek bildirim oluştur.
+     * Tüm fotoğraflar başarıyla yüklendikten sonra
+     * backend'e yalnızca oluşturulan gerçek
+     * fotoğraf kayıtlarının ID'lerini gönderiyoruz.
+     *
+     * Backend:
+     * - ID'leri doğrular
+     * - invitation ID kontrolü yapar
+     * - upload code kontrolü yapar
+     * - gerçek fotoğraf sayısını belirler
+     * - tek bildirim oluşturur
      */
     if (createdPhotos.length > 0) {
-      const { error: notificationError } = await supabase.rpc(
-        "create_guest_photo_upload_notification",
-        {
-          target_invitation_id: invitationId,
-          target_upload_code: normalizedCode,
-          target_photo_count: createdPhotos.length,
-          target_first_photo_id: createdPhotos[0]?.id ?? null,
-        },
-      );
-
-      if (notificationError) {
-        console.log("Guest photo notification RPC failed:", notificationError);
-      }
+      await finalizeGuestPhotoUpload({
+        invitationId,
+        guestUploadCode: normalizedCode,
+        photoIds: createdPhotos.map((photo) => photo.id),
+      });
     }
 
     return true;

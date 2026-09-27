@@ -49,6 +49,8 @@ type GuestPhotoUploadResponse = {
   fileSize?: number;
   expiresIn?: number;
   photo?: unknown;
+  notificationId?: string | null;
+  photoCount?: number;
   code?: string;
   message?: string;
 };
@@ -239,6 +241,47 @@ async function confirmGuestPhotoUpload({
     key: data.key,
     photo: data.photo,
   };
+}
+
+export async function finalizeGuestPhotoUpload({
+  invitationId,
+  guestUploadCode,
+  photoIds,
+}: {
+  invitationId: string;
+  guestUploadCode: string;
+  photoIds: string[];
+}) {
+  if (photoIds.length === 0) {
+    return true;
+  }
+
+  const { data, error } =
+    await supabase.functions.invoke<GuestPhotoUploadResponse>(
+      "guest-photo-upload",
+      {
+        body: {
+          action: "finalize-upload",
+          invitationId,
+          uploadCode: guestUploadCode.trim().toUpperCase(),
+          photoIds,
+        },
+      },
+    );
+
+  if (error) {
+    const message = await getFunctionErrorMessage(error);
+
+    throw new Error(message);
+  }
+
+  if (!data?.success) {
+    throw new Error(
+      data?.message ?? "Fotoğraf yükleme bildirimi oluşturulamadı.",
+    );
+  }
+
+  return true;
 }
 
 export async function getR2UploadUrl({

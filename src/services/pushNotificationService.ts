@@ -176,6 +176,32 @@ export async function saveCurrentUserPushToken(
     const user = await getAuthenticatedUser();
     const now = new Date().toISOString();
 
+    /*
+     * Aynı kullanıcıya ait diğer aktif tokenları kapat.
+     * Böylece aynı kullanıcı için yalnızca güncel token aktif kalır.
+     */
+    const { error: deactivateError } = await supabase
+      .from("user_push_tokens")
+      .update({
+        is_active: false,
+        updated_at: now,
+      })
+      .eq("user_id", user.id)
+      .neq("expo_push_token", token)
+      .eq("is_active", true);
+
+    if (deactivateError) {
+      return {
+        granted: false,
+        reason: "save_error",
+        message: deactivateError.message,
+      };
+    }
+
+    /*
+     * Mevcut cihazın tokenını aktif hale getir
+     * veya henüz yoksa oluştur.
+     */
     const { error } = await supabase.from("user_push_tokens").upsert(
       {
         user_id: user.id,
