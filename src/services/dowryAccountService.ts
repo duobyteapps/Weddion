@@ -65,32 +65,6 @@ export async function getOrCreateMyDefaultDowryAccount(): Promise<DowryAccount> 
   return mapDowryAccount(account);
 }
 
-export async function joinDowryAccountByCode(
-  inviteCode: string,
-): Promise<DowryAccount> {
-  const normalizedInviteCode = inviteCode.trim().toUpperCase();
-
-  if (normalizedInviteCode.length < 4) {
-    throw new Error("Geçerli bir davet kodu girin.");
-  }
-
-  const { data, error } = await supabase.rpc("join_dowry_account_by_code", {
-    p_invite_code: normalizedInviteCode,
-  });
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  const account = ((data ?? []) as DowryAccountTableRow[])[0];
-
-  if (!account) {
-    throw new Error("Çeyiz hesabına katılma işlemi tamamlanamadı.");
-  }
-
-  return mapDowryAccount(account);
-}
-
 export async function refreshDowryInviteCode(
   dowryAccountId: string,
 ): Promise<DowryAccount> {

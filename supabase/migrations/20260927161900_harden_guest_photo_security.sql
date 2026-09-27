@@ -307,3 +307,16 @@ on function public.create_guest_photo_upload_notification(
   uuid
 )
 to service_role;
+
+drop function if exists public.can_guest_upload_to_invitation(uuid);
+
+-- ---------------------------------------------------------
+-- 5. Eski direct guest insert yolunu kaldır
+-- ---------------------------------------------------------
+
+drop policy if exists "Guests can insert photos with valid code"
+on public.invitation_guest_photos;
+
+drop function if exists public.can_guest_insert_photo(uuid, text);
+
+drop function if exists public.join_dowry_account_by_code(text);
