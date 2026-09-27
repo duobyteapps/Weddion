@@ -154,16 +154,14 @@ export const uploadGuestPhotos = async ({
   try {
     for (const imageUri of imageUris) {
       /*
-       * Mobil tarafındaki ilk güvenlik/optimizasyon katmanı.
-       *
-       * Fotoğraf önce 3 MB veya altına indiriliyor.
+       * Fotoğraf önce mobil tarafta
+       * maksimum 3 MB olacak şekilde hazırlanır.
        */
       const compressedImage = await compressImageForUpload(imageUri);
 
       /*
-       * Fotoğraf sıkıştırıldıysa ImageManipulator
-       * sonucu JPEG olduğu için content-type da
-       * image/jpeg olmalı.
+       * ImageManipulator ile sıkıştırılmışsa
+       * sonuç JPEG'dir.
        */
       const contentType = compressedImage.wasCompressed
         ? "image/jpeg"
@@ -172,36 +170,28 @@ export const uploadGuestPhotos = async ({
           );
 
       /*
-       * ESKİ:
+       * Yeni güvenli akış:
        *
-       * r2-object
-       * -> presigned URL
-       * -> doğrudan R2 upload
-       * -> upload_guest_photo_record
-       *
-       *
-       * YENİ:
-       *
-       * guest-photo-upload
-       * -> gerçek dosya boyutu kontrolü
-       * -> dosya tipi kontrolü
-       * -> R2 upload
-       * -> DB kaydı
+       * 1. create-upload
+       * 2. doğrudan R2 binary upload
+       * 3. confirm-upload
+       * 4. gerçek R2 boyut kontrolü
+       * 5. DB kaydı
        */
       const uploadResult = await uploadGuestPhotoSecurely({
         invitationId,
         guestUploadCode: normalizedCode,
         imageUri: compressedImage.uri,
         contentType,
+        fileSize: compressedImage.size,
       });
 
       createdPhotos.push(uploadResult.photo as UploadedGuestPhotoRecord);
     }
 
     /*
-     * Birden fazla fotoğraf yüklense bile
-     * mevcut sistemde olduğu gibi tek bildirim
-     * oluşturuyoruz.
+     * Birden fazla fotoğraf için mevcut sistemde
+     * olduğu gibi tek bildirim oluştur.
      */
     if (createdPhotos.length > 0) {
       const { error: notificationError } = await supabase.rpc(

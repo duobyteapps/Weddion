@@ -38,11 +38,16 @@ type UploadGuestPhotoSecurelyParams = {
   guestUploadCode: string;
   imageUri: string;
   contentType: string;
+  fileSize: number;
 };
 
-type SecureGuestPhotoUploadResponse = {
+type GuestPhotoUploadResponse = {
   success: boolean;
+  uploadUrl?: string;
   key?: string;
+  contentType?: string;
+  fileSize?: number;
+  expiresIn?: number;
   photo?: unknown;
   code?: string;
   message?: string;
@@ -97,7 +102,7 @@ async function getFunctionErrorMessage(error: unknown) {
     return error.message;
   }
 
-  return "R2 Edge Function çağrısı başarısız oldu.";
+  return "Edge Function çağrısı başarısız oldu.";
 }
 
 async function callR2ObjectFunction({
@@ -145,6 +150,95 @@ async function readImageAsBytes(imageUri: string) {
   }
 
   return bytes;
+}
+
+async function createGuestPhotoUpload({
+  invitationId,
+  guestUploadCode,
+  contentType,
+  fileSize,
+}: {
+  invitationId: string;
+  guestUploadCode: string;
+  contentType: string;
+  fileSize: number;
+}) {
+  const { data, error } =
+    await supabase.functions.invoke<GuestPhotoUploadResponse>(
+      "guest-photo-upload",
+      {
+        body: {
+          action: "create-upload",
+          invitationId,
+          uploadCode: guestUploadCode.trim().toUpperCase(),
+          contentType,
+          fileSize,
+        },
+      },
+    );
+
+  if (error) {
+    const message = await getFunctionErrorMessage(error);
+
+    throw new Error(message);
+  }
+
+  if (!data?.success) {
+    throw new Error(
+      data?.message ?? "Fotoğraf yükleme bağlantısı oluşturulamadı.",
+    );
+  }
+
+  if (!data.uploadUrl || !data.key) {
+    throw new Error("Fotoğraf yükleme bağlantısı alınamadı.");
+  }
+
+  return {
+    uploadUrl: data.uploadUrl,
+    key: data.key,
+  };
+}
+
+async function confirmGuestPhotoUpload({
+  invitationId,
+  guestUploadCode,
+  key,
+}: {
+  invitationId: string;
+  guestUploadCode: string;
+  key: string;
+}) {
+  const { data, error } =
+    await supabase.functions.invoke<GuestPhotoUploadResponse>(
+      "guest-photo-upload",
+      {
+        body: {
+          action: "confirm-upload",
+          invitationId,
+          uploadCode: guestUploadCode.trim().toUpperCase(),
+          key,
+        },
+      },
+    );
+
+  if (error) {
+    const message = await getFunctionErrorMessage(error);
+
+    throw new Error(message);
+  }
+
+  if (!data?.success) {
+    throw new Error(data?.message ?? "Fotoğraf yüklemesi doğrulanamadı.");
+  }
+
+  if (!data.photo || !data.key) {
+    throw new Error("Fotoğraf yükleme sonucu alınamadı.");
+  }
+
+  return {
+    key: data.key,
+    photo: data.photo,
+  };
 }
 
 export async function getR2UploadUrl({
@@ -246,65 +340,61 @@ export async function uploadGuestPhotoSecurely({
   guestUploadCode,
   imageUri,
   contentType,
+  fileSize,
 }: UploadGuestPhotoSecurelyParams) {
-  const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
-  const supabasePublishableKey =
-    process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-
-  if (!supabaseUrl || !supabasePublishableKey) {
-    throw new Error("Supabase env değişkenleri eksik.");
+  if (!Number.isFinite(fileSize) || fileSize <= 0) {
+    throw new Error("Fotoğraf boyutu belirlenemedi.");
   }
 
-  const session = await getAuthenticatedSession();
+  /*
+   * 1. Supabase'ten bu fotoğraf için kısa süreli
+   * R2 upload URL'si al.
+   *
+   * Burada login/session gerekmiyor.
+   * Güvenlik davet ID + upload code üzerinden sağlanıyor.
+   */
+  const { uploadUrl, key } = await createGuestPhotoUpload({
+    invitationId,
+    guestUploadCode,
+    contentType,
+    fileSize,
+  });
 
-  const uploadResponse = await FileSystem.uploadAsync(
-    `${supabaseUrl}/functions/v1/guest-photo-upload`,
-    imageUri,
-    {
-      httpMethod: "POST",
-      uploadType: FileSystem.FileSystemUploadType.MULTIPART,
-      fieldName: "file",
-      mimeType: contentType,
-      headers: {
-        apikey: supabasePublishableKey,
-        Authorization: `Bearer ${session.access_token}`,
-        "x-invitation-id": invitationId,
-        "x-upload-code": guestUploadCode.trim().toUpperCase(),
-      },
+  /*
+   * 2. Fotoğrafı Edge Function üzerinden geçirmek yerine
+   * doğrudan R2'ye binary olarak yükle.
+   *
+   * MULTIPART kullanmıyoruz.
+   */
+  const uploadResponse = await FileSystem.uploadAsync(uploadUrl, imageUri, {
+    httpMethod: "PUT",
+    uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
+    headers: {
+      "Content-Type": contentType,
+      "Content-Length": String(fileSize),
     },
-  );
-
-  let responseData: SecureGuestPhotoUploadResponse | null = null;
-
-  try {
-    responseData = JSON.parse(
-      uploadResponse.body,
-    ) as SecureGuestPhotoUploadResponse;
-  } catch {
-    throw new Error(
-      `Fotoğraf yükleme yanıtı okunamadı. HTTP ${uploadResponse.status}`,
-    );
-  }
+  });
 
   if (uploadResponse.status < 200 || uploadResponse.status >= 300) {
-    throw new Error(
-      responseData?.message ??
-        `Fotoğraf yüklenemedi. HTTP ${uploadResponse.status}`,
-    );
+    let message = `Fotoğraf R2 üzerine yüklenemedi. HTTP ${uploadResponse.status}`;
+
+    if (uploadResponse.body?.trim()) {
+      message = `${message} ${uploadResponse.body}`;
+    }
+
+    throw new Error(message);
   }
 
-  if (!responseData?.success) {
-    throw new Error(
-      responseData?.message ?? "Fotoğraf güvenli şekilde yüklenemedi.",
-    );
-  }
-
-  if (!responseData.photo || !responseData.key) {
-    throw new Error("Fotoğraf yükleme sonucu alınamadı.");
-  }
-
-  return {
-    key: responseData.key,
-    photo: responseData.photo,
-  };
+  /*
+   * 3. R2 yüklemesinden sonra Supabase gerçek objeyi
+   * HEAD isteğiyle kontrol eder.
+   *
+   * Burada gerçek ContentLength tekrar kontrol edilir.
+   * Uygunsa invitation_guest_photos kaydı oluşturulur.
+   */
+  return confirmGuestPhotoUpload({
+    invitationId,
+    guestUploadCode,
+    key,
+  });
 }
