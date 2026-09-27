@@ -1,4 +1,4 @@
-import { router, useLocalSearchParams } from "expo-router";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import {
   ComponentProps,
   useCallback,
@@ -38,6 +38,7 @@ import { InvitationGuestPhoto, UserInvitation } from "@/types/invitation";
 const MAX_GUEST_PHOTOS_PER_INVITATION = 100;
 
 type GalleryPhotos = ComponentProps<typeof GalleryPhotoGrid>["photos"];
+
 type GalleryPhoto = GalleryPhotos[number];
 
 type GalleryAccessRole = "owner" | "partner";
@@ -81,6 +82,7 @@ function parseEventDate(date?: string | null) {
 
   if (isoDateMatch) {
     const [, year, month, day] = isoDateMatch;
+
     const parsedDate = new Date(Number(year), Number(month) - 1, Number(day));
 
     return Number.isNaN(parsedDate.getTime()) ? null : parsedDate;
@@ -92,6 +94,7 @@ function parseEventDate(date?: string | null) {
 
   if (turkishDateMatch) {
     const [, day, month, year] = turkishDateMatch;
+
     const parsedDate = new Date(Number(year), Number(month) - 1, Number(day));
 
     return Number.isNaN(parsedDate.getTime()) ? null : parsedDate;
@@ -135,6 +138,7 @@ function mapGuestPhotoToGalleryPhoto(
 
 export default function GalleryScreen() {
   const { showAlert } = useAppAlert();
+
   const { invitationId, from } = useLocalSearchParams<{
     invitationId?: string;
     from?: string;
@@ -143,45 +147,69 @@ export default function GalleryScreen() {
   const [invitations, setInvitations] = useState<GalleryAccessibleInvitation[]>(
     [],
   );
+
   const [selectedInvitationId, setSelectedInvitationId] = useState<string>();
+
   const [loadingInvitations, setLoadingInvitations] = useState(true);
+
   const [deletingPhotoId, setDeletingPhotoId] = useState<string | null>(null);
+
   const [downloadingPhotoId, setDownloadingPhotoId] = useState<string | null>(
     null,
   );
+
   const [downloadingAllPhotos, setDownloadingAllPhotos] = useState(false);
+
   const [downloadingSelectedPhotos, setDownloadingSelectedPhotos] =
     useState(false);
+
   const [deletingSelectedPhotos, setDeletingSelectedPhotos] = useState(false);
 
   const isMountedRef = useRef(true);
 
-  function handleServiceError(params: {
-    error: unknown;
-    fallbackTitle: string;
-    fallbackMessage: string;
-  }) {
-    const message =
-      params.error instanceof Error
-        ? params.error.message
-        : params.fallbackMessage;
+  /*
+   * İlk focus sırasında usePaginatedData zaten
+   * ilk sayfayı yüklediği için ikinci kez
+   * gereksiz refresh yapmayacağız.
+   *
+   * Galeriden çıkıp tekrar gelindiğinde ise
+   * refresh çalışacak.
+   */
+  const isFirstGalleryFocusRef = useRef(true);
 
-    const isSessionExpired = message === SESSION_EXPIRED_MESSAGE;
+  const handleServiceError = useCallback(
+    (params: {
+      error: unknown;
+      fallbackTitle: string;
+      fallbackMessage: string;
+    }) => {
+      const message =
+        params.error instanceof Error
+          ? params.error.message
+          : params.fallbackMessage;
 
-    showAlert({
-      title: isSessionExpired ? "Oturum Süresi Doldu" : params.fallbackTitle,
-      message,
-      type: isSessionExpired ? "warning" : "error",
-      confirmText: isSessionExpired ? "Giriş Yap" : "Tamam",
-      onConfirm: () => {
-        if (isSessionExpired) {
-          router.replace("/auth/login");
-        }
-      },
-    });
-  }
+      const isSessionExpired = message === SESSION_EXPIRED_MESSAGE;
 
-  async function getMyGalleryAccessibleInvitations() {
+      showAlert({
+        title: isSessionExpired ? "Oturum Süresi Doldu" : params.fallbackTitle,
+
+        message,
+
+        type: isSessionExpired ? "warning" : "error",
+
+        confirmText: isSessionExpired ? "Giriş Yap" : "Tamam",
+
+        onConfirm: () => {
+          if (isSessionExpired) {
+            router.replace("/auth/login");
+          }
+        },
+      });
+    },
+    [showAlert],
+  );
+
+  const getMyGalleryAccessibleInvitations = useCallback(async () => {
     const { data, error } = await supabase.rpc(
       "get_my_gallery_accessible_invitations",
     );
@@ -191,63 +219,9 @@ export default function GalleryScreen() {
     }
 
     return (data ?? []) as GalleryAccessibleInvitation[];
-  }
+  }, []);
 
-  useEffect(() => {
-    isMountedRef.current = true;
-    fetchInvitations();
-
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, [invitationId]);
-
-  const fetchGuestPhotoPage = useCallback(
-    async ({ page, pageSize }: { page: number; pageSize: number }) => {
-      if (!selectedInvitationId) {
-        return [];
-      }
-
-      const data = await getGuestPhotosByInvitation({
-        invitationId: selectedInvitationId,
-        page,
-        pageSize,
-      });
-
-      return data.filter((photo) => Boolean(photo.public_url));
-    },
-    [selectedInvitationId],
-  );
-
-  const {
-    items: guestPhotos,
-    setItems: setGuestPhotos,
-    loadingInitial: loadingPhotos,
-    loadingMore: loadingMorePhotos,
-    hasMore: hasMorePhotos,
-    loadMore: handleLoadMorePhotos,
-  } = usePaginatedData<InvitationGuestPhoto>({
-    pageSize: GUEST_PHOTO_PAGE_SIZE,
-    enabled: Boolean(selectedInvitationId),
-    dependencies: [selectedInvitationId],
-    fetchPage: fetchGuestPhotoPage,
-    onError: (error) => {
-      console.log("Galeri fotoğrafları alınamadı:", error);
-
-      handleServiceError({
-        error,
-        fallbackTitle: "Fotoğraflar alınamadı",
-        fallbackMessage:
-          "Misafir fotoğrafları yüklenirken bir hata oluştu. Lütfen tekrar deneyin.",
-      });
-    },
-  });
-
-  const photos = useMemo(() => {
-    return guestPhotos.map(mapGuestPhotoToGalleryPhoto);
-  }, [guestPhotos]);
-
-  const fetchInvitations = async () => {
+  const fetchInvitations = useCallback(async () => {
     try {
       if (isMountedRef.current) {
         setLoadingInvitations(true);
@@ -292,7 +266,111 @@ export default function GalleryScreen() {
         setLoadingInvitations(false);
       }
     }
-  };
+  }, [getMyGalleryAccessibleInvitations, handleServiceError, invitationId]);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+
+    fetchInvitations();
+
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, [fetchInvitations]);
+
+  const fetchGuestPhotoPage = useCallback(
+    async ({ page, pageSize }: { page: number; pageSize: number }) => {
+      if (!selectedInvitationId) {
+        return [];
+      }
+
+      const data = await getGuestPhotosByInvitation({
+        invitationId: selectedInvitationId,
+        page,
+        pageSize,
+      });
+
+      return data.filter((photo) => Boolean(photo.public_url));
+    },
+    [selectedInvitationId],
+  );
+
+  /*
+   * Bu fonksiyon mutlaka useCallback olmalı.
+   *
+   * Inline onError kullanılırsa her render'da
+   * yeni fonksiyon oluşur. Bu da usePaginatedData
+   * içindeki refresh fonksiyonunun referansını
+   * değiştirebilir ve useFocusEffect ile birlikte
+   * sonsuz refresh döngüsüne neden olabilir.
+   */
+  const handleGuestPhotoLoadError = useCallback(
+    (error: unknown) => {
+      console.log("Galeri fotoğrafları alınamadı:", error);
+
+      handleServiceError({
+        error,
+        fallbackTitle: "Fotoğraflar alınamadı",
+        fallbackMessage:
+          "Misafir fotoğrafları yüklenirken bir hata oluştu. Lütfen tekrar deneyin.",
+      });
+    },
+    [handleServiceError],
+  );
+
+  const {
+    items: guestPhotos,
+    setItems: setGuestPhotos,
+    loadingInitial: loadingPhotos,
+    loadingMore: loadingMorePhotos,
+    hasMore: hasMorePhotos,
+    refresh: refreshGuestPhotos,
+    loadMore: handleLoadMorePhotos,
+  } = usePaginatedData<InvitationGuestPhoto>({
+    pageSize: GUEST_PHOTO_PAGE_SIZE,
+    enabled: Boolean(selectedInvitationId),
+    dependencies: [selectedInvitationId],
+    fetchPage: fetchGuestPhotoPage,
+    onError: handleGuestPhotoLoadError,
+  });
+
+  /*
+   * Galeriye tekrar dönüldüğünde fotoğrafları
+   * yeniden çek.
+   *
+   * Örnek:
+   *
+   * Misafir fotoğraf yükledi
+   * ↓
+   * Bildirim geldi
+   * ↓
+   * Kullanıcı galeriye geçti
+   * ↓
+   * Galeri focus aldı
+   * ↓
+   * Fotoğraflar yeniden çekildi
+   *
+   * İlk açılışta usePaginatedData zaten yükleme
+   * yaptığı için ilk focus'ta refresh atlanıyor.
+   */
+  useFocusEffect(
+    useCallback(() => {
+      if (!selectedInvitationId) {
+        return;
+      }
+
+      if (isFirstGalleryFocusRef.current) {
+        isFirstGalleryFocusRef.current = false;
+        return;
+      }
+
+      refreshGuestPhotos();
+    }, [selectedInvitationId, refreshGuestPhotos]),
+  );
+
+  const photos = useMemo(() => {
+    return guestPhotos.map(mapGuestPhotoToGalleryPhoto);
+  }, [guestPhotos]);
 
   const eventOptions: GalleryEventOption[] = useMemo(() => {
     return invitations.map((invitation) => ({
@@ -309,6 +387,7 @@ export default function GalleryScreen() {
   }, [invitations, selectedInvitationId]);
 
   const hasInvitation = eventOptions.length > 0;
+
   const hasPhotos = photos.length > 0;
 
   const handleCreateInvitation = () => {
@@ -322,24 +401,42 @@ export default function GalleryScreen() {
 
     router.push({
       pathname: "/invitation-flow/[templateId]/share",
+
       params: {
         templateId: selectedInvitation.template_id,
+
         invitationId: selectedInvitation.id,
+
         shareSlug: selectedInvitation.share_slug ?? "",
+
         invitationImageUrl: selectedInvitation.invitation_image_url ?? "",
+
         guestUploadCode: selectedInvitation.guest_upload_code ?? "",
+
         guestUploadSlug: selectedInvitation.guest_upload_slug ?? "",
+
         guestUploadQrValue: selectedInvitation.guest_upload_qr_value ?? "",
+
         brideName: selectedInvitation.bride_name,
+
         groomName: selectedInvitation.groom_name,
+
         brideParents: selectedInvitation.bride_parents ?? "",
+
         groomParents: selectedInvitation.groom_parents ?? "",
+
         brideSurname: selectedInvitation.bride_surname ?? "",
+
         groomSurname: selectedInvitation.groom_surname ?? "",
+
         date: selectedInvitation.event_date,
+
         time: selectedInvitation.event_time ?? "",
+
         description: selectedInvitation.description ?? "",
+
         venueName: selectedInvitation.venue_name ?? "",
+
         venueLocation: selectedInvitation.venue_location ?? "",
       },
     });
@@ -376,6 +473,7 @@ export default function GalleryScreen() {
 
       await downloadImageToGallery({
         imageUri: photo.imageUrl,
+
         fileNamePrefix: `weddion-galeri-${
           selectedInvitation?.bride_name ?? "misafir"
         }-${selectedInvitation?.groom_name ?? "fotograf"}`,
@@ -384,10 +482,12 @@ export default function GalleryScreen() {
       showAlert({
         type: "success",
         title: "Fotoğraf indirildi",
+
         message:
           Platform.OS === "ios"
             ? "Fotoğraf, Fotoğraflar uygulamasına kaydedildi."
             : "Fotoğraf galerinize kaydedildi.",
+
         confirmText: "Tamam",
       });
     } catch (error) {
@@ -446,6 +546,7 @@ export default function GalleryScreen() {
 
       const downloadedUris = await downloadImagesToGallery({
         imageUris,
+
         fileNamePrefix: `weddion-galeri-${
           selectedInvitation?.bride_name ?? "misafir"
         }-${selectedInvitation?.groom_name ?? "fotograf"}`,
@@ -454,10 +555,12 @@ export default function GalleryScreen() {
       showAlert({
         type: "success",
         title: "Fotoğraflar indirildi",
+
         message:
           Platform.OS === "ios"
             ? `${downloadedUris.length} fotoğraf Fotoğraflar uygulamasına kaydedildi.`
             : `${downloadedUris.length} fotoğraf galerinize kaydedildi.`,
+
         confirmText: "Tamam",
       });
     } catch (error) {
@@ -513,6 +616,7 @@ export default function GalleryScreen() {
 
       const downloadedUris = await downloadImagesToGallery({
         imageUris,
+
         fileNamePrefix: `weddion-galeri-${
           selectedInvitation?.bride_name ?? "misafir"
         }-${selectedInvitation?.groom_name ?? "fotograf"}`,
@@ -521,10 +625,12 @@ export default function GalleryScreen() {
       showAlert({
         type: "success",
         title: "Fotoğraflar indirildi",
+
         message:
           Platform.OS === "ios"
             ? `${downloadedUris.length} fotoğraf Fotoğraflar uygulamasına kaydedildi.`
             : `${downloadedUris.length} fotoğraf galerinize kaydedildi.`,
+
         confirmText: "Tamam",
       });
     } catch (error) {
@@ -567,10 +673,13 @@ export default function GalleryScreen() {
     showAlert({
       type: "warning",
       title: "Fotoğraf silinsin mi?",
+
       message:
         "Bu fotoğraf galeriden ve depolama alanından silinecek. Bu işlem geri alınamaz.",
+
       cancelText: "Vazgeç",
       confirmText: "Sil",
+
       onConfirm: async () => {
         try {
           setDeletingPhotoId(targetPhoto.id);
@@ -632,9 +741,12 @@ export default function GalleryScreen() {
     showAlert({
       type: "warning",
       title: "Seçilen fotoğraflar silinsin mi?",
+
       message: `${targetPhotos.length} fotoğraf galeriden ve depolama alanından silinecek. Bu işlem geri alınamaz.`,
+
       cancelText: "Vazgeç",
       confirmText: "Sil",
+
       onConfirm: async () => {
         try {
           setDeletingSelectedPhotos(true);
@@ -662,7 +774,7 @@ export default function GalleryScreen() {
             confirmText: "Tamam",
           });
         } catch (error) {
-          console.log("Seçilen fotoğraflar silinemedi:", error);
+          console.log("Seçilen galeri fotoğrafları silinemedi:", error);
 
           handleServiceError({
             error,
