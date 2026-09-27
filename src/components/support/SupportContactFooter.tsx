@@ -2,7 +2,7 @@ import { AppCard } from "@/components/ui/AppCard";
 import { AppText } from "@/components/ui/AppText";
 import { Colors } from "@/constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
-import { Linking, Pressable, View } from "react-native";
+import { Alert, Linking, Pressable, View } from "react-native";
 
 const SUPPORT_EMAIL = "duobyteapps@gmail.com";
 
@@ -32,16 +32,27 @@ function TextArea() {
 function ButtonArea() {
   const handleSendMail = async () => {
     const subject = encodeURIComponent("Weddion Destek Talebi");
+
     const body = encodeURIComponent(
       "Merhaba Weddion ekibi,\n\nYaşadığım sorun hakkında destek almak istiyorum.\n\nSorun açıklaması:\n",
     );
 
     const mailUrl = `mailto:${SUPPORT_EMAIL}?subject=${subject}&body=${body}`;
 
-    const canOpen = await Linking.canOpenURL(mailUrl);
-
-    if (canOpen) {
+    try {
       await Linking.openURL(mailUrl);
+    } catch (error) {
+      console.log("E-posta uygulaması açılamadı:", error);
+
+      Alert.alert(
+        "E-posta Uygulaması Bulunamadı",
+        `Destek için bize şu adresten ulaşabilirsiniz:\n\n${SUPPORT_EMAIL}`,
+        [
+          {
+            text: "Tamam",
+          },
+        ],
+      );
     }
   };
 
@@ -65,7 +76,9 @@ export function SupportContactFooter() {
     <AppCard className="my-5 !bg-primarySoft">
       <View className="flex-row items-center">
         <IconArea />
+
         <TextArea />
+
         <ButtonArea />
       </View>
     </AppCard>
