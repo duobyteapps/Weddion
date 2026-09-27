@@ -3,6 +3,7 @@ import { useAppAlert } from "@/components/ui/AppAlert";
 import { AppBackButton } from "@/components/ui/AppBackButton";
 import { AppButton } from "@/components/ui/AppButton";
 import { AppCard } from "@/components/ui/AppCard";
+import AppKeyboardAvoidingView from "@/components/ui/AppKeyboardAvoidingView";
 import { AppText } from "@/components/ui/AppText";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { getInvitationByGuestCode } from "@/services/guestPhotoService";
@@ -12,8 +13,6 @@ import { Fragment, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Image,
-  KeyboardAvoidingView,
-  Platform,
   Pressable,
   ScrollView,
   TextInput,
@@ -46,13 +45,16 @@ export default function GuestPhotoAccessScreen() {
   const inputRefs = useRef<Array<TextInput | null>>([]);
 
   const [code, setCode] = useState<string[]>(Array(CODE_LENGTH).fill(""));
+
   const [activeInputIndex, setActiveInputIndex] = useState<number | null>(null);
+
   const [loading, setLoading] = useState(false);
 
   const eventCode = code.join("");
 
   function handleChangeCode(value: string, index: number) {
     const normalizedValue = cleanCode(value);
+
     const nextCode = [...code];
 
     if (normalizedValue.length > 1) {
@@ -72,13 +74,16 @@ export default function GuestPhotoAccessScreen() {
       );
 
       inputRefs.current[nextFocusIndex]?.focus();
+
       return;
     }
 
     const lastCharacter = normalizedValue.slice(-1);
+
     const wasEmpty = !nextCode[index];
 
     nextCode[index] = lastCharacter;
+
     setCode(nextCode);
 
     if (lastCharacter && wasEmpty && index < CODE_LENGTH - 1) {
@@ -93,8 +98,11 @@ export default function GuestPhotoAccessScreen() {
 
     if (code[index]) {
       const nextCode = [...code];
+
       nextCode[index] = "";
+
       setCode(nextCode);
+
       return;
     }
 
@@ -102,7 +110,9 @@ export default function GuestPhotoAccessScreen() {
       inputRefs.current[index - 1]?.focus();
 
       const nextCode = [...code];
+
       nextCode[index - 1] = "";
+
       setCode(nextCode);
     }
   }
@@ -117,6 +127,7 @@ export default function GuestPhotoAccessScreen() {
         type: "warning",
         confirmText: "Tamam",
       });
+
       return;
     }
 
@@ -127,6 +138,7 @@ export default function GuestPhotoAccessScreen() {
         type: "warning",
         confirmText: "Tamam",
       });
+
       return;
     }
 
@@ -149,15 +161,24 @@ export default function GuestPhotoAccessScreen() {
 
       router.push({
         pathname: "/guest-photo-upload",
+
         params: {
           invitationId: data.id,
+
           guestUploadCode: data.guest_upload_code,
+
           guestUploadSlug: data.guest_upload_slug,
+
           brideName: data.bride_name,
+
           groomName: data.groom_name,
+
           eventDate: data.event_date ?? "",
+
           eventTime: data.event_time ?? "",
+
           venueName: data.venue_name ?? "",
+
           backTo: "/guest-photo-access",
         },
       });
@@ -166,10 +187,12 @@ export default function GuestPhotoAccessScreen() {
 
       showAlert({
         title: "Kod kontrol edilemedi",
+
         message:
           error instanceof Error
             ? error.message
             : "Kod kontrol edilirken bir sorun oluştu. Lütfen tekrar deneyin.",
+
         type: "error",
         confirmText: "Tamam",
       });
@@ -198,14 +221,13 @@ export default function GuestPhotoAccessScreen() {
           descriptionClassName="mt-3 px-6 text-center text-textMuted"
         />
 
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
-          className="flex-1"
-        >
+        <AppKeyboardAvoidingView style={{ flex: 1 }}>
           <ScrollView
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
-            contentContainerStyle={{ flexGrow: 1 }}
+            contentContainerStyle={{
+              flexGrow: 1,
+            }}
           >
             <View className="flex-1 justify-between">
               <View>
@@ -279,7 +301,9 @@ export default function GuestPhotoAccessScreen() {
                               <View
                                 pointerEvents="none"
                                 className="absolute top-[16px] h-6 w-[1px] bg-primary"
-                                style={{ left: "50%" }}
+                                style={{
+                                  left: "50%",
+                                }}
                               />
                             ) : null}
                           </View>
@@ -343,7 +367,7 @@ export default function GuestPhotoAccessScreen() {
               </View>
             </View>
           </ScrollView>
-        </KeyboardAvoidingView>
+        </AppKeyboardAvoidingView>
       </View>
     </ScreenContainer>
   );

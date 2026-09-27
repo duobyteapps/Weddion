@@ -27,6 +27,7 @@ export default function PersonalInfoScreen() {
   const [phone, setPhone] = useState("");
 
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
   const [avatarPath, setAvatarPath] = useState<string | null>(null);
 
   function handleServiceError(params: {
@@ -43,9 +44,13 @@ export default function PersonalInfoScreen() {
 
     showAlert({
       title: isSessionExpired ? "Oturum Süresi Doldu" : params.fallbackTitle,
+
       message,
+
       type: isSessionExpired ? "warning" : "error",
+
       confirmText: isSessionExpired ? "Giriş Yap" : "Tamam",
+
       onConfirm: () => {
         if (isSessionExpired) {
           router.replace("/auth/login");
@@ -129,7 +134,7 @@ export default function PersonalInfoScreen() {
         <ScrollView
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
-          contentContainerClassName="pb-28"
+          contentContainerClassName="flex-grow pb-28"
         >
           <PersonalInfoHeader />
 

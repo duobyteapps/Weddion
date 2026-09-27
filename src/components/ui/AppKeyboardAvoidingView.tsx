@@ -1,6 +1,11 @@
 import { PropsWithChildren } from "react";
 
-import { KeyboardAvoidingView, StyleProp, ViewStyle } from "react-native";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  StyleProp,
+  ViewStyle,
+} from "react-native";
 
 type AppKeyboardAvoidingViewProps = PropsWithChildren<{
   style?: StyleProp<ViewStyle>;
@@ -15,7 +20,7 @@ export default function AppKeyboardAvoidingView({
   return (
     <KeyboardAvoidingView
       style={[{ flex: 1 }, style]}
-      behavior="padding"
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
       keyboardVerticalOffset={keyboardVerticalOffset}
     >
       {children}

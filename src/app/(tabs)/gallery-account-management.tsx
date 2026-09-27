@@ -1,14 +1,7 @@
 import * as Clipboard from "expo-clipboard";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useState } from "react";
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Share,
-  View,
-} from "react-native";
+import { ActivityIndicator, ScrollView, Share, View } from "react-native";
 
 import { ScreenHeader } from "@/components/common/ScreenHeader";
 import { GalleryAccountSummaryCard } from "@/components/gallery/account-management/GalleryAccountSummaryCard";
@@ -16,6 +9,7 @@ import { GalleryJoinGalleryCard } from "@/components/gallery/account-management/
 import { GalleryPartnerMembersCard } from "@/components/gallery/account-management/GalleryPartnerMembersCard";
 import { GalleryPartnerRequestsCard } from "@/components/gallery/account-management/GalleryPartnerRequestsCard";
 import { useAppAlert } from "@/components/ui/AppAlert";
+import AppKeyboardAvoidingView from "@/components/ui/AppKeyboardAvoidingView";
 import { AppText } from "@/components/ui/AppText";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { Colors } from "@/constants/Colors";
@@ -48,10 +42,8 @@ export default function GalleryAccountManagementScreen() {
 
   const [partner, setPartner] = useState<GalleryPartner | null>(null);
   const [joinRequests, setJoinRequests] = useState<GalleryPartnerRequest[]>([]);
-
   const [joinCode, setJoinCode] = useState("");
   const [displayName, setDisplayName] = useState("");
-
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState(false);
   const [refreshingCode, setRefreshingCode] = useState(false);
@@ -69,7 +61,6 @@ export default function GalleryAccountManagementScreen() {
   const hasPartner = Boolean(partner);
   const activeMemberCount = selectedInvitation ? (partner ? 2 : 1) : 0;
   const canUseInviteActions = Boolean(isOwner && !hasPartner);
-
   const shouldShowJoinCard = !selectedInvitation;
 
   function handleServiceError(params: {
@@ -102,7 +93,6 @@ export default function GalleryAccountManagementScreen() {
   ) {
     const activePartner = await getGalleryPartner(targetInvitation.id);
     setPartner(activePartner);
-
     if (targetInvitation.access_role === "owner") {
       const pendingRequests =
         activePartner === null
@@ -210,7 +200,9 @@ export default function GalleryAccountManagementScreen() {
 
     showAlert({
       title: "Davet Kodu Kopyalandı",
+
       message: "Galeri davet kodunu partnerinle paylaşabilirsin.",
+
       type: "success",
       confirmText: "Tamam",
     });
@@ -235,28 +227,36 @@ export default function GalleryAccountManagementScreen() {
 
     showAlert({
       title: "Davet Kodu Yenilensin mi?",
+
       message:
         "Mevcut davet kodu geçersiz olur. Yeni kodu tekrar paylaşman gerekir.",
+
       type: "warning",
       confirmText: "Yenile",
       cancelText: "İptal",
+
       onConfirm: async () => {
         try {
           setRefreshingCode(true);
 
           await refreshGalleryPartnerInviteCode(selectedInvitation.id);
+
           await refreshGalleryAccountSilently();
 
           showAlert({
             title: "Davet Kodu Yenilendi",
+
             message: "Yeni galeri davet kodunu partnerinle paylaşabilirsin.",
+
             type: "success",
             confirmText: "Tamam",
           });
         } catch (error) {
           handleServiceError({
             error,
+
             fallbackTitle: "Davet Kodu Hatası",
+
             fallbackMessage:
               "Davet kodu yenilenirken bir hata oluştu. Lütfen tekrar deneyin.",
           });
@@ -273,10 +273,13 @@ export default function GalleryAccountManagementScreen() {
     if (normalizedCode.length < 4) {
       showAlert({
         title: "Davet Kodu Eksik",
+
         message: "Lütfen geçerli bir davet kodu girin.",
+
         type: "warning",
         confirmText: "Tamam",
       });
+
       return;
     }
 
@@ -293,15 +296,19 @@ export default function GalleryAccountManagementScreen() {
 
       showAlert({
         title: "Katılma İsteği Gönderildi",
+
         message:
           "Galeri sahibi isteğini onayladığında bu galeriye erişebileceksin.",
+
         type: "success",
         confirmText: "Tamam",
       });
     } catch (error) {
       handleServiceError({
         error,
+
         fallbackTitle: "Katılma İsteği Hatası",
+
         fallbackMessage:
           "Galeriye katılma isteği gönderilirken bir hata oluştu. Lütfen tekrar deneyin.",
       });
@@ -313,28 +320,36 @@ export default function GalleryAccountManagementScreen() {
   function handleApproveJoinRequest(request: GalleryPartnerRequest) {
     showAlert({
       title: "Katılma İsteği Onaylansın mı?",
+
       message:
         "Bu kişi galeri fotoğraflarını görebilecek, indirebilecek ve silebilecek.",
+
       type: "warning",
       confirmText: "Onayla",
       cancelText: "İptal",
+
       onConfirm: async () => {
         try {
           setApprovingRequestId(request.id);
 
           await approveGalleryPartnerRequest(request.id);
+
           await refreshGalleryAccountSilently();
 
           showAlert({
             title: "Katılma İsteği Onaylandı",
+
             message: "Kişi galeri ortağı olarak eklendi.",
+
             type: "success",
             confirmText: "Tamam",
           });
         } catch (error) {
           handleServiceError({
             error,
+
             fallbackTitle: "Onaylama Hatası",
+
             fallbackMessage:
               "Katılma isteği onaylanırken bir hata oluştu. Lütfen tekrar deneyin.",
           });
@@ -348,27 +363,35 @@ export default function GalleryAccountManagementScreen() {
   function handleRejectJoinRequest(request: GalleryPartnerRequest) {
     showAlert({
       title: "Katılma İsteği Reddedilsin mi?",
+
       message: "Bu kişi galeri ortağı olarak eklenmeyecek.",
+
       type: "warning",
       confirmText: "Reddet",
       cancelText: "İptal",
+
       onConfirm: async () => {
         try {
           setRejectingRequestId(request.id);
 
           await rejectGalleryPartnerRequest(request.id);
+
           await refreshGalleryAccountSilently();
 
           showAlert({
             title: "Katılma İsteği Reddedildi",
+
             message: "Kişi galeri ortağı olarak eklenmedi.",
+
             type: "success",
             confirmText: "Tamam",
           });
         } catch (error) {
           handleServiceError({
             error,
+
             fallbackTitle: "Reddetme Hatası",
+
             fallbackMessage:
               "Katılma isteği reddedilirken bir hata oluştu. Lütfen tekrar deneyin.",
           });
@@ -386,17 +409,21 @@ export default function GalleryAccountManagementScreen() {
 
     showAlert({
       title: "Galeri Ortağı Kaldırılsın mı?",
+
       message:
         "Bu kişi artık galeri fotoğraflarını göremez, indiremez ve silemez.",
+
       type: "warning",
       confirmText: "Kaldır",
       cancelText: "İptal",
+
       onConfirm: async () => {
         try {
           setRemovingPartner(true);
 
           await removeGalleryPartner({
             invitationId: selectedInvitation.id,
+
             partnerUserId: partner.partnerUserId,
           });
 
@@ -404,14 +431,18 @@ export default function GalleryAccountManagementScreen() {
 
           showAlert({
             title: "Galeri Ortağı Kaldırıldı",
+
             message: "Kişinin galeri erişimi kaldırıldı.",
+
             type: "success",
             confirmText: "Tamam",
           });
         } catch (error) {
           handleServiceError({
             error,
+
             fallbackTitle: "Ortak Kaldırma Hatası",
+
             fallbackMessage:
               "Galeri ortağı kaldırılırken bir hata oluştu. Lütfen tekrar deneyin.",
           });
@@ -429,28 +460,36 @@ export default function GalleryAccountManagementScreen() {
 
     showAlert({
       title: "Bu Galeriden Ayrıl?",
+
       message:
         "Bu galeriden ayrılırsan fotoğrafları artık göremez, indiremez ve silemezsin.",
+
       type: "warning",
       confirmText: "Ayrıl",
       cancelText: "İptal",
+
       onConfirm: async () => {
         try {
           setLeaving(true);
 
           await leaveGalleryPartnerAccess(selectedInvitation.id);
+
           await loadGalleryAccount();
 
           showAlert({
             title: "Galeriden Ayrıldın",
+
             message: "Galeri erişimin kaldırıldı.",
+
             type: "success",
             confirmText: "Tamam",
           });
         } catch (error) {
           handleServiceError({
             error,
+
             fallbackTitle: "Ayrılma Hatası",
+
             fallbackMessage:
               "Galeriden ayrılırken bir hata oluştu. Lütfen tekrar deneyin.",
           });
@@ -463,13 +502,11 @@ export default function GalleryAccountManagementScreen() {
 
   return (
     <ScreenContainer>
-      <KeyboardAvoidingView
-        className="flex-1"
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
+      <AppKeyboardAvoidingView style={{ flex: 1 }}>
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerClassName="pb-10"
+          keyboardShouldPersistTaps="handled"
+          contentContainerClassName="flex-grow pb-10"
         >
           <ScreenHeader
             title="Galeri Hesabı Yönetimi"
@@ -532,7 +569,7 @@ export default function GalleryAccountManagementScreen() {
             </>
           )}
         </ScrollView>
-      </KeyboardAvoidingView>
+      </AppKeyboardAvoidingView>
     </ScreenContainer>
   );
 }

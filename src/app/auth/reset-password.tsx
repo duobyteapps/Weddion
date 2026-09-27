@@ -1,7 +1,13 @@
 import * as Linking from "expo-linking";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Image, Pressable, View } from "react-native";
+import {
+  ActivityIndicator,
+  Image,
+  Pressable,
+  ScrollView,
+  View,
+} from "react-native";
 
 import { AuthHeader } from "@/components/auth/AuthHeader";
 import { useAppAlert } from "@/components/ui/AppAlert";
@@ -18,24 +24,12 @@ function getUrlParam(url: string, paramName: string) {
   try {
     const parsedUrl = new URL(url);
 
-    /*
-     * PKCE formatı:
-     *
-     * weddion://auth/reset-password?code=...
-     */
     const queryValue = parsedUrl.searchParams.get(paramName);
 
     if (queryValue) {
       return queryValue;
     }
 
-    /*
-     * Eski implicit format:
-     *
-     * weddion://auth/reset-password
-     * #access_token=...
-     * &refresh_token=...
-     */
     const hash = parsedUrl.hash.replace(/^#/, "");
 
     if (!hash) {
@@ -72,9 +66,6 @@ export default function ResetPasswordScreen() {
           throw new Error("Şifre sıfırlama bağlantısı bulunamadı.");
         }
 
-        /*
-         * Yeni Supabase PKCE recovery formatı.
-         */
         const code = getUrlParam(url, "code");
 
         if (code) {
@@ -101,9 +92,6 @@ export default function ResetPasswordScreen() {
           return;
         }
 
-        /*
-         * Eski implicit recovery formatı.
-         */
         const accessToken = getUrlParam(url, "access_token");
 
         const refreshToken = getUrlParam(url, "refresh_token");
@@ -174,12 +162,6 @@ export default function ResetPasswordScreen() {
 
     initializeRecovery();
 
-    /*
-     * Uygulama zaten açıksa getInitialURL()
-     * yeterli değildir.
-     *
-     * Maildeki linke basılınca bu event çalışır.
-     */
     const subscription = Linking.addEventListener("url", ({ url }) => {
       prepareRecoverySession(url);
     });
@@ -232,8 +214,11 @@ export default function ResetPasswordScreen() {
     }
 
     const hasLowercase = /[a-z]/.test(password);
+
     const hasUppercase = /[A-Z]/.test(password);
+
     const hasNumber = /\d/.test(password);
+
     const hasSpecialCharacter = /[^A-Za-z0-9]/.test(password);
 
     if (!hasLowercase || !hasUppercase || !hasNumber || !hasSpecialCharacter) {
@@ -260,10 +245,6 @@ export default function ResetPasswordScreen() {
     try {
       setLoading(true);
 
-      /*
-       * Recovery session oluşturulduktan sonra
-       * şifreyi güncelliyoruz.
-       */
       const { error } = await supabase.auth.updateUser({
         password,
       });
@@ -272,11 +253,6 @@ export default function ResetPasswordScreen() {
         throw error;
       }
 
-      /*
-       * Recovery session açık kalmasın.
-       *
-       * Kullanıcı yeni şifresiyle tekrar giriş yapacak.
-       */
       const { error: signOutError } = await supabase.auth.signOut();
 
       if (signOutError) {
@@ -316,90 +292,96 @@ export default function ResetPasswordScreen() {
   return (
     <ScreenContainer className="bg-background">
       <AppKeyboardAvoidingView style={{ flex: 1 }}>
-        <View className="relative flex-1 px-1 pb-8 pt-4">
-          <Image
-            source={require("../../../assets/images/backgrounds/wedding-floral.png")}
-            className="absolute -right-8 top-0 h-44 w-44 opacity-80"
-            resizeMode="contain"
-          />
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          contentContainerClassName="flex-grow pb-8"
+        >
+          <View className="relative flex-1 px-1 pt-4">
+            <Image
+              source={require("../../../assets/images/backgrounds/wedding-floral.png")}
+              className="absolute -right-8 top-0 h-44 w-44 opacity-80"
+              resizeMode="contain"
+            />
 
-          <AppBackButton onPress={() => router.replace("/auth/login")} />
+            <AppBackButton onPress={() => router.replace("/auth/login")} />
 
-          <AuthHeader />
+            <AuthHeader />
 
-          <AppCard className="mt-7">
-            <View className="items-center">
-              <AppText variant="subtitle" className="text-text">
-                Yeni Şifre Oluştur
-              </AppText>
-
-              <AppText
-                variant="caption"
-                className="mt-1 text-center text-textMuted"
-              >
-                Hesabın için yeni ve güvenli bir şifre belirle
-              </AppText>
-            </View>
-
-            {sessionLoading ? (
-              <View className="mt-8 items-center gap-3 py-6">
-                <ActivityIndicator color="#A875D1" />
+            <AppCard className="mt-7">
+              <View className="items-center">
+                <AppText variant="subtitle" className="text-text">
+                  Yeni Şifre Oluştur
+                </AppText>
 
                 <AppText
                   variant="caption"
-                  className="text-center text-textMuted"
+                  className="mt-1 text-center text-textMuted"
                 >
-                  Şifre sıfırlama bağlantısı hazırlanıyor...
+                  Hesabın için yeni ve güvenli bir şifre belirle
                 </AppText>
               </View>
-            ) : (
-              <View className="mt-6 gap-4">
-                <AppInput
-                  label="Yeni Şifre"
-                  placeholder="Yeni şifreniz"
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry
-                  editable={sessionReady && !loading}
-                />
 
-                <AppInput
-                  label="Yeni Şifre Tekrar"
-                  placeholder="Yeni şifrenizi tekrar girin"
-                  value={confirmPassword}
-                  onChangeText={setConfirmPassword}
-                  secureTextEntry
-                  editable={sessionReady && !loading}
-                />
+              {sessionLoading ? (
+                <View className="mt-8 items-center gap-3 py-6">
+                  <ActivityIndicator color="#A875D1" />
 
-                <AppText variant="caption" className="text-textMuted">
-                  En az 8 karakter, bir büyük harf, bir küçük harf, bir sayı ve
-                  bir özel karakter kullan.
-                </AppText>
+                  <AppText
+                    variant="caption"
+                    className="text-center text-textMuted"
+                  >
+                    Şifre sıfırlama bağlantısı hazırlanıyor...
+                  </AppText>
+                </View>
+              ) : (
+                <View className="mt-6 gap-4">
+                  <AppInput
+                    label="Yeni Şifre"
+                    placeholder="Yeni şifreniz"
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry
+                    editable={sessionReady && !loading}
+                  />
 
-                <AppButton
-                  title={loading ? "Güncelleniyor..." : "Şifreyi Güncelle"}
-                  className="mt-1"
-                  onPress={handleUpdatePassword}
-                  disabled={loading || sessionLoading || !sessionReady}
-                />
+                  <AppInput
+                    label="Yeni Şifre Tekrar"
+                    placeholder="Yeni şifrenizi tekrar girin"
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                    secureTextEntry
+                    editable={sessionReady && !loading}
+                  />
 
-                <View className="flex-row items-center justify-center gap-1 pt-2">
-                  <AppText variant="caption" className="text-textLight">
-                    Şifren güncellendiyse
+                  <AppText variant="caption" className="text-textMuted">
+                    En az 8 karakter, bir büyük harf, bir küçük harf, bir sayı
+                    ve bir özel karakter kullan.
                   </AppText>
 
-                  <Pressable
-                    onPress={() => router.replace("/auth/login")}
-                    disabled={loading}
-                  >
-                    <AppText variant="captionStrong">Giriş yap</AppText>
-                  </Pressable>
+                  <AppButton
+                    title={loading ? "Güncelleniyor..." : "Şifreyi Güncelle"}
+                    className="mt-1"
+                    onPress={handleUpdatePassword}
+                    disabled={loading || sessionLoading || !sessionReady}
+                  />
+
+                  <View className="flex-row items-center justify-center gap-1 pt-2">
+                    <AppText variant="caption" className="text-textLight">
+                      Şifren güncellendiyse
+                    </AppText>
+
+                    <Pressable
+                      onPress={() => router.replace("/auth/login")}
+                      disabled={loading}
+                    >
+                      <AppText variant="captionStrong">Giriş yap</AppText>
+                    </Pressable>
+                  </View>
                 </View>
-              </View>
-            )}
-          </AppCard>
-        </View>
+              )}
+            </AppCard>
+          </View>
+        </ScrollView>
       </AppKeyboardAvoidingView>
     </ScreenContainer>
   );
