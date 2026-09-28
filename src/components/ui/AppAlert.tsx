@@ -1,4 +1,11 @@
-import { createContext, ReactNode, useContext, useState } from "react";
+import {
+  createContext,
+  ReactNode,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+} from "react";
 import {
   Image,
   ImageSourcePropType,
@@ -54,10 +61,10 @@ export function AppAlertProvider({ children }: { children: ReactNode }) {
   const [alert, setAlert] = useState<AlertOptions | null>(null);
   const [confirmLoading, setConfirmLoading] = useState(false);
 
-  const showAlert = (options: AlertOptions) => {
+  const showAlert = useCallback((options: AlertOptions) => {
     setConfirmLoading(false);
     setAlert(options);
-  };
+  }, []);
 
   const closeAlert = (action?: "confirm" | "cancel") => {
     if (confirmLoading) {
@@ -86,7 +93,9 @@ export function AppAlertProvider({ children }: { children: ReactNode }) {
 
     try {
       setConfirmLoading(true);
+
       await alert.onConfirm();
+
       setAlert(null);
     } finally {
       setConfirmLoading(false);
@@ -103,10 +112,18 @@ export function AppAlertProvider({ children }: { children: ReactNode }) {
 
   const type = alert?.type ?? "info";
   const style = alertStyles[type];
+
   const hasCancelButton = !!alert?.cancelText || !!alert?.onCancel;
 
+  const contextValue = useMemo(
+    () => ({
+      showAlert,
+    }),
+    [showAlert],
+  );
+
   return (
-    <AlertContext.Provider value={{ showAlert }}>
+    <AlertContext.Provider value={contextValue}>
       {children}
 
       <Modal
@@ -197,6 +214,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: 24,
   },
+
   card: {
     width: "100%",
     maxWidth: 420,
@@ -209,6 +227,7 @@ const styles = StyleSheet.create({
     paddingBottom: 28,
     overflow: "hidden",
   },
+
   flower: {
     position: "absolute",
     right: -20,
@@ -217,16 +236,19 @@ const styles = StyleSheet.create({
     height: 130,
     opacity: 0.6,
   },
+
   alertIcon: {
     width: 96,
     height: 96,
     alignSelf: "center",
     marginBottom: 24,
   },
+
   buttonRow: {
     flexDirection: "row",
     gap: 12,
   },
+
   buttonWrapper: {
     flex: 1,
   },
