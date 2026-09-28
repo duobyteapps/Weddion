@@ -196,6 +196,7 @@ export function GalleryPhotoGrid({
 
             {onDownloadAllPhotos && photos.length > 0 ? (
               <AppButton
+                className="h-10"
                 title="Tümünü İndir"
                 variant="ghost"
                 loading={downloadAllLoading}

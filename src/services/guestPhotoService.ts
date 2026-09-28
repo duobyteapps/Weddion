@@ -44,6 +44,12 @@ type UpdateGuestPhotoStatusParams = {
   status: InvitationGuestPhotoStatus;
 };
 
+export type GalleryAccountPhotoUsage = {
+  activePhotoCount: number;
+  photoLimit: number;
+  remainingPhotoCount: number;
+};
+
 export const GUEST_PHOTO_PAGE_SIZE = 30;
 
 type GetGuestPhotosByInvitationParams = {
@@ -194,13 +200,6 @@ export const uploadGuestPhotos = async ({
      * Tüm fotoğraflar başarıyla yüklendikten sonra
      * backend'e yalnızca oluşturulan gerçek
      * fotoğraf kayıtlarının ID'lerini gönderiyoruz.
-     *
-     * Backend:
-     * - ID'leri doğrular
-     * - invitation ID kontrolü yapar
-     * - upload code kontrolü yapar
-     * - gerçek fotoğraf sayısını belirler
-     * - tek bildirim oluşturur
      */
     if (createdPhotos.length > 0) {
       await finalizeGuestPhotoUpload({
@@ -268,6 +267,56 @@ export const getGuestPhotosByInvitation = async ({
   );
 
   return photosWithSignedUrls;
+};
+
+/*
+ * Seçili davetiyenin sahibinin tüm davetiyelerindeki
+ * aktif misafir fotoğraflarının kullanımını getirir.
+ *
+ * Örneğin:
+ *
+ * Davetiye A = 20
+ * Davetiye B = 15
+ * Davetiye C = 5
+ *
+ * activePhotoCount = 40
+ * photoLimit = 2000
+ * remainingPhotoCount = 1960
+ *
+ * Partner kullanıcı da bu RPC üzerinden
+ * davet sahibinin doğru kullanım bilgisini görür.
+ */
+export const getGalleryAccountPhotoUsage = async (
+  invitationId: string,
+): Promise<GalleryAccountPhotoUsage> => {
+  await getAuthenticatedUser();
+
+  const { data, error } = await supabase.rpc(
+    "get_gallery_account_photo_usage",
+    {
+      target_invitation_id: invitationId,
+    },
+  );
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  const usage = data?.[0];
+
+  if (!usage) {
+    return {
+      activePhotoCount: 0,
+      photoLimit: 2000,
+      remainingPhotoCount: 2000,
+    };
+  }
+
+  return {
+    activePhotoCount: Number(usage.active_photo_count ?? 0),
+    photoLimit: Number(usage.photo_limit ?? 2000),
+    remainingPhotoCount: Number(usage.remaining_photo_count ?? 0),
+  };
 };
 
 export const updateGuestPhotoStatus = async ({

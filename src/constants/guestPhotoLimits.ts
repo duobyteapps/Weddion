@@ -1,2 +1,2 @@
-export const MAX_GUEST_PHOTOS_PER_ACCOUNT = 100;
+export const MAX_GUEST_PHOTOS_PER_ACCOUNT = 2000;
 export const MAX_PHOTOS_PER_UPLOAD = 20;

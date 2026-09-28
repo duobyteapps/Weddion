@@ -20,13 +20,16 @@ import { GalleryLoadMoreButton } from "@/components/gallery/GalleryLoadMoreButto
 import { GalleryPhotoGrid } from "@/components/gallery/GalleryPhotoGrid";
 import { GalleryQrInfoCard } from "@/components/gallery/GalleryQrInfoCard";
 import { useAppAlert } from "@/components/ui/AppAlert";
+import { AppText } from "@/components/ui/AppText";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { usePaginatedData } from "@/hooks/usePaginatedData";
 import { supabase } from "@/lib/supabase";
 import {
   deleteGuestPhoto,
+  getGalleryAccountPhotoUsage,
   getGuestPhotosByInvitation,
   GUEST_PHOTO_PAGE_SIZE,
+  type GalleryAccountPhotoUsage,
 } from "@/services/guestPhotoService";
 import {
   downloadImagesToGallery,
@@ -34,8 +37,6 @@ import {
 } from "@/services/imageDownloadService";
 import { SESSION_EXPIRED_MESSAGE } from "@/services/sessionService";
 import { InvitationGuestPhoto, UserInvitation } from "@/types/invitation";
-
-const MAX_GUEST_PHOTOS_PER_INVITATION = 100;
 
 type GalleryPhotos = ComponentProps<typeof GalleryPhotoGrid>["photos"];
 
@@ -165,6 +166,12 @@ export default function GalleryScreen() {
 
   const [deletingSelectedPhotos, setDeletingSelectedPhotos] = useState(false);
 
+  const [accountPhotoUsage, setAccountPhotoUsage] =
+    useState<GalleryAccountPhotoUsage | null>(null);
+
+  const [loadingAccountPhotoUsage, setLoadingAccountPhotoUsage] =
+    useState(false);
+
   const isMountedRef = useRef(true);
 
   /*
@@ -268,6 +275,40 @@ export default function GalleryScreen() {
     }
   }, [getMyGalleryAccessibleInvitations, handleServiceError, invitationId]);
 
+  const refreshAccountPhotoUsage = useCallback(async () => {
+    if (!selectedInvitationId) {
+      if (isMountedRef.current) {
+        setAccountPhotoUsage(null);
+      }
+
+      return;
+    }
+
+    try {
+      if (isMountedRef.current) {
+        setLoadingAccountPhotoUsage(true);
+      }
+
+      const usage = await getGalleryAccountPhotoUsage(selectedInvitationId);
+
+      if (!isMountedRef.current) {
+        return;
+      }
+
+      setAccountPhotoUsage(usage);
+    } catch (error) {
+      console.log("Fotoğraf kullanım bilgisi alınamadı:", error);
+
+      if (isMountedRef.current) {
+        setAccountPhotoUsage(null);
+      }
+    } finally {
+      if (isMountedRef.current) {
+        setLoadingAccountPhotoUsage(false);
+      }
+    }
+  }, [selectedInvitationId]);
+
   useEffect(() => {
     isMountedRef.current = true;
 
@@ -277,6 +318,15 @@ export default function GalleryScreen() {
       isMountedRef.current = false;
     };
   }, [fetchInvitations]);
+
+  useEffect(() => {
+    if (!selectedInvitationId) {
+      setAccountPhotoUsage(null);
+      return;
+    }
+
+    void refreshAccountPhotoUsage();
+  }, [selectedInvitationId, refreshAccountPhotoUsage]);
 
   const fetchGuestPhotoPage = useCallback(
     async ({ page, pageSize }: { page: number; pageSize: number }) => {
@@ -295,15 +345,6 @@ export default function GalleryScreen() {
     [selectedInvitationId],
   );
 
-  /*
-   * Bu fonksiyon mutlaka useCallback olmalı.
-   *
-   * Inline onError kullanılırsa her render'da
-   * yeni fonksiyon oluşur. Bu da usePaginatedData
-   * içindeki refresh fonksiyonunun referansını
-   * değiştirebilir ve useFocusEffect ile birlikte
-   * sonsuz refresh döngüsüne neden olabilir.
-   */
   const handleGuestPhotoLoadError = useCallback(
     (error: unknown) => {
       console.log("Galeri fotoğrafları alınamadı:", error);
@@ -334,25 +375,6 @@ export default function GalleryScreen() {
     onError: handleGuestPhotoLoadError,
   });
 
-  /*
-   * Galeriye tekrar dönüldüğünde fotoğrafları
-   * yeniden çek.
-   *
-   * Örnek:
-   *
-   * Misafir fotoğraf yükledi
-   * ↓
-   * Bildirim geldi
-   * ↓
-   * Kullanıcı galeriye geçti
-   * ↓
-   * Galeri focus aldı
-   * ↓
-   * Fotoğraflar yeniden çekildi
-   *
-   * İlk açılışta usePaginatedData zaten yükleme
-   * yaptığı için ilk focus'ta refresh atlanıyor.
-   */
   useFocusEffect(
     useCallback(() => {
       if (!selectedInvitationId) {
@@ -365,7 +387,9 @@ export default function GalleryScreen() {
       }
 
       refreshGuestPhotos();
-    }, [selectedInvitationId, refreshGuestPhotos]),
+
+      void refreshAccountPhotoUsage();
+    }, [selectedInvitationId, refreshGuestPhotos, refreshAccountPhotoUsage]),
   );
 
   const photos = useMemo(() => {
@@ -692,6 +716,8 @@ export default function GalleryScreen() {
 
           removePhotoFromState(targetPhoto.id);
 
+          await refreshAccountPhotoUsage();
+
           showAlert({
             type: "success",
             title: "Fotoğraf silindi",
@@ -767,6 +793,8 @@ export default function GalleryScreen() {
             ),
           );
 
+          await refreshAccountPhotoUsage();
+
           showAlert({
             type: "success",
             title: "Fotoğraflar silindi",
@@ -831,6 +859,34 @@ export default function GalleryScreen() {
               onChangeEvent={setSelectedInvitationId}
             />
 
+            <View className="mb-4 rounded-[20px] border border-primary/15 bg-white px-4 py-4">
+              <View className="flex-row items-center justify-between">
+                <AppText variant="body" className="font-semibold text-textDark">
+                  Fotoğraf kullanımı
+                </AppText>
+
+                {loadingAccountPhotoUsage ? (
+                  <ActivityIndicator size="small" />
+                ) : accountPhotoUsage ? (
+                  <AppText
+                    variant="body"
+                    className="font-semibold text-primary"
+                  >
+                    {accountPhotoUsage.activePhotoCount}/
+                    {accountPhotoUsage.photoLimit}
+                  </AppText>
+                ) : null}
+              </View>
+
+              {accountPhotoUsage ? (
+                <AppText className="mt-1 text-[13px] text-textMuted">
+                  {accountPhotoUsage.remainingPhotoCount > 0
+                    ? `${accountPhotoUsage.remainingPhotoCount} fotoğraf yükleme hakkınız kaldı.`
+                    : "Fotoğraf yükleme limitine ulaştınız."}
+                </AppText>
+              ) : null}
+            </View>
+
             <GalleryQrInfoCard onPressQrCode={handlePressQrCode} />
 
             {loadingPhotos ? (
@@ -842,7 +898,6 @@ export default function GalleryScreen() {
                 <GalleryPhotoGrid
                   photos={photos}
                   photoCount={photos.length}
-                  photoLimit={MAX_GUEST_PHOTOS_PER_INVITATION}
                   onDownloadPhoto={handleDownloadPhoto}
                   onDownloadAllPhotos={handleDownloadAllPhotos}
                   onDownloadSelectedPhotos={handleDownloadSelectedPhotos}

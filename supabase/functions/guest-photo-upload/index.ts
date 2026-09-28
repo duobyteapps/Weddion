@@ -390,7 +390,7 @@ async function confirmUpload(body: GuestPhotoUploadBody) {
           success: false,
           code: "GUEST_PHOTO_LIMIT_REACHED",
           message:
-            "Fotoğraf yükleme limiti doldu. Bu hesap için daha fazla fotoğraf yüklenemez.",
+            "Fotoğraf yükleme limiti doldu. Bu hesapta aktif olarak en fazla 2000 fotoğraf bulunabilir.",
         },
         409,
       );
